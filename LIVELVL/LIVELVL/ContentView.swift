@@ -2,12 +2,26 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
+    @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
+    private var snapshots: [StateSnapshot]
+
+    var body: some View {
+        if snapshots.isEmpty {
+            StateAssessmentView(mode: .initial)
+        } else {
+            MainTabView()
+        }
+    }
+}
+
+private struct MainTabView: View {
     var body: some View {
         TabView {
             TodayView().tabItem { Label("今天", systemImage: "sun.max.fill") }
             GrowthView().tabItem { Label("成长", systemImage: "chart.line.uptrend.xyaxis") }
             ProfileView().tabItem { Label("我的", systemImage: "person.crop.circle") }
-        }.tint(.indigo)
+        }
+        .tint(.indigo)
     }
 }
 
