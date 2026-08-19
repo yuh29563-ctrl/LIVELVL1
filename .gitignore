@@ -7,3 +7,6 @@ build/
 
 # Swift package and local IDE caches
 .swiftpm/
+
+# Local product-design preview sessions
+.superpowers/
