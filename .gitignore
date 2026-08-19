@@ -10,3 +10,4 @@ build/
 
 # Local product-design preview sessions
 .superpowers/
+.worktrees/
