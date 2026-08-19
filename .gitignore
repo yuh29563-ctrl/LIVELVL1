@@ -1,0 +1,9 @@
+.DS_Store
+
+# Xcode per-user state and local build data
+**/xcuserdata/
+**/DerivedData/
+build/
+
+# Swift package and local IDE caches
+.swiftpm/
