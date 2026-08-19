@@ -1,7 +1,6 @@
 import Foundation
 import SwiftData
 
-enum LifeDimension: String, CaseIterable, Codable, Identifiable { case health, learning, career, finance, relationships, interests; var id: String { rawValue }; var title: String { ["健康","学习","事业","财务","关系","兴趣"][LifeDimension.allCases.firstIndex(of: self)!] } }
 enum Recurrence: String, CaseIterable, Codable, Identifiable { case once, daily, weekly; var id: String { rawValue }; var title: String { ["一次性","每天","每周"][Recurrence.allCases.firstIndex(of: self)!] } }
 enum GrowthEngine {
     static func recommendedXP(minutes: Int, difficulty: Int) -> Int {

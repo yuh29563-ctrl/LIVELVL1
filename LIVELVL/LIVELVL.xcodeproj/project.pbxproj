@@ -8,6 +8,7 @@
 
 /* Begin PBXFileReference section */
 		0614A150303462CC00A88BDD /* LIVELVL.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LIVELVL.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B00000013000000000000001 /* LIVELVLTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LIVELVLTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -29,10 +30,32 @@
 			path = LIVELVL;
 			sourceTree = "<group>";
 		};
+		B00000023000000000000002 /* LIVELVLTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = LIVELVLTests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXContainerItemProxy section */
+		B00000033000000000000003 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 0614A148303462CC00A88BDD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 0614A14F303462CC00A88BDD;
+			remoteInfo = LIVELVL;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		0614A14D303462CC00A88BDD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B00000043000000000000004 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -46,6 +69,7 @@
 			isa = PBXGroup;
 			children = (
 				0614A152303462CC00A88BDD /* LIVELVL */,
+				B00000023000000000000002 /* LIVELVLTests */,
 				0614A151303462CC00A88BDD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -54,6 +78,7 @@
 			isa = PBXGroup;
 			children = (
 				0614A150303462CC00A88BDD /* LIVELVL.app */,
+				B00000013000000000000001 /* LIVELVLTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -83,7 +108,38 @@
 			productReference = 0614A150303462CC00A88BDD /* LIVELVL.app */;
 			productType = "com.apple.product-type.application";
 		};
+		B00000053000000000000005 /* LIVELVLTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B00000063000000000000006 /* Build configuration list for PBXNativeTarget "LIVELVLTests" */;
+			buildPhases = (
+				B00000073000000000000007 /* Sources */,
+				B00000043000000000000004 /* Frameworks */,
+				B00000083000000000000008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B00000093000000000000009 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				B00000023000000000000002 /* LIVELVLTests */,
+			);
+			name = LIVELVLTests;
+			packageProductDependencies = (
+			);
+			productName = LIVELVLTests;
+			productReference = B00000013000000000000001 /* LIVELVLTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXTargetDependency section */
+		B00000093000000000000009 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 0614A14F303462CC00A88BDD /* LIVELVL */;
+			targetProxy = B00000033000000000000003 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXProject section */
 		0614A148303462CC00A88BDD /* Project object */ = {
@@ -95,6 +151,10 @@
 				TargetAttributes = {
 					0614A14F303462CC00A88BDD = {
 						CreatedOnToolsVersion = 26.6;
+					};
+					B00000053000000000000005 = {
+						CreatedOnToolsVersion = 26.6;
+						TestTargetID = 0614A14F303462CC00A88BDD;
 					};
 				};
 			};
@@ -113,6 +173,7 @@
 			projectRoot = "";
 			targets = (
 				0614A14F303462CC00A88BDD /* LIVELVL */,
+				B00000053000000000000005 /* LIVELVLTests */,
 			);
 		};
 /* End PBXProject section */
@@ -125,10 +186,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		B00000083000000000000008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0614A14C303462CC00A88BDD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B00000073000000000000007 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -201,6 +276,36 @@
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		B000000A300000000000000A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.livelvl.LIVELVLTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LIVELVL.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LIVELVL";
+			};
+			name = Debug;
+		};
+		B000000B300000000000000B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.livelvl.LIVELVLTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/LIVELVL.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/LIVELVL";
 			};
 			name = Release;
 		};
@@ -340,6 +445,15 @@
 			buildConfigurations = (
 				0614A15F303462CD00A88BDD /* Debug */,
 				0614A160303462CD00A88BDD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B00000063000000000000006 /* Build configuration list for PBXNativeTarget "LIVELVLTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B000000A300000000000000A /* Debug */,
+				B000000B300000000000000B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
