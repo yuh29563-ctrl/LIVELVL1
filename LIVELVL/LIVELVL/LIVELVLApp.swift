@@ -13,6 +13,7 @@ struct LIVELVLApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Item.self, Progress.self, Completion.self,
+            DimensionProfile.self, StateSnapshot.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

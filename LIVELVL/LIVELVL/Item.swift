@@ -31,4 +31,30 @@ enum GrowthEngine {
 }
 @Model final class Item { var id: UUID; var title: String; var dimensionRaw: String; var minutes: Int; var difficulty: Int; var xp: Int; var recurrenceRaw: String; var createdAt: Date; init(title: String, dimension: LifeDimension, minutes: Int, difficulty: Int, xp: Int, recurrence: Recurrence) { id = UUID(); self.title = title; dimensionRaw = dimension.rawValue; self.minutes = minutes; self.difficulty = difficulty; self.xp = xp; recurrenceRaw = recurrence.rawValue; createdAt = .now }; var dimension: LifeDimension { LifeDimension(rawValue: dimensionRaw) ?? .learning } }
 @Model final class Progress { var totalXP: Int; var onboardingCompleted: Bool; init(totalXP: Int = 0, onboardingCompleted: Bool = true) { self.totalXP = totalXP; self.onboardingCompleted = onboardingCompleted }; var level: Int { GrowthEngine.level(for: totalXP) } }
-@Model final class Completion { var itemID: UUID; var date: Date; var xp: Int; init(itemID: UUID, xp: Int) { self.itemID = itemID; self.xp = xp; date = .now } }
+@Model final class Completion {
+    var itemID: UUID
+    var date: Date
+    var xp: Int
+    var dimensionRaw: String?
+    var taskTitle: String?
+
+    init(itemID: UUID, xp: Int, dimension: LifeDimension? = nil,
+         taskTitle: String? = nil, date: Date = .now) {
+        self.itemID = itemID
+        self.xp = xp
+        self.dimensionRaw = dimension?.rawValue
+        self.taskTitle = taskTitle
+        self.date = date
+    }
+
+    func stateActivity(fallbackItem: Item?) -> DimensionActivityRecord? {
+        guard let dimension = dimensionRaw.flatMap(LifeDimension.init(rawValue:))
+                ?? fallbackItem?.dimension else { return nil }
+        return DimensionActivityRecord(
+            dimension: dimension,
+            taskTitle: taskTitle ?? fallbackItem?.title ?? "已完成的行动",
+            date: date,
+            xp: xp
+        )
+    }
+}
