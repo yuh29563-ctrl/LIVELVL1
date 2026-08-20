@@ -30,18 +30,46 @@ struct TodayView: View {
     @Query private var items: [Item]
     @Query private var completions: [Completion]
     @Query private var progressItems: [Progress]
+    @Query private var profiles: [DimensionProfile]
+    @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
+    private var snapshots: [StateSnapshot]
     @State private var showAdd = false
+    @State private var showAssessment = false
     @State private var showConfirm = false
     @State private var showMessage = false
     @State private var message = ""
     @State private var pendingItemID: UUID?
+    @State private var radarPulse: RadarPulse?
 
     private var progress: Progress { progressItems.first ?? Progress() }
+
+    private var currentSummary: LifeStateSummary? {
+        guard let snapshot = snapshots.first else { return nil }
+        let itemByID = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
+        let activities = completions.compactMap { $0.stateActivity(fallbackItem: itemByID[$0.itemID]) }
+        return LifeStateSummaryBuilder.build(
+            profiles: profiles,
+            snapshot: snapshot,
+            activities: activities,
+            now: .now
+        )
+    }
 
     var body: some View {
         NavigationStack {
             List {
                 Section { levelHeader }
+                if let currentSummary {
+                    Section {
+                        LifeStateCard(
+                            summary: currentSummary,
+                            pulse: radarPulse,
+                            onAssessment: { showAssessment = true }
+                        )
+                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
+                        .listRowBackground(Color.clear)
+                    }
+                }
                 Section("今日行动") {
                     if items.isEmpty {
                         ContentUnavailableView("今天还没有任务", systemImage: "checkmark.circle", description: Text("创建一个值得完成的现实行动吧"))
@@ -54,6 +82,7 @@ struct TodayView: View {
             .navigationTitle("今天")
             .toolbar { Button { showAdd = true } label: { Image(systemName: "plus") } }
             .sheet(isPresented: $showAdd) { AddTaskView() }
+            .sheet(isPresented: $showAssessment) { StateAssessmentView(mode: .weekly) }
             .alert("确认完成任务？", isPresented: $showConfirm) {
                 Button("确认完成") { confirmCompletion() }
                 Button("先不完成", role: .cancel) { pendingItemID = nil }
@@ -61,6 +90,7 @@ struct TodayView: View {
                 Text("完成后将获得对应 XP。误触时再次点击勾选按钮可以取消，并退回 XP。")
             }
             .alert("任务状态已更新", isPresented: $showMessage) { Button("好的") {} } message: { Text(message) }
+            .onAppear(perform: ensureProgress)
         }
     }
 
@@ -111,6 +141,7 @@ struct TodayView: View {
             context.delete(completion)
             progress.totalXP = max(0, progress.totalXP - completion.xp)
             try? context.save()
+            radarPulse = nil
             message = "已取消完成，退回 \(completion.xp) XP"
             showMessage = true
         } else {
@@ -121,12 +152,24 @@ struct TodayView: View {
 
     private func confirmCompletion() {
         guard let id = pendingItemID, let item = items.first(where: { $0.id == id }) else { return }
-        context.insert(Completion(itemID: item.id, xp: item.xp))
+        context.insert(Completion(
+            itemID: item.id,
+            xp: item.xp,
+            dimension: item.dimension,
+            taskTitle: item.title
+        ))
         progress.totalXP += item.xp
         try? context.save()
         pendingItemID = nil
+        radarPulse = RadarPulse(dimension: item.dimension)
         message = "获得 +\(item.xp) XP"
         showMessage = true
+    }
+
+    private func ensureProgress() {
+        guard progressItems.isEmpty else { return }
+        context.insert(Progress())
+        try? context.save()
     }
 }
 
