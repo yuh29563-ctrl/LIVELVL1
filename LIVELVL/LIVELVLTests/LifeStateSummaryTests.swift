@@ -6,6 +6,16 @@ import Testing
 struct LifeStateSummaryTests {
     private let now = Date(timeIntervalSince1970: 1_776_672_000)
 
+    private var calendar: Calendar {
+        var value = Calendar(identifier: .gregorian)
+        value.timeZone = TimeZone(secondsFromGMT: 0)!
+        return value
+    }
+
+    private func date(_ day: Int, hour: Int) -> Date {
+        calendar.date(from: DateComponents(year: 2026, month: 8, day: day, hour: hour))!
+    }
+
     @Test func activityChangesProjectionButNotOfficialSnapshot() {
         let profiles = LifeDimension.allCases.map {
             DimensionProfile(dimension: $0, selfRating: 6.0, weeklyTarget: 3, lastAssessedAt: now)
@@ -57,5 +67,43 @@ struct LifeStateSummaryTests {
         let record = legacy.stateActivity(fallbackItem: task)
         #expect(record?.dimension == .health)
         #expect(record?.taskTitle == "慢跑")
+    }
+
+    @Test func summaryReportsOneDayBeforeExactDueTime() {
+        let snapshot = StateSnapshot(
+            scores: .neutral,
+            actionScores: .neutral,
+            assessedAt: date(13, hour: 13)
+        )
+
+        let summary = LifeStateSummaryBuilder.build(
+            profiles: [],
+            snapshot: snapshot,
+            activities: [],
+            now: date(20, hour: 12),
+            calendar: calendar
+        )
+
+        #expect(summary.daysUntilAssessment == 1)
+        #expect(!summary.isAssessmentDue)
+    }
+
+    @Test func summaryReportsDueAtExactTime() {
+        let snapshot = StateSnapshot(
+            scores: .neutral,
+            actionScores: .neutral,
+            assessedAt: date(13, hour: 12)
+        )
+
+        let summary = LifeStateSummaryBuilder.build(
+            profiles: [],
+            snapshot: snapshot,
+            activities: [],
+            now: date(20, hour: 12),
+            calendar: calendar
+        )
+
+        #expect(summary.daysUntilAssessment == 0)
+        #expect(summary.isAssessmentDue)
     }
 }

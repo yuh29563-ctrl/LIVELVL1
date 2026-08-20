@@ -76,4 +76,17 @@ struct LifeStateEngineTests {
             lastAssessedAt: date(13, hour: 12), now: date(20, hour: 12), calendar: calendar
         ))
     }
+
+    @Test func daysUntilAssessmentNeverShowsZeroBeforeDueTime() {
+        #expect(LifeStateEngine.daysUntilAssessment(
+            lastAssessedAt: date(13, hour: 13),
+            now: date(20, hour: 12),
+            calendar: calendar
+        ) == 1)
+        #expect(LifeStateEngine.daysUntilAssessment(
+            lastAssessedAt: date(13, hour: 12),
+            now: date(20, hour: 12),
+            calendar: calendar
+        ) == 0)
+    }
 }

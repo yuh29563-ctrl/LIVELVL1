@@ -22,6 +22,7 @@ struct LifeStateSummary: Equatable, Sendable {
     let overallScore: Double
     let dimensions: [DimensionStateSummary]
     let highlightedChange: DimensionStateSummary?
+    let daysUntilAssessment: Int
     let isAssessmentDue: Bool
 }
 
@@ -66,6 +67,11 @@ enum LifeStateSummaryBuilder {
         let highlighted = dimensionSummaries
             .filter { abs($0.delta) >= 0.1 }
             .max { abs($0.delta) < abs($1.delta) }
+        let daysUntilAssessment = LifeStateEngine.daysUntilAssessment(
+            lastAssessedAt: snapshot.assessedAt,
+            now: now,
+            calendar: calendar
+        )
 
         return LifeStateSummary(
             official: snapshot.scores,
@@ -73,9 +79,8 @@ enum LifeStateSummaryBuilder {
             overallScore: snapshot.overallScore,
             dimensions: dimensionSummaries,
             highlightedChange: highlighted,
-            isAssessmentDue: LifeStateEngine.isAssessmentDue(
-                lastAssessedAt: snapshot.assessedAt, now: now, calendar: calendar
-            )
+            daysUntilAssessment: daysUntilAssessment,
+            isAssessmentDue: daysUntilAssessment == 0
         )
     }
 }

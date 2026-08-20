@@ -119,4 +119,16 @@ enum LifeStateEngine {
         }
         return now >= dueDate
     }
+
+    static func daysUntilAssessment(
+        lastAssessedAt: Date,
+        now: Date,
+        calendar: Calendar = .current
+    ) -> Int {
+        guard let dueDate = calendar.date(byAdding: .day, value: 7, to: lastAssessedAt),
+              now < dueDate else { return 0 }
+        let start = calendar.startOfDay(for: now)
+        let dueDay = calendar.startOfDay(for: dueDate)
+        return max(1, calendar.dateComponents([.day], from: start, to: dueDay).day ?? 1)
+    }
 }
