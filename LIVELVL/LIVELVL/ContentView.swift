@@ -210,19 +210,56 @@ struct AddTaskView: View {
 
 struct GrowthView: View {
     @Query private var progressItems: [Progress]
+    @Query private var profiles: [DimensionProfile]
+    @Query private var items: [Item]
+    @Query private var completions: [Completion]
+    @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
+    private var snapshots: [StateSnapshot]
+    @State private var showAssessment = false
     private var progress: Progress { progressItems.first ?? Progress() }
+
+    private var summary: LifeStateSummary? {
+        guard let snapshot = snapshots.first else { return nil }
+        let itemByID = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
+        let activities = completions.compactMap { $0.stateActivity(fallbackItem: itemByID[$0.itemID]) }
+        return LifeStateSummaryBuilder.build(
+            profiles: profiles,
+            snapshot: snapshot,
+            activities: activities,
+            now: .now
+        )
+    }
+
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    Text("Lv.\(progress.level)").font(.largeTitle.bold())
-                    ProgressView(value: GrowthEngine.progressToNextLevel(for: progress.totalXP))
-                    Text("\(progress.totalXP) XP · 距离下一级还需 \(GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP)) XP")
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    LevelCard(
+                        level: progress.level,
+                        currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
+                        requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
+                        remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
+                        progress: GrowthEngine.progressToNextLevel(for: progress.totalXP)
+                    )
+
+                    if let summary {
+                        LifeStateCard(
+                            summary: summary,
+                            pulse: nil,
+                            onAssessment: { showAssessment = true }
+                        )
+                    }
+
+                    Text("等级记录长期积累，状态记录最近 15 天。它们彼此独立。")
+                        .font(.footnote)
                         .foregroundStyle(.secondary)
+                        .padding(.horizontal, 4)
                 }
-                Section("六维状态") { ForEach(LifeDimension.allCases) { Label($0.title, systemImage: "circle.fill") } }
-                Section { Text("等级记录长期积累，状态记录最近 15 天。它们彼此独立。").foregroundStyle(.secondary) }
-            }.navigationTitle("成长")
+                .padding(16)
+            }
+            .background(Color(uiColor: .systemGroupedBackground))
+            .navigationTitle("成长")
+            .sheet(isPresented: $showAssessment) { StateAssessmentView(mode: .weekly) }
         }
     }
 }
