@@ -41,7 +41,7 @@ struct RadarChartView: View {
     @State private var pulsingDimension: LifeDimension?
     @State private var markerScale = 1.0
 
-    private let projectedColor = Color(red: 0.64, green: 0.48, blue: 0.92)
+    private let projectedColor = TodayVisualTheme.graphite
 
     var body: some View {
         GeometryReader { proxy in
@@ -83,11 +83,11 @@ struct RadarChartView: View {
                 }
 
                 RadarPolygonShape(values: official, radius: radius)
-                    .fill(Color.indigo.opacity(0.14))
+                    .fill(TodayVisualTheme.graphite.opacity(0.10))
 
                 RadarPolygonShape(values: official, radius: radius)
                     .stroke(
-                        Color.indigo,
+                        TodayVisualTheme.ink,
                         style: StrokeStyle(lineWidth: 2.5, lineJoin: .round)
                     )
 
@@ -104,8 +104,24 @@ struct RadarChartView: View {
                     .animation(projectedAnimation, value: projected)
 
                 ForEach(Array(LifeDimension.allCases.enumerated()), id: \.element) { index, dimension in
+                    if dimension == pulsingDimension {
+                        Circle()
+                            .fill(TodayVisualTheme.reward.opacity(0.16))
+                            .overlay(
+                                Circle()
+                                    .stroke(TodayVisualTheme.reward.opacity(0.32), lineWidth: 1)
+                            )
+                            .frame(width: 34, height: 34)
+                            .scaleEffect(markerScale)
+                            .position(projectedPoints[index])
+                    }
+
                     Circle()
-                        .fill(projectedColor)
+                        .fill(
+                            dimension == pulsingDimension
+                                ? TodayVisualTheme.reward
+                                : projectedColor
+                        )
                         .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
                         .frame(width: 8, height: 8)
                         .scaleEffect(dimension == pulsingDimension ? markerScale : 1)
@@ -117,7 +133,11 @@ struct RadarChartView: View {
                     let angle = -CGFloat.pi / 2 + CGFloat(index) * CGFloat.pi / 3
                     Text(dimension.title)
                         .font(.caption.weight(.medium))
-                        .foregroundStyle(Color.secondary)
+                        .foregroundStyle(
+                            dimension == pulsingDimension
+                                ? TodayVisualTheme.reward
+                                : TodayVisualTheme.graphite
+                        )
                         .fixedSize(horizontal: true, vertical: false)
                         .position(
                             x: center.x + cos(angle) * (radius + labelMargin),

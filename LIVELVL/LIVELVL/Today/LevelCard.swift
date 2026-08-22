@@ -6,6 +6,7 @@ struct LevelCard: View {
     let requiredXP: Int
     let remainingXP: Int
     let progress: Double
+    var isRewarding = false
 
     private var clampedProgress: Double {
         min(1, max(0, progress))
@@ -13,26 +14,36 @@ struct LevelCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            ViewThatFits(in: .horizontal) {
-                HStack(alignment: .firstTextBaseline) {
-                    levelText
-                    Spacer(minLength: 16)
-                    xpText
-                }
+            HStack(spacing: 14) {
+                PixelSproutView()
+                    .padding(10)
+                    .background(
+                        TodayVisualTheme.cloud,
+                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    )
 
-                VStack(alignment: .leading, spacing: 4) {
-                    levelText
-                    xpText
+                ViewThatFits(in: .horizontal) {
+                    HStack(alignment: .firstTextBaseline) {
+                        levelText
+                        Spacer(minLength: 16)
+                        xpText
+                    }
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        levelText
+                        xpText
+                    }
                 }
             }
 
             GeometryReader { proxy in
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.white.opacity(0.16))
+                    Capsule().fill(TodayVisualTheme.mist)
                     Capsule()
-                        .fill(Color(red: 0.62, green: 0.45, blue: 0.95))
+                        .fill(isRewarding ? TodayVisualTheme.reward : TodayVisualTheme.ink)
                         .frame(width: proxy.size.width * clampedProgress)
                 }
+                .animation(.easeInOut(duration: 0.2), value: isRewarding)
             }
             .frame(height: 9)
             .accessibilityElement(children: .ignore)
@@ -41,15 +52,16 @@ struct LevelCard: View {
 
             Text("还需 \(remainingXP) XP 升级")
                 .font(.subheadline.monospacedDigit())
-                .foregroundStyle(Color.white.opacity(0.78))
+                .foregroundStyle(TodayVisualTheme.graphite)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(20)
-        .foregroundStyle(Color.white)
+        .foregroundStyle(TodayVisualTheme.ink)
         .background(
-            Color(red: 0.105, green: 0.11, blue: 0.135),
+            Color.white,
             in: RoundedRectangle(cornerRadius: 22, style: .continuous)
         )
+        .shadow(color: Color.black.opacity(0.06), radius: 16, y: 6)
     }
 
     private var levelText: some View {
@@ -61,7 +73,8 @@ struct LevelCard: View {
     private var xpText: some View {
         Text("\(currentXP) / \(requiredXP) XP")
             .font(.headline.monospacedDigit())
-            .foregroundStyle(Color.white.opacity(0.84))
+            .foregroundStyle(isRewarding ? TodayVisualTheme.reward : TodayVisualTheme.graphite)
+            .animation(.easeInOut(duration: 0.2), value: isRewarding)
             .fixedSize(horizontal: true, vertical: false)
     }
 }

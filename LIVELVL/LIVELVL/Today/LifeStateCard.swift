@@ -12,10 +12,11 @@ struct LifeStateCard: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text("你的最近 15 天")
                     .font(.headline)
-                    .foregroundStyle(Color.black.opacity(0.58))
+                    .foregroundStyle(TodayVisualTheme.graphite)
                 Text("综合状态 \(summary.overallScore, format: .number.precision(.fractionLength(1)))")
                     .font(.title2.bold().monospacedDigit())
-                    .foregroundStyle(Color.black.opacity(0.9))
+                    .foregroundStyle(pulse == nil ? TodayVisualTheme.ink : TodayVisualTheme.reward)
+                    .animation(.easeInOut(duration: 0.2), value: pulse?.id)
             }
 
             RadarChartView(
@@ -26,29 +27,36 @@ struct LifeStateCard: View {
             .frame(height: radarHeight)
 
             HStack(spacing: 22) {
-                legendItem(title: "正式状态", color: .indigo, dashed: false)
+                legendItem(title: "正式状态", color: TodayVisualTheme.ink, dashed: false)
                 legendItem(
                     title: "行动预估",
-                    color: Color(red: 0.64, green: 0.48, blue: 0.92),
+                    color: TodayVisualTheme.graphite,
                     dashed: true
                 )
             }
             .font(.subheadline)
-            .foregroundStyle(Color.black.opacity(0.7))
+            .foregroundStyle(TodayVisualTheme.graphite)
 
             annotation
                 .font(.subheadline)
-                .foregroundStyle(Color.black.opacity(0.7))
+                .foregroundStyle(TodayVisualTheme.graphite)
                 .fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 11)
+                .background(
+                    TodayVisualTheme.cloud,
+                    in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                )
 
             if summary.isAssessmentDue {
                 Button("更新本周状态", action: onAssessment)
                     .buttonStyle(.bordered)
-                    .tint(.indigo)
+                    .tint(TodayVisualTheme.ink)
             } else {
                 Text("距离下次自评还有 \(summary.daysUntilAssessment) 天")
                     .font(.footnote.weight(.medium).monospacedDigit())
-                    .foregroundStyle(Color.black.opacity(0.58))
+                    .foregroundStyle(TodayVisualTheme.graphite)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
