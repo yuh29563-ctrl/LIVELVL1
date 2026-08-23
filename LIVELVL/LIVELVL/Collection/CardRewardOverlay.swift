@@ -1,10 +1,39 @@
 import SwiftUI
 
+struct CardRewardFlightTransform: Equatable {
+    let scale: CGFloat
+    let offset: CGSize
+
+    func projectedFrame(of cardFrame: CGRect) -> CGRect {
+        let projectedSize = CGSize(
+            width: cardFrame.width * scale,
+            height: cardFrame.height * scale
+        )
+        return CGRect(
+            x: cardFrame.midX + offset.width - (projectedSize.width / 2),
+            y: cardFrame.midY + offset.height - (projectedSize.height / 2),
+            width: projectedSize.width,
+            height: projectedSize.height
+        )
+    }
+}
+
 enum CardRewardFlightGeometry {
     static func offset(from cardFrame: CGRect, to targetFrame: CGRect) -> CGSize {
         CGSize(
             width: targetFrame.midX - cardFrame.midX,
             height: targetFrame.midY - cardFrame.midY
+        )
+    }
+
+    static func transform(
+        from cardFrame: CGRect,
+        to targetFrame: CGRect,
+        scale: CGFloat
+    ) -> CardRewardFlightTransform {
+        CardRewardFlightTransform(
+            scale: scale,
+            offset: offset(from: cardFrame, to: targetFrame)
         )
     }
 }
@@ -49,6 +78,7 @@ struct CardRewardOverlay: View {
 
                 ScrollView {
                     rewardCard
+                        .frame(maxWidth: 360)
                         .background {
                             GeometryReader { cardGeometry in
                                 Color.clear.preference(
@@ -57,7 +87,9 @@ struct CardRewardOverlay: View {
                                 )
                             }
                         }
-                        .frame(maxWidth: 360)
+                        .scaleEffect(cardScale)
+                        .offset(cardOffset)
+                        .opacity(cardOpacity)
                         .padding(.horizontal, 28)
                         .padding(.vertical, 36)
                         .frame(
@@ -66,9 +98,6 @@ struct CardRewardOverlay: View {
                         )
                 }
                 .scrollIndicators(.hidden)
-                .scaleEffect(cardScale)
-                .offset(cardOffset)
-                .opacity(cardOpacity)
                 .onPreferenceChange(CardRewardFramePreferenceKey.self) {
                     cardFrame = $0
                 }
@@ -179,12 +208,16 @@ struct CardRewardOverlay: View {
                 }
                 try? await Task.sleep(for: .milliseconds(200))
             } else {
-                let flightOffset = collectionTargetFrame.map {
-                    CardRewardFlightGeometry.offset(from: cardFrame, to: $0)
-                } ?? .zero
+                let flightTransform = collectionTargetFrame.map {
+                    CardRewardFlightGeometry.transform(
+                        from: cardFrame,
+                        to: $0,
+                        scale: 0.15
+                    )
+                } ?? CardRewardFlightTransform(scale: 0.15, offset: .zero)
                 withAnimation(.easeInOut(duration: 0.45)) {
-                    cardScale = 0.15
-                    cardOffset = flightOffset
+                    cardScale = flightTransform.scale
+                    cardOffset = flightTransform.offset
                     cardOpacity = 0.08
                     backdropOpacity = 0
                 }

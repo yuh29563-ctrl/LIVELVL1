@@ -171,4 +171,32 @@ struct CardRewardPresentationTests {
                 == CGSize(width: 140, height: 430)
         )
     }
+
+    @Test func offCenterCardLocalTransformLandsOnMeasuredTarget() {
+        let scrollFrame = CGRect(x: 0, y: 0, width: 400, height: 800)
+        let cardFrame = CGRect(x: 40, y: 100, width: 240, height: 320)
+        let targetFrame = CGRect(x: 280, y: 720, width: 40, height: 40)
+
+        let transform = CardRewardFlightGeometry.transform(
+            from: cardFrame,
+            to: targetFrame,
+            scale: 0.15
+        )
+        let projectedCardFrame = transform.projectedFrame(of: cardFrame)
+
+        #expect(abs(projectedCardFrame.midX - 300) < 0.001)
+        #expect(abs(projectedCardFrame.midY - 740) < 0.001)
+        #expect(abs(projectedCardFrame.width - 36) < 0.001)
+        #expect(abs(projectedCardFrame.height - 48) < 0.001)
+
+        let legacyScaledX = (cardFrame.midX - scrollFrame.midX) * 0.15
+        let legacyScaledY = (cardFrame.midY - scrollFrame.midY) * 0.15
+        let legacyScrollAnchoredCenter = CGPoint(
+            x: scrollFrame.midX + legacyScaledX + 140,
+            y: scrollFrame.midY + legacyScaledY + 480
+        )
+        #expect(abs(legacyScrollAnchoredCenter.x - 334) < 0.001)
+        #expect(abs(legacyScrollAnchoredCenter.y - 859) < 0.001)
+        #expect(legacyScrollAnchoredCenter != CGPoint(x: 300, y: 740))
+    }
 }
