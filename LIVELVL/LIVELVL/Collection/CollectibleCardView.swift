@@ -175,6 +175,8 @@ struct ExpandedCollectibleCardOverlay: View {
                         .degrees(isShowingBack ? -180 : 0),
                         axis: (x: 0, y: 1, z: 0)
                     )
+                    .allowsHitTesting(!isShowingBack)
+                    .accessibilityHidden(isShowingBack)
 
                 back
                     .opacity(isShowingBack ? 1 : 0)
@@ -182,6 +184,8 @@ struct ExpandedCollectibleCardOverlay: View {
                         .degrees(isShowingBack ? 0 : 180),
                         axis: (x: 0, y: 1, z: 0)
                     )
+                    .allowsHitTesting(isShowingBack)
+                    .accessibilityHidden(!isShowingBack)
             }
         }
     }

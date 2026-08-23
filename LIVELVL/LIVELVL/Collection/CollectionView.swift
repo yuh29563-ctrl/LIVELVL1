@@ -1,6 +1,73 @@
 import SwiftData
 import SwiftUI
 
+struct CollectionSelectionState: Equatable {
+    private(set) var selectedAwardKey: String?
+    private(set) var isShowingBack = false
+
+    mutating func select(awardKey: String) {
+        selectedAwardKey = awardKey
+        isShowingBack = false
+    }
+
+    mutating func setShowingBack(_ isShowingBack: Bool) {
+        self.isShowingBack = isShowingBack
+    }
+
+    mutating func close() {
+        selectedAwardKey = nil
+        isShowingBack = false
+    }
+
+    mutating func reconcile(validAwardKeys: Set<String>) {
+        guard let selectedAwardKey,
+              !validAwardKeys.contains(selectedAwardKey) else {
+            return
+        }
+        close()
+    }
+}
+
+struct CollectionSeenRetryState: Equatable {
+    private(set) var isAttempting = false
+    private(set) var errorMessage: String?
+
+    var needsRetry: Bool {
+        errorMessage != nil
+    }
+
+    mutating func beginAttempt(hasUnseenCollectibles: Bool) -> Bool {
+        guard hasUnseenCollectibles, !isAttempting else { return false }
+        isAttempting = true
+        return true
+    }
+
+    mutating func finishAttempt(_ result: Result<Void, Error>) -> Bool {
+        guard isAttempting else { return false }
+        isAttempting = false
+
+        switch result {
+        case .success:
+            errorMessage = nil
+            return true
+        case .failure:
+            errorMessage = "未能更新查看状态"
+            return false
+        }
+    }
+
+    mutating func reconcile(hasUnseenCollectibles: Bool) {
+        guard !hasUnseenCollectibles else { return }
+        isAttempting = false
+        errorMessage = nil
+    }
+}
+
+private struct SelectedCollectiblePresentation {
+    let collectible: OwnedCollectible
+    let definition: CollectibleDefinition
+}
+
 @MainActor
 struct CollectionView: View {
     @Environment(\.modelContext) private var context
@@ -12,17 +79,51 @@ struct CollectionView: View {
     @Query private var collectionProgress: [CollectionProgress]
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var selectedAwardKey: String?
-    @State private var isShowingBack = false
+    @State private var selection = CollectionSelectionState()
+    @State private var seenRetryState = CollectionSeenRetryState()
+
+    private let onMarkedSeen: () -> Void
 
     private let columns = [
         GridItem(.flexible(), spacing: 14),
         GridItem(.flexible(), spacing: 14)
     ]
 
-    private var selectedCollectible: OwnedCollectible? {
-        guard let selectedAwardKey else { return nil }
-        return ownedCollectibles.first { $0.awardKey == selectedAwardKey }
+    init(onMarkedSeen: @escaping () -> Void = {}) {
+        self.onMarkedSeen = onMarkedSeen
+    }
+
+    private var validatedSelection: SelectedCollectiblePresentation? {
+        guard let selectedAwardKey = selection.selectedAwardKey,
+              let collectible = ownedCollectibles.first(where: {
+                  $0.awardKey == selectedAwardKey
+              }),
+              let definition = CollectionCatalog.definition(id: collectible.collectibleID) else {
+            return nil
+        }
+        return SelectedCollectiblePresentation(
+            collectible: collectible,
+            definition: definition
+        )
+    }
+
+    private var selectableAwardKeys: Set<String> {
+        Set(ownedCollectibles.compactMap { collectible in
+            CollectionCatalog.definition(id: collectible.collectibleID) == nil
+                ? nil
+                : collectible.awardKey
+        })
+    }
+
+    private var hasUnseenCollectibles: Bool {
+        ownedCollectibles.contains(where: \.isUnseen)
+    }
+
+    private var showingBackBinding: Binding<Bool> {
+        Binding(
+            get: { selection.isShowingBack },
+            set: { selection.setShowingBack($0) }
+        )
     }
 
     private var activeCompanion: (CollectibleDefinition, CompanionStage) {
@@ -34,11 +135,21 @@ struct CollectionView: View {
     }
 
     var body: some View {
+        let validatedSelection = validatedSelection
+
         ZStack {
             NavigationStack {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 22) {
                         featuredContent
+
+                        if let errorMessage = seenRetryState.errorMessage {
+                            CollectionSeenRetryView(
+                                message: errorMessage,
+                                isRetrying: seenRetryState.isAttempting,
+                                onRetry: markUnseenCollectiblesSeen
+                            )
+                        }
 
                         if !ownedCollectibles.isEmpty {
                             Text("收藏卡片")
@@ -85,14 +196,13 @@ struct CollectionView: View {
                     }
                 }
             }
-            .accessibilityHidden(selectedAwardKey != nil)
+            .accessibilityHidden(validatedSelection != nil)
 
-            if let collectible = selectedCollectible,
-               let definition = CollectionCatalog.definition(id: collectible.collectibleID) {
+            if let validatedSelection {
                 ExpandedCollectibleCardOverlay(
-                    collectible: collectible,
-                    definition: definition,
-                    isShowingBack: $isShowingBack,
+                    collectible: validatedSelection.collectible,
+                    definition: validatedSelection.definition,
+                    isShowingBack: showingBackBinding,
                     onClose: closeSelection
                 )
                 .transition(
@@ -102,6 +212,12 @@ struct CollectionView: View {
                 )
                 .zIndex(1)
             }
+        }
+        .onChange(of: selectableAwardKeys, initial: true) { _, validAwardKeys in
+            selection.reconcile(validAwardKeys: validAwardKeys)
+        }
+        .onChange(of: hasUnseenCollectibles, initial: true) { _, hasUnseen in
+            seenRetryState.reconcile(hasUnseenCollectibles: hasUnseen)
         }
     }
 
@@ -130,22 +246,70 @@ struct CollectionView: View {
     }
 
     private func select(_ collectible: OwnedCollectible) {
-        isShowingBack = false
         withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.34)) {
-            selectedAwardKey = collectible.awardKey
+            selection.select(awardKey: collectible.awardKey)
         }
     }
 
     private func closeSelection() {
         withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .easeInOut(duration: 0.22)) {
-            selectedAwardKey = nil
-            isShowingBack = false
+            selection.close()
         }
     }
 
     private func markVisibleCollectiblesSeen(_ collectible: OwnedCollectible) {
         guard collectible.isUnseen else { return }
-        try? CardRewardService.markAllSeen(in: context)
+        markUnseenCollectiblesSeen()
+    }
+
+    private func markUnseenCollectiblesSeen() {
+        guard seenRetryState.beginAttempt(
+            hasUnseenCollectibles: hasUnseenCollectibles
+        ) else {
+            return
+        }
+
+        let result: Result<Void, Error>
+        do {
+            try CardRewardService.markAllSeen(in: context)
+            result = .success(())
+        } catch {
+            result = .failure(error)
+        }
+
+        if seenRetryState.finishAttempt(result) {
+            onMarkedSeen()
+        }
+    }
+}
+
+private struct CollectionSeenRetryView: View {
+    let message: String
+    let isRetrying: Bool
+    let onRetry: () -> Void
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.circle")
+                .foregroundStyle(TodayVisualTheme.graphite)
+                .accessibilityHidden(true)
+
+            Text(message)
+                .font(.footnote)
+                .foregroundStyle(TodayVisualTheme.graphite)
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+            Button("重试", action: onRetry)
+                .font(.footnote.weight(.semibold))
+                .foregroundStyle(TodayVisualTheme.ink)
+                .disabled(isRetrying)
+        }
+        .padding(14)
+        .background(
+            TodayVisualTheme.cloud,
+            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
+        )
+        .accessibilityElement(children: .contain)
     }
 }
 

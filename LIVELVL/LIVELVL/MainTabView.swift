@@ -223,7 +223,9 @@ struct MainTabView: View {
                     .tag(AppTab.today)
                     .tabItem { Label("今天", systemImage: "sun.max.fill") }
 
-                CollectionView()
+                CollectionView {
+                    attention.markSeen()
+                }
                     .tag(AppTab.collection)
                     .tabItem {
                         CollectionTabLabel(
