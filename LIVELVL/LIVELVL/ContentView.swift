@@ -14,17 +14,6 @@ struct ContentView: View {
     }
 }
 
-private struct MainTabView: View {
-    var body: some View {
-        TabView {
-            TodayView().tabItem { Label("今天", systemImage: "sun.max.fill") }
-            GrowthView().tabItem { Label("成长", systemImage: "chart.line.uptrend.xyaxis") }
-            ProfileView().tabItem { Label("我的", systemImage: "person.crop.circle") }
-        }
-        .tint(TodayVisualTheme.ink)
-    }
-}
-
 struct TodayView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -388,67 +377,5 @@ struct AddTaskView: View {
                 }
             }
         }
-    }
-}
-
-struct GrowthView: View {
-    @Query private var progressItems: [Progress]
-    @Query private var profiles: [DimensionProfile]
-    @Query private var items: [Item]
-    @Query private var completions: [Completion]
-    @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
-    private var snapshots: [StateSnapshot]
-    @State private var showAssessment = false
-    private var progress: Progress { progressItems.first ?? Progress() }
-
-    private var summary: LifeStateSummary? {
-        guard let snapshot = snapshots.first else { return nil }
-        let itemByID = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
-        let activities = completions.compactMap { $0.stateActivity(fallbackItem: itemByID[$0.itemID]) }
-        return LifeStateSummaryBuilder.build(
-            profiles: profiles,
-            snapshot: snapshot,
-            activities: activities,
-            now: .now
-        )
-    }
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    LevelCard(
-                        level: progress.level,
-                        currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
-                        requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
-                        remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
-                        progress: GrowthEngine.progressToNextLevel(for: progress.totalXP)
-                    )
-
-                    if let summary {
-                        LifeStateCard(
-                            summary: summary,
-                            pulse: nil,
-                            onAssessment: { showAssessment = true }
-                        )
-                    }
-
-                    Text("等级记录长期积累，状态记录最近 15 天。它们彼此独立。")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .padding(.horizontal, 4)
-                }
-                .padding(16)
-            }
-            .background(Color(uiColor: .systemGroupedBackground))
-            .navigationTitle("成长")
-            .sheet(isPresented: $showAssessment) { StateAssessmentView(mode: .weekly) }
-        }
-    }
-}
-
-struct ProfileView: View {
-    var body: some View {
-        NavigationStack { List { Section("我的") { Text("本地数据与隐私"); Text("现实奖励目标将在下一阶段加入") }; Section("产品") { Text("LIVELVL · 现实人生 RPG").foregroundStyle(.secondary) } }.navigationTitle("我的") }
     }
 }
