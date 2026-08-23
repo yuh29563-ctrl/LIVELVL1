@@ -4,12 +4,35 @@ import SwiftData
 struct ContentView: View {
     @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
     private var snapshots: [StateSnapshot]
+#if DEBUG
+    @State private var resetFailure: LocalDataResetFailure?
+#endif
 
     var body: some View {
+#if DEBUG
+        rootContent
+            .alert(item: $resetFailure) { failure in
+                Alert(
+                    title: Text(failure.title),
+                    message: Text(failure.message),
+                    dismissButton: .default(Text("好的"))
+                )
+            }
+#else
+        rootContent
+#endif
+    }
+
+    @ViewBuilder
+    private var rootContent: some View {
         if snapshots.isEmpty {
             StateAssessmentView(mode: .initial)
         } else {
+#if DEBUG
+            MainTabView(reportLocalDataResetFailure: { resetFailure = $0 })
+#else
             MainTabView()
+#endif
         }
     }
 }

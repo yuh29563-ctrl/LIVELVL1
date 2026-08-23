@@ -191,6 +191,15 @@ struct MainTabView: View {
     @State private var attention = CollectionAttentionState()
     @State private var presentation = CardRewardPresentationState()
     @State private var collectionTabFrameInWindow: CGRect?
+#if DEBUG
+    let reportLocalDataResetFailure: (LocalDataResetFailure) -> Void
+
+    init(
+        reportLocalDataResetFailure: @escaping (LocalDataResetFailure) -> Void = { _ in }
+    ) {
+        self.reportLocalDataResetFailure = reportLocalDataResetFailure
+    }
+#endif
 
     private var orderedPendingRewards: [PendingCardReward] {
         CardRewardService.ordered(pendingRewards)
@@ -238,7 +247,13 @@ struct MainTabView: View {
                     .tag(AppTab.rewards)
                     .tabItem { Label("奖励", systemImage: "gift.fill") }
 
-                ProfileView()
+                Group {
+#if DEBUG
+                    ProfileView(reportResetFailure: reportLocalDataResetFailure)
+#else
+                    ProfileView()
+#endif
+                }
                     .tag(AppTab.profile)
                     .tabItem { Label("我的", systemImage: "person.crop.circle") }
             }

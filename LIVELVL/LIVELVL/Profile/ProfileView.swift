@@ -7,6 +7,11 @@ struct ProfileView: View {
 #if DEBUG
     @Environment(\.modelContext) private var modelContext
     @State private var resetPresentation: ResetPresentation?
+    let reportResetFailure: (LocalDataResetFailure) -> Void
+
+    init(reportResetFailure: @escaping (LocalDataResetFailure) -> Void = { _ in }) {
+        self.reportResetFailure = reportResetFailure
+    }
 #endif
 
     var body: some View {
@@ -49,13 +54,11 @@ private extension ProfileView {
     enum ResetPresentation: Identifiable {
         case impact
         case final
-        case error(String)
 
         var id: String {
             switch self {
             case .impact: "impact"
             case .final: "final"
-            case .error: "error"
             }
         }
     }
@@ -84,12 +87,6 @@ private extension ProfileView {
                 primaryButton: .destructive(Text("确认重置"), action: resetAllLocalData),
                 secondaryButton: .cancel(Text("取消"))
             )
-        case let .error(message):
-            Alert(
-                title: Text("重置未完成"),
-                message: Text(message),
-                dismissButton: .default(Text("好的"))
-            )
         }
     }
 
@@ -103,14 +100,16 @@ private extension ProfileView {
                 appropriateFor: nil,
                 create: false
             )
-            try LocalDataResetService.reset(
+            LocalDataResetAction.perform(
                 context: modelContext,
                 fileManager: fileManager,
-                applicationSupportURL: applicationSupportURL
+                applicationSupportURL: applicationSupportURL,
+                reportFailure: reportResetFailure
             )
             resetPresentation = nil
         } catch {
-            resetPresentation = .error(error.localizedDescription)
+            resetPresentation = nil
+            reportResetFailure(LocalDataResetFailure(error: error))
         }
     }
 }
