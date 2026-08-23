@@ -1,11 +1,18 @@
 import SwiftUI
 import SwiftData
+#if DEBUG
+import Combine
+#endif
 
 struct ContentView: View {
     @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
     private var snapshots: [StateSnapshot]
 #if DEBUG
-    @State private var debugPresentation = DebugPresentationState()
+    @StateObject private var debugPresentation: DebugPresentationState
+
+    init(debugPresentation: DebugPresentationState = DebugPresentationState()) {
+        _debugPresentation = StateObject(wrappedValue: debugPresentation)
+    }
 #endif
 
     var body: some View {
@@ -29,6 +36,7 @@ struct ContentView: View {
         switch debugPresentation.root(hasSnapshots: !snapshots.isEmpty) {
         case .initialAssessment:
             StateAssessmentView(mode: .initial)
+                .accessibilityIdentifier("content-root-initial-assessment")
         case .mainTabs:
             MainTabView(
                 reportLocalDataResetFailure: { debugPresentation.report($0) }
@@ -46,19 +54,19 @@ struct ContentView: View {
 
 #if DEBUG
 extension ContentView {
-    struct DebugPresentationState {
+    final class DebugPresentationState: ObservableObject {
         enum Root: Equatable {
             case initialAssessment
             case mainTabs
         }
 
-        var resetFailure: LocalDataResetFailure?
+        @Published var resetFailure: LocalDataResetFailure?
 
         func root(hasSnapshots: Bool) -> Root {
             hasSnapshots ? .mainTabs : .initialAssessment
         }
 
-        mutating func report(_ failure: LocalDataResetFailure) {
+        func report(_ failure: LocalDataResetFailure) {
             resetFailure = failure
         }
     }

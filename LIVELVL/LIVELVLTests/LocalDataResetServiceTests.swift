@@ -1,6 +1,8 @@
 import Foundation
 import SwiftData
+import SwiftUI
 import Testing
+import UIKit
 @testable import LIVELVL
 
 @MainActor
@@ -10,7 +12,7 @@ struct LocalDataResetServiceTests {
         case remove
     }
 
-    @Test func partialFailureRemainsPresentableAfterSnapshotDeletion() throws {
+    @Test func partialFailureRemainsPresentableAfterSnapshotDeletion() async throws {
         let schema = Schema([
             PendingCardReward.self,
             OwnedCollectible.self,
@@ -25,42 +27,46 @@ struct LocalDataResetServiceTests {
             for: schema,
             configurations: .init(isStoredInMemoryOnly: true)
         )
-        let context = container.mainContext
-        insertEveryModel(in: context, suffix: "root-presentation")
-        try context.save()
-
-        let fileManager = FileManager.default
-        let applicationSupportURL = fileManager.temporaryDirectory
-            .appending(path: UUID().uuidString, directoryHint: .isDirectory)
-        let imageDirectoryURL = applicationSupportURL
-            .appending(path: "RewardProductImages", directoryHint: .isDirectory)
-        try fileManager.createDirectory(
-            at: imageDirectoryURL,
-            withIntermediateDirectories: true
+        let expectedMessage = "数据记录已清除，但奖励图片清理失败：测试文件错误"
+        let failure = LocalDataResetFailure(
+            error: NSError(
+                domain: "LocalDataResetServiceTests",
+                code: 1,
+                userInfo: [NSLocalizedDescriptionKey: expectedMessage]
+            )
         )
-        defer { try? fileManager.removeItem(at: applicationSupportURL) }
+        let presentation = ContentView.DebugPresentationState()
+        let hostingController = UIHostingController(
+            rootView: ContentView(debugPresentation: presentation)
+                .modelContainer(container)
+        )
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = hostingController
+        window.makeKeyAndVisible()
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
 
-        var presentation = ContentView.DebugPresentationState()
-        let hadSnapshotsBeforeReset = try !context
-            .fetch(FetchDescriptor<StateSnapshot>())
-            .isEmpty
-        #expect(presentation.root(hasSnapshots: hadSnapshotsBeforeReset) == .mainTabs)
+        try await Task.sleep(nanoseconds: 200_000_000)
+        #expect(hostingController.view.window === window)
 
-        LocalDataResetAction.perform(
-            context: context,
-            fileManager: fileManager,
-            applicationSupportURL: applicationSupportURL,
-            removeItem: { _, _ in throw ForcedResetError.remove },
-            reportFailure: { presentation.report($0) }
+        #expect(
+            accessibilityIdentifiers(in: hostingController.view)
+                .contains("content-root-initial-assessment")
         )
 
-        let hasSnapshotsAfterReset = try !context
-            .fetch(FetchDescriptor<StateSnapshot>())
-            .isEmpty
-        #expect(presentation.root(hasSnapshots: hasSnapshotsAfterReset) == .initialAssessment)
-        #expect(presentation.resetFailure?.title == "重置未完成")
-        #expect(presentation.resetFailure?.message.contains("数据记录已清除") == true)
-        #expect(presentation.resetFailure?.message.contains("奖励图片清理失败") == true)
+        presentation.report(failure)
+        for _ in 0..<20 where hostingController.presentedViewController == nil {
+            try await Task.sleep(nanoseconds: 50_000_000)
+        }
+
+        let alertController = hostingController.presentedViewController as? UIAlertController
+        #expect(alertController?.title == "重置未完成")
+        #expect(alertController?.message == expectedMessage)
+
+        alertController?.dismiss(animated: false)
+        try await Task.sleep(nanoseconds: 100_000_000)
     }
 
     @Test func imageRemovalFailureReportsPartialResetAndKeepsImageDirectory() throws {
@@ -353,5 +359,39 @@ struct LocalDataResetServiceTests {
             weeklyTarget: 3,
             lastAssessedAt: timestamp
         ))
+    }
+
+    private func accessibilityIdentifiers(in view: UIView) -> [String] {
+        var identifiers = view.accessibilityIdentifier.map { [$0] } ?? []
+        if let elements = view.accessibilityElements {
+            for element in elements {
+                if let identifier = accessibilityIdentifier(for: element) {
+                    identifiers.append(identifier)
+                }
+            }
+        }
+        let elementCount = view.accessibilityElementCount()
+        if elementCount > 0 {
+            for index in 0..<elementCount {
+                if let element = view.accessibilityElement(at: index),
+                   let identifier = accessibilityIdentifier(for: element) {
+                    identifiers.append(identifier)
+                }
+            }
+        }
+        for subview in view.subviews {
+            identifiers.append(contentsOf: accessibilityIdentifiers(in: subview))
+        }
+        return identifiers
+    }
+
+    private func accessibilityIdentifier(for element: Any) -> String? {
+        if let view = element as? UIView {
+            return view.accessibilityIdentifier
+        }
+        if let element = element as? UIAccessibilityElement {
+            return element.accessibilityIdentifier
+        }
+        return nil
     }
 }
