@@ -120,6 +120,54 @@ struct CardRewardServiceTests {
         #expect(fetchedProgress.first?.lastProcessedMaturityLevel == 1)
     }
 
+    @Test func claimingAfterReachingLevelTwoRestoresTheDeferredStage() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let progress = Progress(totalXP: 200)
+        context.insert(progress)
+        try context.save()
+
+        _ = try CardRewardService.ensureProgress(in: context)
+        let levelOneTime = Date(timeIntervalSince1970: 3_100)
+        try CardRewardService.processCompletion(
+            progress: progress,
+            previousLevel: 0,
+            completions: [],
+            in: context,
+            now: levelOneTime,
+            calendar: Calendar(identifier: .gregorian)
+        )
+        progress.totalXP = 2_200
+        try context.save()
+        try CardRewardService.processCompletion(
+            progress: progress,
+            previousLevel: 1,
+            completions: [],
+            in: context,
+            now: levelOneTime.addingTimeInterval(10),
+            calendar: Calendar(identifier: .gregorian)
+        )
+
+        let pending = try #require(
+            context.fetch(FetchDescriptor<PendingCardReward>())
+                .first(where: { $0.awardKey == "ordinary.level.1" })
+        )
+        let collectionProgress = try #require(
+            context.fetch(FetchDescriptor<CollectionProgress>()).first
+        )
+        try CardRewardService.claim(
+            pending,
+            progress: collectionProgress,
+            in: context,
+            now: levelOneTime.addingTimeInterval(20)
+        )
+
+        let fetchedProgress = try context.fetch(FetchDescriptor<CollectionProgress>())
+        #expect(fetchedProgress.first?.highestLevel == 2)
+        #expect(fetchedProgress.first?.activeOrdinaryIndex == 1)
+        #expect(fetchedProgress.first?.activeStage == .stageTwo)
+    }
+
     @Test func loweringXPCannotRegressHighestLevelOrDuplicateOriginalReward() throws {
         let container = try makeContainer()
         let context = container.mainContext
@@ -154,6 +202,52 @@ struct CardRewardServiceTests {
         #expect(fetchedProgress.first?.highestLevel == 1)
         #expect(pending.map(\.awardKey) == ["ordinary.level.1"])
         #expect(owned.isEmpty)
+    }
+
+    @Test func rewardProcessingFailureSuppressesSuccessUntilRetrySucceeds() {
+        var flow = CompletionRewardFlowState()
+
+        flow.rewardProcessingFailed()
+
+        #expect(flow.requiresRetry)
+        #expect(!flow.allowsSuccessFeedback)
+
+        flow.rewardProcessingSucceeded()
+
+        #expect(!flow.requiresRetry)
+        #expect(flow.allowsSuccessFeedback)
+    }
+
+    @Test func reconciliationProcessesAlreadyPersistedCompletionAndXP() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let progress = Progress(totalXP: 200)
+        let completion = Completion(
+            itemID: UUID(),
+            xp: 200,
+            dimension: .learning,
+            durationMinutes: 30,
+            taskTitle: "学习"
+        )
+        context.insert(progress)
+        context.insert(completion)
+        try context.save()
+        _ = try CardRewardService.ensureProgress(in: context)
+
+        let persistedCompletions = try context.fetch(FetchDescriptor<Completion>())
+        try CardRewardService.reconcile(
+            progress: progress,
+            completions: persistedCompletions,
+            in: context,
+            now: Date(timeIntervalSince1970: 4_100),
+            calendar: Calendar(identifier: .gregorian)
+        )
+
+        let fetchedProgress = try context.fetch(FetchDescriptor<LIVELVL.Progress>())
+        let pending = try context.fetch(FetchDescriptor<PendingCardReward>())
+        #expect(fetchedProgress.first?.totalXP == 200)
+        #expect(persistedCompletions.count == 1)
+        #expect(pending.map(\.awardKey) == ["ordinary.level.1"])
     }
 
     @Test func markingAllSeenClearsEveryUnseenFlag() throws {

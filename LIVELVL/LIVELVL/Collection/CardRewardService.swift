@@ -1,6 +1,21 @@
 import Foundation
 import SwiftData
 
+struct CompletionRewardFlowState: Equatable, Sendable {
+    private(set) var requiresRetry = false
+    private(set) var allowsSuccessFeedback = false
+
+    mutating func rewardProcessingFailed() {
+        requiresRetry = true
+        allowsSuccessFeedback = false
+    }
+
+    mutating func rewardProcessingSucceeded() {
+        requiresRetry = false
+        allowsSuccessFeedback = true
+    }
+}
+
 @MainActor
 enum CardRewardService {
     static func ensureProgress(in context: ModelContext) throws -> CollectionProgress {
@@ -104,6 +119,24 @@ enum CardRewardService {
         }
     }
 
+    static func reconcile(
+        progress: Progress,
+        completions: [Completion],
+        in context: ModelContext,
+        now: Date,
+        calendar: Calendar
+    ) throws {
+        let previousLevel = try progressWithoutSaving(in: context).highestLevel
+        try processCompletion(
+            progress: progress,
+            previousLevel: previousLevel,
+            completions: completions,
+            in: context,
+            now: now,
+            calendar: calendar
+        )
+    }
+
     static func ordered(_ rewards: [PendingCardReward]) -> [PendingCardReward] {
         rewards.sorted { lhs, rhs in
             let lhsPriority = lhs.kind == .ordinaryMature ? 0 : 1
@@ -150,6 +183,12 @@ enum CardRewardService {
                 if CollectionCatalog.ordinary(at: nextIndex) != nil {
                     progress.activeOrdinaryIndex = nextIndex
                     progress.activeStage = .juvenile
+                    reconcileStage(
+                        for: nextIndex,
+                        after: maturityLevel,
+                        through: progress.highestLevel,
+                        progress: progress
+                    )
                 } else {
                     progress.activeOrdinaryIndex = min(
                         maturedIndex,
@@ -187,5 +226,29 @@ enum CardRewardService {
         let progress = CollectionProgress()
         context.insert(progress)
         return progress
+    }
+
+    private static func reconcileStage(
+        for ordinaryIndex: Int,
+        after maturityLevel: Int,
+        through highestLevel: Int,
+        progress: CollectionProgress
+    ) {
+        guard highestLevel > maturityLevel else { return }
+
+        for level in (maturityLevel + 1)...highestLevel {
+            switch CompanionProgressionEngine.event(forReachedLevel: level) {
+            case let .active(index, stage) where index == ordinaryIndex:
+                progress.activeStage = stage
+            case let .matured(index, _, _) where index == ordinaryIndex:
+                progress.activeStage = .mature
+                return
+            case let .active(index, _) where index > ordinaryIndex,
+                 let .matured(index, _, _) where index > ordinaryIndex:
+                return
+            default:
+                continue
+            }
+        }
     }
 }

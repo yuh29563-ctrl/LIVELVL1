@@ -42,6 +42,7 @@ struct TodayView: View {
     @State private var pendingItemID: UUID?
     @State private var radarPulse: RadarPulse?
     @State private var rewardFeedback: TaskRewardFeedback?
+    @State private var rewardFlow = CompletionRewardFlowState()
 
     private var progress: Progress { progressItems.first ?? Progress() }
 
@@ -120,6 +121,14 @@ struct TodayView: View {
                 Text("完成后将获得对应 XP。误触时再次点击勾选按钮可以取消，并退回 XP。")
             }
             .alert("任务状态已更新", isPresented: $showMessage) { Button("好的") {} } message: { Text(message) }
+            .alert("奖励处理未完成", isPresented: Binding(
+                get: { rewardFlow.requiresRetry },
+                set: { _ in }
+            )) {
+                Button("重试") { retryRewardProcessing() }
+            } message: {
+                Text("任务和 XP 已保存，但收藏奖励尚未处理。请重试补发奖励。")
+            }
             .onAppear(perform: ensureProgress)
             .task(id: rewardFeedback?.id) {
                 guard rewardFeedback != nil else { return }
@@ -167,6 +176,15 @@ struct TodayView: View {
         progress.totalXP += item.xp
         do {
             try context.save()
+        } catch {
+            context.rollback()
+            pendingItemID = nil
+            message = "任务保存失败，请重试"
+            showMessage = true
+            return
+        }
+
+        do {
             let persistedCompletions = try context.fetch(FetchDescriptor<Completion>())
             try CardRewardService.processCompletion(
                 progress: progress,
@@ -176,9 +194,16 @@ struct TodayView: View {
                 now: .now,
                 calendar: .current
             )
+            rewardFlow.rewardProcessingSucceeded()
         } catch {
-            context.rollback()
+            rewardFlow.rewardProcessingFailed()
+            pendingItemID = nil
+            radarPulse = nil
+            rewardFeedback = nil
+            return
         }
+
+        guard rewardFlow.allowsSuccessFeedback else { return }
         pendingItemID = nil
         radarPulse = RadarPulse(dimension: item.dimension)
         rewardFeedback = TaskRewardFeedback(
@@ -186,6 +211,24 @@ struct TodayView: View {
             xp: item.xp,
             dimension: item.dimension
         )
+    }
+
+    private func retryRewardProcessing() {
+        do {
+            let persistedCompletions = try context.fetch(FetchDescriptor<Completion>())
+            try CardRewardService.reconcile(
+                progress: progress,
+                completions: persistedCompletions,
+                in: context,
+                now: .now,
+                calendar: .current
+            )
+            rewardFlow.rewardProcessingSucceeded()
+            message = "收藏奖励已补发"
+            showMessage = true
+        } catch {
+            rewardFlow.rewardProcessingFailed()
+        }
     }
 
     private func ensureProgress() {
