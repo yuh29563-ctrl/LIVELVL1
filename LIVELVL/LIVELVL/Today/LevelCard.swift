@@ -69,7 +69,7 @@ struct LevelCard: View {
         .task(id: levelUpFeedback) {
             levelPulseScale = 1
             guard levelUpFeedback != nil, !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 0.18).repeatCount(2, autoreverses: true)) {
+            withAnimation(.easeInOut(duration: 0.20).repeatCount(2, autoreverses: true)) {
                 levelPulseScale = 1.045
             }
         }

@@ -71,18 +71,14 @@ struct TodayView: View {
                     )
 
                     VStack(spacing: 8) {
-                        if let levelUpFeedback {
-                            Text("升级至 Lv.\(levelUpFeedback)")
-                                .font(.subheadline.bold().monospacedDigit())
-                                .foregroundStyle(TodayVisualTheme.reward)
-                                .fixedSize(horizontal: false, vertical: true)
-                                .transition(
-                                    reduceMotion
-                                        ? .opacity
-                                        : .opacity.combined(with: .scale(scale: 0.96))
-                                )
-                                .accessibilityLabel("升级至等级 \(levelUpFeedback)")
-                        }
+                        Text("升级至 Lv.\(levelUpFeedback ?? progress.level)")
+                            .font(.subheadline.bold().monospacedDigit())
+                            .foregroundStyle(TodayVisualTheme.reward)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .opacity(levelUpFeedback == nil ? 0 : 1)
+                            .scaleEffect(reduceMotion || levelUpFeedback != nil ? 1 : 0.96)
+                            .accessibilityHidden(levelUpFeedback == nil)
+                            .accessibilityLabel("升级至等级 \(levelUpFeedback ?? progress.level)")
 
                         LevelCard(
                             level: progress.level,
@@ -94,7 +90,6 @@ struct TodayView: View {
                             levelUpFeedback: levelUpFeedback
                         )
                     }
-                    .animation(.easeInOut(duration: 0.2), value: levelUpFeedback)
 
                     if let currentSummary {
                         LifeStateCard(
