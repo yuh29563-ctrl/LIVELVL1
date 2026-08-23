@@ -155,15 +155,30 @@ struct TodayView: View {
 
     private func confirmCompletion() {
         guard let id = pendingItemID, let item = items.first(where: { $0.id == id }) else { return }
-        context.insert(Completion(
+        let previousLevel = progress.level
+        let completion = Completion(
             itemID: item.id,
             xp: item.xp,
             dimension: item.dimension,
             durationMinutes: item.minutes,
             taskTitle: item.title
-        ))
+        )
+        context.insert(completion)
         progress.totalXP += item.xp
-        try? context.save()
+        do {
+            try context.save()
+            let persistedCompletions = try context.fetch(FetchDescriptor<Completion>())
+            try CardRewardService.processCompletion(
+                progress: progress,
+                previousLevel: previousLevel,
+                completions: persistedCompletions,
+                in: context,
+                now: .now,
+                calendar: .current
+            )
+        } catch {
+            context.rollback()
+        }
         pendingItemID = nil
         radarPulse = RadarPulse(dimension: item.dimension)
         rewardFeedback = TaskRewardFeedback(
@@ -174,9 +189,11 @@ struct TodayView: View {
     }
 
     private func ensureProgress() {
-        guard progressItems.isEmpty else { return }
-        context.insert(Progress())
-        try? context.save()
+        if progressItems.isEmpty {
+            context.insert(Progress())
+            try? context.save()
+        }
+        _ = try? CardRewardService.ensureProgress(in: context)
     }
 }
 
