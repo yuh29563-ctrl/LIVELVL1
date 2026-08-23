@@ -1,11 +1,29 @@
 import SwiftUI
 
+enum CardRewardFlightGeometry {
+    static func offset(from cardFrame: CGRect, to targetFrame: CGRect) -> CGSize {
+        CGSize(
+            width: targetFrame.midX - cardFrame.midX,
+            height: targetFrame.midY - cardFrame.midY
+        )
+    }
+}
+
+private struct CardRewardFramePreferenceKey: PreferenceKey {
+    static var defaultValue = CGRect.zero
+
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        value = nextValue()
+    }
+}
+
 @MainActor
 struct CardRewardOverlay: View {
     let kind: CardRewardKind
     let definition: CollectibleDefinition
     let reason: String
-    let onClaim: () throws -> Void
+    let collectionTargetFrame: CGRect?
+    let onClaim: () throws -> Bool
     let onClaimed: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -16,6 +34,7 @@ struct CardRewardOverlay: View {
     @State private var cardOffset = CGSize.zero
     @State private var cardOpacity = 1.0
     @State private var backdropOpacity = 1.0
+    @State private var cardFrame = CGRect.zero
 
     private var title: String {
         kind == .ordinaryMature ? "陪伴成熟" : "隐藏发现"
@@ -30,6 +49,14 @@ struct CardRewardOverlay: View {
 
                 ScrollView {
                     rewardCard
+                        .background {
+                            GeometryReader { cardGeometry in
+                                Color.clear.preference(
+                                    key: CardRewardFramePreferenceKey.self,
+                                    value: cardGeometry.frame(in: .global)
+                                )
+                            }
+                        }
                         .frame(maxWidth: 360)
                         .padding(.horizontal, 28)
                         .padding(.vertical, 36)
@@ -42,6 +69,9 @@ struct CardRewardOverlay: View {
                 .scaleEffect(cardScale)
                 .offset(cardOffset)
                 .opacity(cardOpacity)
+                .onPreferenceChange(CardRewardFramePreferenceKey.self) {
+                    cardFrame = $0
+                }
             }
             .contentShape(Rectangle())
             .onTapGesture { }
@@ -130,7 +160,11 @@ struct CardRewardOverlay: View {
         errorMessage = nil
 
         do {
-            try onClaim()
+            guard try onClaim() else {
+                errorMessage = "领取失败，请重试"
+                isClaiming = false
+                return
+            }
         } catch {
             errorMessage = "领取失败，请重试"
             isClaiming = false
@@ -145,12 +179,12 @@ struct CardRewardOverlay: View {
                 }
                 try? await Task.sleep(for: .milliseconds(200))
             } else {
+                let flightOffset = collectionTargetFrame.map {
+                    CardRewardFlightGeometry.offset(from: cardFrame, to: $0)
+                } ?? .zero
                 withAnimation(.easeInOut(duration: 0.45)) {
                     cardScale = 0.15
-                    cardOffset = CGSize(
-                        width: -UIScreen.main.bounds.width * 0.125,
-                        height: UIScreen.main.bounds.height * 0.45
-                    )
+                    cardOffset = flightOffset
                     cardOpacity = 0.08
                     backdropOpacity = 0
                 }

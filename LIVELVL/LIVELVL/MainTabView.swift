@@ -27,12 +27,158 @@ private struct RewardQueueHeadIdentity: Hashable {
     let eligibleAt: Date
 }
 
-private struct PresentedCardReward {
-    let model: PendingCardReward
+struct PresentedCardReward: Equatable, Sendable {
     let awardKey: String
     let kind: CardRewardKind
     let reason: String
     let definition: CollectibleDefinition
+}
+
+struct CardRewardPresentationState: Equatable, Sendable {
+    private(set) var presentedReward: PresentedCardReward?
+    private var locallyClaimingAwardKey: String?
+
+    mutating func present(_ reward: PresentedCardReward) {
+        presentedReward = reward
+        locallyClaimingAwardKey = nil
+    }
+
+    mutating func reconcile(liveAwardKeys: Set<String>) {
+        guard let presentedReward,
+              !liveAwardKeys.contains(presentedReward.awardKey),
+              locallyClaimingAwardKey != presentedReward.awardKey else {
+            return
+        }
+        self.presentedReward = nil
+    }
+
+    mutating func beginSuccessfulClaim(awardKey: String) -> Bool {
+        guard presentedReward?.awardKey == awardKey,
+              locallyClaimingAwardKey == nil else {
+            return false
+        }
+        locallyClaimingAwardKey = awardKey
+        return true
+    }
+
+    mutating func finishSuccessfulClaim(awardKey: String) {
+        guard locallyClaimingAwardKey == awardKey else { return }
+        locallyClaimingAwardKey = nil
+        presentedReward = nil
+    }
+}
+
+@MainActor
+enum CardRewardClaimCoordinator {
+    static func claim(
+        awardKey: String,
+        in context: ModelContext,
+        now: Date
+    ) throws -> Bool {
+        let liveReward = try context.fetch(FetchDescriptor<PendingCardReward>())
+            .first { $0.awardKey == awardKey }
+        guard let liveReward, liveReward.eligibleAt <= now else { return false }
+
+        let progress = try CardRewardService.ensureProgress(in: context)
+        try CardRewardService.claim(
+            liveReward,
+            progress: progress,
+            in: context,
+            now: now
+        )
+
+        let pendingStillExists = try context.fetch(FetchDescriptor<PendingCardReward>())
+            .contains { $0.awardKey == awardKey }
+        let ownedExists = try context.fetch(FetchDescriptor<OwnedCollectible>())
+            .contains { $0.awardKey == awardKey }
+        return !pendingStillExists && ownedExists
+    }
+}
+
+struct CollectionTabFeedbackRequest: Equatable, Sendable {
+    fileprivate let generation: Int
+    let attentionToken: Int
+    let hasUnseenReward: Bool
+    let reduceMotion: Bool
+}
+
+struct CollectionTabFeedbackGenerationState: Equatable, Sendable {
+    private var generation = 0
+    private var desiredState: CollectionTabFeedbackRequest?
+    private var lastAnimatedToken = 0
+
+    mutating func replaceDesiredState(
+        attentionToken: Int,
+        hasUnseenReward: Bool,
+        reduceMotion: Bool
+    ) -> CollectionTabFeedbackRequest {
+        generation &+= 1
+        let request = CollectionTabFeedbackRequest(
+            generation: generation,
+            attentionToken: attentionToken,
+            hasUnseenReward: hasUnseenReward,
+            reduceMotion: reduceMotion
+        )
+        desiredState = request
+        return request
+    }
+
+    func isCurrent(_ request: CollectionTabFeedbackRequest) -> Bool {
+        desiredState == request && request.generation == generation
+    }
+
+    mutating func takeAnimationToken(
+        for request: CollectionTabFeedbackRequest
+    ) -> Int? {
+        guard isCurrent(request), request.attentionToken > lastAnimatedToken else {
+            return nil
+        }
+        lastAnimatedToken = request.attentionToken
+        return request.attentionToken
+    }
+
+    mutating func cancel() {
+        generation &+= 1
+        desiredState = nil
+    }
+}
+
+enum CollectionTabIdentity {
+    static let accessibilityIdentifier = "main-tab.collection"
+    static let systemImageName = "square.grid.2x2.fill"
+}
+
+@MainActor
+enum CollectionTabTargetResolver {
+    static func item(in tabBar: UITabBar) -> UITabBarItem? {
+        tabBar.items?.first {
+            $0.accessibilityIdentifier == CollectionTabIdentity.accessibilityIdentifier
+                || $0.image?.accessibilityIdentifier == CollectionTabIdentity.systemImageName
+                || $0.selectedImage?.accessibilityIdentifier == CollectionTabIdentity.systemImageName
+        }
+    }
+
+    static func itemView(in tabBar: UITabBar) -> UIView? {
+        guard let stableMarkerView = descendantViews(of: tabBar).first(where: {
+            $0.accessibilityIdentifier == CollectionTabIdentity.accessibilityIdentifier
+                || $0.accessibilityIdentifier == CollectionTabIdentity.systemImageName
+        }) else {
+            return nil
+        }
+
+        var ancestor: UIView? = stableMarkerView
+        while let current = ancestor, current !== tabBar {
+            if current is UIControl {
+                return current
+            }
+            ancestor = current.superview
+        }
+        return stableMarkerView
+    }
+
+    private static func descendantViews(of root: UIView) -> [UIView] {
+        root.subviews.flatMap { [$0] + descendantViews(of: $0) }
+    }
 }
 
 @MainActor
@@ -43,7 +189,8 @@ struct MainTabView: View {
     @Query private var ownedCollectibles: [OwnedCollectible]
     @State private var selectedTab: AppTab = .today
     @State private var attention = CollectionAttentionState()
-    @State private var presentedReward: PresentedCardReward?
+    @State private var presentation = CardRewardPresentationState()
+    @State private var collectionTabFrameInWindow: CGRect?
 
     private var orderedPendingRewards: [PendingCardReward] {
         CardRewardService.ordered(pendingRewards)
@@ -65,6 +212,10 @@ struct MainTabView: View {
         attention.hasUnseenReward || ownedCollectibles.contains(where: \.isUnseen)
     }
 
+    private var livePendingAwardKeys: Set<String> {
+        Set(pendingRewards.map(\.awardKey))
+    }
+
     var body: some View {
         ZStack {
             TabView(selection: selectedTabBinding) {
@@ -78,6 +229,7 @@ struct MainTabView: View {
                         CollectionTabLabel(
                             hasUnseenReward: hasUnseenReward
                         )
+                        .accessibilityIdentifier(CollectionTabIdentity.accessibilityIdentifier)
                     }
 
                 RewardPlaceholderView()
@@ -89,33 +241,39 @@ struct MainTabView: View {
                     .tabItem { Label("我的", systemImage: "person.crop.circle") }
             }
             .tint(TodayVisualTheme.ink)
-            .accessibilityHidden(presentedReward != nil)
+            .accessibilityHidden(presentation.presentedReward != nil)
             .background {
                 CollectionTabFeedbackBridge(
                     attentionToken: attention.shakeToken,
                     hasUnseenReward: hasUnseenReward,
-                    reduceMotion: reduceMotion
+                    reduceMotion: reduceMotion,
+                    targetFrameInWindow: $collectionTabFrameInWindow
                 )
                 .frame(width: 0, height: 0)
             }
 
-            if let presentedReward {
+            if let presentedReward = presentation.presentedReward {
                 CardRewardOverlay(
                     kind: presentedReward.kind,
                     definition: presentedReward.definition,
                     reason: presentedReward.reason,
+                    collectionTargetFrame: collectionTabFrameInWindow,
                     onClaim: {
-                        let progress = try CardRewardService.ensureProgress(in: context)
-                        try CardRewardService.claim(
-                            presentedReward.model,
-                            progress: progress,
+                        let didClaim = try CardRewardClaimCoordinator.claim(
+                            awardKey: presentedReward.awardKey,
                             in: context,
                             now: .now
+                        )
+                        guard didClaim else { return false }
+                        return presentation.beginSuccessfulClaim(
+                            awardKey: presentedReward.awardKey
                         )
                     },
                     onClaimed: {
                         attention.registerClaim()
-                        self.presentedReward = nil
+                        presentation.finishSuccessfulClaim(
+                            awardKey: presentedReward.awardKey
+                        )
                     }
                 )
                 .id(presentedReward.awardKey)
@@ -124,6 +282,9 @@ struct MainTabView: View {
         }
         .task(id: queueHeadIdentity) {
             await presentQueueHead(queueHeadIdentity)
+        }
+        .onChange(of: livePendingAwardKeys, initial: true) { _, liveAwardKeys in
+            presentation.reconcile(liveAwardKeys: liveAwardKeys)
         }
     }
 
@@ -157,8 +318,8 @@ struct MainTabView: View {
         }
         guard !Task.isCancelled else { return }
 
-        let waitsBehindCurrentReward = presentedReward != nil
-        while presentedReward != nil {
+        let waitsBehindCurrentReward = presentation.presentedReward != nil
+        while presentation.presentedReward != nil {
             do {
                 try await Task.sleep(for: .milliseconds(25))
             } catch is CancellationError {
@@ -188,13 +349,12 @@ struct MainTabView: View {
             return
         }
 
-        presentedReward = PresentedCardReward(
-            model: currentReward,
+        presentation.present(PresentedCardReward(
             awardKey: currentReward.awardKey,
             kind: currentReward.kind,
             reason: currentReward.reason,
             definition: definition
-        )
+        ))
     }
 
     private func markCollectionSeen() {
@@ -212,7 +372,7 @@ struct CollectionTabLabel: View {
     let hasUnseenReward: Bool
 
     var body: some View {
-        Label("收集", systemImage: "square.grid.2x2.fill")
+        Label("收集", systemImage: CollectionTabIdentity.systemImageName)
             .accessibilityLabel(hasUnseenReward ? "收集，有未查看奖励" : "收集")
     }
 }
@@ -221,6 +381,7 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
     let attentionToken: Int
     let hasUnseenReward: Bool
     let reduceMotion: Bool
+    @Binding var targetFrameInWindow: CGRect?
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -237,43 +398,118 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
             from: uiView,
             attentionToken: attentionToken,
             hasUnseenReward: hasUnseenReward,
-            reduceMotion: reduceMotion
+            reduceMotion: reduceMotion,
+            targetFrameDidChange: { measuredFrame in
+                guard targetFrameInWindow != measuredFrame else { return }
+                targetFrameInWindow = measuredFrame
+            }
         )
     }
 
+    static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
+        coordinator.cancel()
+    }
+
+    @MainActor
     final class Coordinator {
-        private var lastAnimatedToken = 0
+        private var generationState = CollectionTabFeedbackGenerationState()
+        private var pendingWorkItem: DispatchWorkItem?
+        private var targetFrameDidChange: ((CGRect?) -> Void)?
 
         func scheduleUpdate(
             from sourceView: UIView,
             attentionToken: Int,
             hasUnseenReward: Bool,
             reduceMotion: Bool,
-            remainingAttempts: Int = 4
+            targetFrameDidChange: @escaping (CGRect?) -> Void
         ) {
-            DispatchQueue.main.async { [weak self, weak sourceView] in
-                guard let self, let sourceView else { return }
-                guard let tabBar = self.findTabBar(from: sourceView) else {
-                    guard remainingAttempts > 0 else { return }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                        self.scheduleUpdate(
-                            from: sourceView,
-                            attentionToken: attentionToken,
-                            hasUnseenReward: hasUnseenReward,
-                            reduceMotion: reduceMotion,
-                            remainingAttempts: remainingAttempts - 1
-                        )
-                    }
-                    return
-                }
+            let request = generationState.replaceDesiredState(
+                attentionToken: attentionToken,
+                hasUnseenReward: hasUnseenReward,
+                reduceMotion: reduceMotion
+            )
+            self.targetFrameDidChange = targetFrameDidChange
+            enqueue(request, from: sourceView, remainingAttempts: 4, delay: 0)
+        }
 
-                self.updateBadge(in: tabBar, isVisible: hasUnseenReward)
-                guard attentionToken > 0, attentionToken != self.lastAnimatedToken else {
+        func cancel() {
+            pendingWorkItem?.cancel()
+            pendingWorkItem = nil
+            targetFrameDidChange = nil
+            generationState.cancel()
+        }
+
+        private func enqueue(
+            _ request: CollectionTabFeedbackRequest,
+            from sourceView: UIView,
+            remainingAttempts: Int,
+            delay: TimeInterval
+        ) {
+            pendingWorkItem?.cancel()
+            let workItem = DispatchWorkItem { [weak self, weak sourceView] in
+                guard let self, let sourceView,
+                      self.generationState.isCurrent(request) else {
                     return
                 }
-                self.lastAnimatedToken = attentionToken
-                self.animateCollectionItem(in: tabBar, reduceMotion: reduceMotion)
+                self.apply(
+                    request,
+                    from: sourceView,
+                    remainingAttempts: remainingAttempts
+                )
             }
+            pendingWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+        }
+
+        private func apply(
+            _ request: CollectionTabFeedbackRequest,
+            from sourceView: UIView,
+            remainingAttempts: Int
+        ) {
+            guard generationState.isCurrent(request),
+                  let tabBar = findTabBar(from: sourceView) else {
+                retry(
+                    request,
+                    from: sourceView,
+                    remainingAttempts: remainingAttempts
+                )
+                return
+            }
+            guard generationState.isCurrent(request),
+                  let collectionItem = CollectionTabTargetResolver.item(in: tabBar),
+                  let itemView = CollectionTabTargetResolver.itemView(in: tabBar),
+                  let window = sourceView.window else {
+                retry(
+                    request,
+                    from: sourceView,
+                    remainingAttempts: remainingAttempts
+                )
+                return
+            }
+
+            updateBadge(collectionItem, isVisible: request.hasUnseenReward)
+            targetFrameDidChange?(itemView.convert(itemView.bounds, to: window))
+            guard generationState.takeAnimationToken(for: request) != nil else {
+                return
+            }
+            animateCollectionItem(itemView, reduceMotion: request.reduceMotion)
+        }
+
+        private func retry(
+            _ request: CollectionTabFeedbackRequest,
+            from sourceView: UIView,
+            remainingAttempts: Int
+        ) {
+            guard remainingAttempts > 0 else {
+                targetFrameDidChange?(nil)
+                return
+            }
+            enqueue(
+                request,
+                from: sourceView,
+                remainingAttempts: remainingAttempts - 1,
+                delay: 0.05
+            )
         }
 
         private func findTabBar(from sourceView: UIView) -> UITabBar? {
@@ -298,8 +534,7 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
             return nil
         }
 
-        private func updateBadge(in tabBar: UITabBar, isVisible: Bool) {
-            guard let collectionItem = tabBar.items?[safe: 1] else { return }
+        private func updateBadge(_ collectionItem: UITabBarItem, isVisible: Bool) {
             collectionItem.badgeValue = isVisible ? " " : nil
             collectionItem.badgeColor = UIColor(TodayVisualTheme.reward)
             collectionItem.setBadgeTextAttributes(
@@ -308,9 +543,7 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
             )
         }
 
-        private func animateCollectionItem(in tabBar: UITabBar, reduceMotion: Bool) {
-            guard let itemView = tabItemViews(in: tabBar)[safe: 1] else { return }
-
+        private func animateCollectionItem(_ itemView: UIView, reduceMotion: Bool) {
             if !reduceMotion {
                 let shake = CAKeyframeAnimation(keyPath: "transform.translation.x")
                 shake.values = [0, -3, 3, -3, 3, 0]
@@ -337,18 +570,5 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
                 pulseView.removeFromSuperview()
             }
         }
-
-        private func tabItemViews(in tabBar: UITabBar) -> [UIControl] {
-            tabBar.subviews
-                .compactMap { $0 as? UIControl }
-                .filter { !$0.isHidden && $0.bounds.width > 20 }
-                .sorted { $0.frame.minX < $1.frame.minX }
-        }
-    }
-}
-
-private extension Collection {
-    subscript(safe index: Index) -> Element? {
-        indices.contains(index) ? self[index] : nil
     }
 }
