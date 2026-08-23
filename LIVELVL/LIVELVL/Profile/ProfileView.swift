@@ -8,9 +8,17 @@ struct ProfileView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var resetPresentation: ResetPresentation?
     let reportResetFailure: (LocalDataResetFailure) -> Void
+    private let debugResetActionConfiguration: DebugResetActionConfiguration
+    private let debugResetActionTrigger: DebugResetActionTrigger?
 
-    init(reportResetFailure: @escaping (LocalDataResetFailure) -> Void = { _ in }) {
+    init(
+        reportResetFailure: @escaping (LocalDataResetFailure) -> Void = { _ in },
+        debugResetActionConfiguration: DebugResetActionConfiguration = .live,
+        debugResetActionTrigger: DebugResetActionTrigger? = nil
+    ) {
         self.reportResetFailure = reportResetFailure
+        self.debugResetActionConfiguration = debugResetActionConfiguration
+        self.debugResetActionTrigger = debugResetActionTrigger
     }
 #endif
 
@@ -18,6 +26,12 @@ struct ProfileView: View {
 #if DEBUG
         profileContent
             .alert(item: $resetPresentation, content: resetAlert)
+            .onAppear {
+                debugResetActionTrigger?.install { resetAllLocalData() }
+            }
+            .onDisappear {
+                debugResetActionTrigger?.uninstall()
+            }
 #else
         profileContent
 #endif
@@ -50,6 +64,51 @@ struct ProfileView: View {
 }
 
 #if DEBUG
+extension ProfileView {
+    struct DebugResetActionConfiguration {
+        let applicationSupportURL: () throws -> URL
+        let removeItem: (FileManager, URL) throws -> Void
+
+        nonisolated static var live: Self {
+            Self(
+                applicationSupportURL: {
+                    try FileManager.default.url(
+                        for: .applicationSupportDirectory,
+                        in: .userDomainMask,
+                        appropriateFor: nil,
+                        create: false
+                    )
+                },
+                removeItem: { try $0.removeItem(at: $1) }
+            )
+        }
+    }
+
+    @MainActor
+    final class DebugResetActionTrigger {
+        private var action: (() -> Void)?
+
+        var isReady: Bool {
+            action != nil
+        }
+
+        @discardableResult
+        func perform() -> Bool {
+            guard let action else { return false }
+            action()
+            return true
+        }
+
+        fileprivate func install(_ action: @escaping () -> Void) {
+            self.action = action
+        }
+
+        fileprivate func uninstall() {
+            action = nil
+        }
+    }
+}
+
 private extension ProfileView {
     enum ResetPresentation: Identifiable {
         case impact
@@ -94,16 +153,12 @@ private extension ProfileView {
         let fileManager = FileManager.default
 
         do {
-            let applicationSupportURL = try fileManager.url(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask,
-                appropriateFor: nil,
-                create: false
-            )
+            let applicationSupportURL = try debugResetActionConfiguration.applicationSupportURL()
             LocalDataResetAction.perform(
                 context: modelContext,
                 fileManager: fileManager,
                 applicationSupportURL: applicationSupportURL,
+                removeItem: debugResetActionConfiguration.removeItem,
                 reportFailure: reportResetFailure
             )
             resetPresentation = nil

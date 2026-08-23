@@ -9,9 +9,20 @@ struct ContentView: View {
     private var snapshots: [StateSnapshot]
 #if DEBUG
     @StateObject private var debugPresentation: DebugPresentationState
+    private let debugResetActionConfiguration: ProfileView.DebugResetActionConfiguration
+    private let debugResetActionTrigger: ProfileView.DebugResetActionTrigger?
+    private let debugInitialTab: AppTab
 
-    init(debugPresentation: DebugPresentationState = DebugPresentationState()) {
+    init(
+        debugPresentation: DebugPresentationState = DebugPresentationState(),
+        debugResetActionConfiguration: ProfileView.DebugResetActionConfiguration = .live,
+        debugResetActionTrigger: ProfileView.DebugResetActionTrigger? = nil,
+        debugInitialTab: AppTab = .today
+    ) {
         _debugPresentation = StateObject(wrappedValue: debugPresentation)
+        self.debugResetActionConfiguration = debugResetActionConfiguration
+        self.debugResetActionTrigger = debugResetActionTrigger
+        self.debugInitialTab = debugInitialTab
     }
 #endif
 
@@ -39,7 +50,10 @@ struct ContentView: View {
                 .accessibilityIdentifier("content-root-initial-assessment")
         case .mainTabs:
             MainTabView(
-                reportLocalDataResetFailure: { debugPresentation.report($0) }
+                reportLocalDataResetFailure: { debugPresentation.report($0) },
+                debugResetActionConfiguration: debugResetActionConfiguration,
+                debugResetActionTrigger: debugResetActionTrigger,
+                debugInitialTab: debugInitialTab
             )
         }
 #else

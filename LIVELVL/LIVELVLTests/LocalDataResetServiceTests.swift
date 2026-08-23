@@ -7,12 +7,19 @@ import UIKit
 
 @MainActor
 struct LocalDataResetServiceTests {
-    private enum ForcedResetError: Error {
+    private enum ForcedResetError: LocalizedError {
         case save
         case remove
+
+        var errorDescription: String? {
+            switch self {
+            case .save: "测试保存错误"
+            case .remove: "测试文件错误"
+            }
+        }
     }
 
-    @Test func partialFailureRemainsPresentableAfterSnapshotDeletion() async throws {
+    @Test func hostedResetActionPresentsPartialFailureAfterSnapshotDeletion() async throws {
         let schema = Schema([
             PendingCardReward.self,
             OwnedCollectible.self,
@@ -27,46 +34,81 @@ struct LocalDataResetServiceTests {
             for: schema,
             configurations: .init(isStoredInMemoryOnly: true)
         )
-        let expectedMessage = "数据记录已清除，但奖励图片清理失败：测试文件错误"
-        let failure = LocalDataResetFailure(
-            error: NSError(
-                domain: "LocalDataResetServiceTests",
-                code: 1,
-                userInfo: [NSLocalizedDescriptionKey: expectedMessage]
-            )
+        let context = container.mainContext
+        insertEveryModel(in: context, suffix: "hosted-reset")
+        try context.save()
+
+        let fileManager = FileManager.default
+        let applicationSupportURL = fileManager.temporaryDirectory
+            .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        let imageDirectoryURL = applicationSupportURL
+            .appending(path: "RewardProductImages", directoryHint: .isDirectory)
+        try fileManager.createDirectory(
+            at: imageDirectoryURL,
+            withIntermediateDirectories: true
         )
-        let presentation = ContentView.DebugPresentationState()
+        try Data([0x01]).write(to: imageDirectoryURL.appending(path: "sample.bin"))
+
+        let expectedMessage = "数据记录已清除，但奖励图片清理失败：测试文件错误"
+        let resetTrigger = ProfileView.DebugResetActionTrigger()
+        let resetConfiguration = ProfileView.DebugResetActionConfiguration(
+            applicationSupportURL: { applicationSupportURL },
+            removeItem: { _, _ in throw ForcedResetError.remove }
+        )
         let hostingController = UIHostingController(
-            rootView: ContentView(debugPresentation: presentation)
+            rootView: ContentView(
+                debugResetActionConfiguration: resetConfiguration,
+                debugResetActionTrigger: resetTrigger,
+                debugInitialTab: .profile
+            )
                 .modelContainer(container)
         )
+        let previousKeyWindow = currentKeyWindow()
         let window = UIWindow(frame: UIScreen.main.bounds)
         window.rootViewController = hostingController
         window.makeKeyAndVisible()
         defer {
+            hostingController.dismiss(animated: false)
             window.isHidden = true
             window.rootViewController = nil
+            previousKeyWindow?.makeKey()
+            try? fileManager.removeItem(at: applicationSupportURL)
         }
 
-        try await Task.sleep(nanoseconds: 200_000_000)
+        #expect(await waitUntil { resetTrigger.isReady })
         #expect(hostingController.view.window === window)
-
+        #expect(try context.fetch(FetchDescriptor<StateSnapshot>()).count == 1)
         #expect(
-            accessibilityIdentifiers(in: hostingController.view)
+            !accessibilityIdentifiers(in: hostingController.view)
                 .contains("content-root-initial-assessment")
         )
 
-        presentation.report(failure)
-        for _ in 0..<20 where hostingController.presentedViewController == nil {
-            try await Task.sleep(nanoseconds: 50_000_000)
-        }
+        #expect(resetTrigger.perform())
+
+        #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<OwnedCollectible>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<CollectionProgress>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<Completion>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<Item>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<LIVELVL.Progress>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<StateSnapshot>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<DimensionProfile>()).isEmpty)
+        #expect(fileManager.fileExists(atPath: imageDirectoryURL.path))
+
+        #expect(
+            await waitUntil {
+                accessibilityIdentifiers(in: hostingController.view)
+                    .contains("content-root-initial-assessment")
+            }
+        )
+        #expect(await waitUntil { hostingController.presentedViewController != nil })
 
         let alertController = hostingController.presentedViewController as? UIAlertController
         #expect(alertController?.title == "重置未完成")
         #expect(alertController?.message == expectedMessage)
 
         alertController?.dismiss(animated: false)
-        try await Task.sleep(nanoseconds: 100_000_000)
+        #expect(await waitUntil { hostingController.presentedViewController == nil })
     }
 
     @Test func imageRemovalFailureReportsPartialResetAndKeepsImageDirectory() throws {
@@ -393,5 +435,30 @@ struct LocalDataResetServiceTests {
             return element.accessibilityIdentifier
         }
         return nil
+    }
+
+    private func currentKeyWindow() -> UIWindow? {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)
+    }
+
+    private func waitUntil(
+        timeout: Duration = .seconds(2),
+        condition: @escaping @MainActor () -> Bool
+    ) async -> Bool {
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: timeout)
+
+        while clock.now < deadline {
+            if condition() {
+                return true
+            }
+            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+
+        return condition()
     }
 }

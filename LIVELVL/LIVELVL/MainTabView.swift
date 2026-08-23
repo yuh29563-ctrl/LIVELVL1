@@ -193,11 +193,19 @@ struct MainTabView: View {
     @State private var collectionTabFrameInWindow: CGRect?
 #if DEBUG
     let reportLocalDataResetFailure: (LocalDataResetFailure) -> Void
+    private let debugResetActionConfiguration: ProfileView.DebugResetActionConfiguration
+    private let debugResetActionTrigger: ProfileView.DebugResetActionTrigger?
 
     init(
-        reportLocalDataResetFailure: @escaping (LocalDataResetFailure) -> Void = { _ in }
+        reportLocalDataResetFailure: @escaping (LocalDataResetFailure) -> Void = { _ in },
+        debugResetActionConfiguration: ProfileView.DebugResetActionConfiguration = .live,
+        debugResetActionTrigger: ProfileView.DebugResetActionTrigger? = nil,
+        debugInitialTab: AppTab = .today
     ) {
         self.reportLocalDataResetFailure = reportLocalDataResetFailure
+        self.debugResetActionConfiguration = debugResetActionConfiguration
+        self.debugResetActionTrigger = debugResetActionTrigger
+        _selectedTab = State(initialValue: debugInitialTab)
     }
 #endif
 
@@ -249,7 +257,11 @@ struct MainTabView: View {
 
                 Group {
 #if DEBUG
-                    ProfileView(reportResetFailure: reportLocalDataResetFailure)
+                    ProfileView(
+                        reportResetFailure: reportLocalDataResetFailure,
+                        debugResetActionConfiguration: debugResetActionConfiguration,
+                        debugResetActionTrigger: debugResetActionTrigger
+                    )
 #else
                     ProfileView()
 #endif
