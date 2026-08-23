@@ -7,6 +7,10 @@ struct LevelCard: View {
     let remainingXP: Int
     let progress: Double
     var isRewarding = false
+    var levelUpFeedback: Int?
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var levelPulseScale = 1.0
 
     private var clampedProgress: Double {
         min(1, max(0, progress))
@@ -62,12 +66,22 @@ struct LevelCard: View {
             in: RoundedRectangle(cornerRadius: 22, style: .continuous)
         )
         .shadow(color: Color.black.opacity(0.06), radius: 16, y: 6)
+        .task(id: levelUpFeedback) {
+            levelPulseScale = 1
+            guard levelUpFeedback != nil, !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 0.18).repeatCount(2, autoreverses: true)) {
+                levelPulseScale = 1.045
+            }
+        }
     }
 
     private var levelText: some View {
         Text("Lv.\(level)")
             .font(.system(.largeTitle, design: .rounded, weight: .bold))
             .monospacedDigit()
+            .foregroundStyle(levelUpFeedback == nil ? TodayVisualTheme.ink : TodayVisualTheme.reward)
+            .scaleEffect(levelPulseScale)
+            .animation(.easeInOut(duration: 0.2), value: levelUpFeedback)
     }
 
     private var xpText: some View {

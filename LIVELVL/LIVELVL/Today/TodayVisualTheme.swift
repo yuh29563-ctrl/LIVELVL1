@@ -15,8 +15,11 @@ struct TaskRewardFeedback: Identifiable, Equatable {
     let itemID: UUID
     let xp: Int
     let dimension: LifeDimension
+    let levelBefore: Int
+    let levelAfter: Int
 
     var label: String { "+\(xp) XP" }
+    var didLevelUp: Bool { levelAfter > levelBefore }
 }
 
 struct PixelSproutView: View {

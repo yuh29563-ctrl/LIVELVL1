@@ -20,6 +20,7 @@ struct TodayView: View {
     @Query private var items: [Item]
     @Query private var completions: [Completion]
     @Query private var progressItems: [Progress]
+    @Query private var collectionProgressItems: [CollectionProgress]
     @Query private var profiles: [DimensionProfile]
     @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
     private var snapshots: [StateSnapshot]
@@ -31,9 +32,20 @@ struct TodayView: View {
     @State private var pendingItemID: UUID?
     @State private var radarPulse: RadarPulse?
     @State private var rewardFeedback: TaskRewardFeedback?
+    @State private var feedbackSequenceID: UUID?
+    @State private var levelUpFeedback: Int?
     @State private var rewardFlow = CompletionRewardFlowState()
 
     private var progress: Progress { progressItems.first ?? Progress() }
+
+    private var activeCompanion: (definition: CollectibleDefinition, stage: CompanionStage) {
+        guard let collectionProgress = collectionProgressItems.first else {
+            return (CollectionCatalog.ordinary[0], .juvenile)
+        }
+        let definition = CollectionCatalog.ordinary(at: collectionProgress.activeOrdinaryIndex)
+            ?? CollectionCatalog.ordinary[0]
+        return (definition, collectionProgress.activeStage)
+    }
 
     private var currentSummary: LifeStateSummary? {
         guard let snapshot = snapshots.first else { return nil }
@@ -48,50 +60,79 @@ struct TodayView: View {
     }
 
     var body: some View {
+        let companion = activeCompanion
+
         NavigationStack {
-            List {
-                Section {
-                    LevelCard(
-                        level: progress.level,
-                        currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
-                        requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
-                        remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
-                        progress: GrowthEngine.progressToNextLevel(for: progress.totalXP),
-                        isRewarding: rewardFeedback != nil
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    CompanionCardView(
+                        definition: companion.definition,
+                        stage: companion.stage
                     )
-                    .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                    .listRowBackground(Color.clear)
-                }
-                if let currentSummary {
-                    Section {
+
+                    VStack(spacing: 8) {
+                        if let levelUpFeedback {
+                            Text("升级至 Lv.\(levelUpFeedback)")
+                                .font(.subheadline.bold().monospacedDigit())
+                                .foregroundStyle(TodayVisualTheme.reward)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .transition(
+                                    reduceMotion
+                                        ? .opacity
+                                        : .opacity.combined(with: .scale(scale: 0.96))
+                                )
+                                .accessibilityLabel("升级至等级 \(levelUpFeedback)")
+                        }
+
+                        LevelCard(
+                            level: progress.level,
+                            currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
+                            requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
+                            remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
+                            progress: GrowthEngine.progressToNextLevel(for: progress.totalXP),
+                            isRewarding: rewardFeedback != nil,
+                            levelUpFeedback: levelUpFeedback
+                        )
+                    }
+                    .animation(.easeInOut(duration: 0.2), value: levelUpFeedback)
+
+                    if let currentSummary {
                         LifeStateCard(
                             summary: currentSummary,
                             pulse: radarPulse,
                             onAssessment: { showAssessment = true }
                         )
-                        .listRowInsets(EdgeInsets(top: 8, leading: 0, bottom: 8, trailing: 0))
-                        .listRowBackground(Color.clear)
+                    }
+
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("今日任务")
+                            .font(.headline)
+                            .foregroundStyle(TodayVisualTheme.ink)
+                            .padding(.horizontal, 4)
+
+                        if items.isEmpty {
+                            ContentUnavailableView(
+                                "今天还没有任务",
+                                systemImage: "checkmark.circle",
+                                description: Text("创建一个值得完成的现实行动吧")
+                            )
+                            .foregroundStyle(TodayVisualTheme.ink)
+                            .frame(maxWidth: .infinity, minHeight: 150)
+                        }
+
+                        ForEach(items) { item in
+                            TaskRowView(
+                                item: item,
+                                completed: isCompleted(item),
+                                feedback: rewardFeedback,
+                                onToggle: { toggle(item) }
+                            )
+                        }
                     }
                 }
-                Section("今日任务") {
-                    if items.isEmpty {
-                        ContentUnavailableView("今天还没有任务", systemImage: "checkmark.circle", description: Text("创建一个值得完成的现实行动吧"))
-                            .listRowBackground(Color.clear)
-                    }
-                    ForEach(items) { item in
-                        TaskRowView(
-                            item: item,
-                            completed: isCompleted(item),
-                            feedback: rewardFeedback,
-                            onToggle: { toggle(item) }
-                        )
-                        .listRowInsets(EdgeInsets(top: 5, leading: 0, bottom: 5, trailing: 0))
-                        .listRowSeparator(.hidden)
-                        .listRowBackground(Color.clear)
-                    }
-                }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
             }
-            .scrollContentBackground(.hidden)
             .background(TodayVisualTheme.pageBackground)
             .navigationTitle("今天")
             .toolbar {
@@ -119,15 +160,29 @@ struct TodayView: View {
                 Text("任务和 XP 已保存，但收藏奖励尚未处理。请重试补发奖励。")
             }
             .onAppear(perform: ensureProgress)
-            .task(id: rewardFeedback?.id) {
-                guard rewardFeedback != nil else { return }
-                let duration: Duration = reduceMotion ? .milliseconds(650) : .milliseconds(1_150)
-                try? await Task.sleep(for: duration)
+            .task(id: feedbackSequenceID) {
+                guard let feedback = rewardFeedback, feedbackSequenceID == feedback.id else { return }
+                try? await Task.sleep(for: .milliseconds(800))
                 guard !Task.isCancelled else { return }
                 withAnimation(.easeOut(duration: 0.2)) {
                     rewardFeedback = nil
                     radarPulse = nil
                 }
+
+                guard feedback.didLevelUp else {
+                    feedbackSequenceID = nil
+                    return
+                }
+
+                withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(duration: 0.28)) {
+                    levelUpFeedback = feedback.levelAfter
+                }
+                try? await Task.sleep(for: .milliseconds(800))
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeOut(duration: 0.2)) {
+                    levelUpFeedback = nil
+                }
+                feedbackSequenceID = nil
             }
         }
     }
@@ -143,6 +198,8 @@ struct TodayView: View {
             try? context.save()
             radarPulse = nil
             rewardFeedback = nil
+            feedbackSequenceID = nil
+            levelUpFeedback = nil
             message = "已取消完成，退回 \(completion.xp) XP"
             showMessage = true
         } else {
@@ -153,7 +210,7 @@ struct TodayView: View {
 
     private func confirmCompletion() {
         guard let id = pendingItemID, let item = items.first(where: { $0.id == id }) else { return }
-        let previousLevel = progress.level
+        let levelBefore = progress.level
         let completion = Completion(
             itemID: item.id,
             xp: item.xp,
@@ -163,6 +220,7 @@ struct TodayView: View {
         )
         context.insert(completion)
         progress.totalXP += item.xp
+        let levelAfter = progress.level
         do {
             try context.save()
         } catch {
@@ -177,7 +235,7 @@ struct TodayView: View {
             let persistedCompletions = try context.fetch(FetchDescriptor<Completion>())
             try CardRewardService.processCompletion(
                 progress: progress,
-                previousLevel: previousLevel,
+                previousLevel: levelBefore,
                 completions: persistedCompletions,
                 in: context,
                 now: .now,
@@ -189,17 +247,23 @@ struct TodayView: View {
             pendingItemID = nil
             radarPulse = nil
             rewardFeedback = nil
+            feedbackSequenceID = nil
+            levelUpFeedback = nil
             return
         }
 
         guard rewardFlow.allowsSuccessFeedback else { return }
         pendingItemID = nil
         radarPulse = RadarPulse(dimension: item.dimension)
-        rewardFeedback = TaskRewardFeedback(
+        let feedback = TaskRewardFeedback(
             itemID: item.id,
             xp: item.xp,
-            dimension: item.dimension
+            dimension: item.dimension,
+            levelBefore: levelBefore,
+            levelAfter: levelAfter
         )
+        rewardFeedback = feedback
+        feedbackSequenceID = feedback.id
     }
 
     private func retryRewardProcessing() {
@@ -298,12 +362,14 @@ private struct TaskRowView: View {
         .offset(x: shakeOffset)
         .task(id: feedback?.id) {
             shakeOffset = 0
-            rewardOffset = 6
+            rewardOffset = reduceMotion ? 0 : 6
             rewardOpacity = 0
             guard isRewarding else { return }
 
             withAnimation(.easeOut(duration: 0.22)) {
-                rewardOffset = -7
+                if !reduceMotion {
+                    rewardOffset = -7
+                }
                 rewardOpacity = 1
             }
 
@@ -315,12 +381,6 @@ private struct TaskRowView: View {
             try? await Task.sleep(for: .milliseconds(70))
             guard !Task.isCancelled else { return }
             withAnimation(.easeIn(duration: 0.08)) { shakeOffset = 0 }
-            try? await Task.sleep(for: .milliseconds(520))
-            guard !Task.isCancelled else { return }
-            withAnimation(.easeIn(duration: 0.24)) {
-                rewardOffset = -20
-                rewardOpacity = 0
-            }
         }
     }
 
