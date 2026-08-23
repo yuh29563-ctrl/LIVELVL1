@@ -11,8 +11,8 @@ enum GrowthEngine {
     }
     static func level(for xp: Int) -> Int {
         let safeXP = max(0, xp)
-        guard safeXP >= 200 else { return 1 }
-        return 2 + (safeXP - 200) / 2_000
+        guard safeXP >= 200 else { return 0 }
+        return 1 + (safeXP - 200) / 2_000
     }
 
     static func xpInCurrentLevel(for xp: Int) -> Int {
@@ -22,7 +22,7 @@ enum GrowthEngine {
     }
 
     static func xpNeededForNextLevel(for xp: Int) -> Int {
-        level(for: xp) == 1 ? 200 : 2_000
+        level(for: xp) == 0 ? 200 : 2_000
     }
 
     static func progressToNextLevel(for xp: Int) -> Double {
