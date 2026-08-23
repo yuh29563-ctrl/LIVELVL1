@@ -159,6 +159,7 @@ struct TodayView: View {
             itemID: item.id,
             xp: item.xp,
             dimension: item.dimension,
+            durationMinutes: item.minutes,
             taskTitle: item.title
         ))
         progress.totalXP += item.xp

@@ -14,6 +14,7 @@ struct LIVELVLApp: App {
         let schema = Schema([
             Item.self, Progress.self, Completion.self,
             DimensionProfile.self, StateSnapshot.self,
+            CollectionProgress.self, OwnedCollectible.self, PendingCardReward.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

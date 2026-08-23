@@ -36,19 +36,25 @@ enum GrowthEngine {
     var date: Date
     var xp: Int
     var dimensionRaw: String?
+    var durationMinutes: Int?
     var taskTitle: String?
 
     init(itemID: UUID, xp: Int, dimension: LifeDimension? = nil,
-         taskTitle: String? = nil, date: Date = .now) {
+         durationMinutes: Int? = nil, taskTitle: String? = nil, date: Date = .now) {
         self.itemID = itemID
         self.xp = xp
         self.dimensionRaw = dimension?.rawValue
+        self.durationMinutes = durationMinutes
         self.taskTitle = taskTitle
         self.date = date
     }
 
+    var recordedDimension: LifeDimension? {
+        dimensionRaw.flatMap(LifeDimension.init(rawValue:))
+    }
+
     func stateActivity(fallbackItem: Item?) -> DimensionActivityRecord? {
-        guard let dimension = dimensionRaw.flatMap(LifeDimension.init(rawValue:))
+        guard let dimension = recordedDimension
                 ?? fallbackItem?.dimension else { return nil }
         return DimensionActivityRecord(
             dimension: dimension,
