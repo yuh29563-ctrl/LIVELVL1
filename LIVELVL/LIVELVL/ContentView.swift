@@ -5,13 +5,13 @@ struct ContentView: View {
     @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
     private var snapshots: [StateSnapshot]
 #if DEBUG
-    @State private var resetFailure: LocalDataResetFailure?
+    @State private var debugPresentation = DebugPresentationState()
 #endif
 
     var body: some View {
 #if DEBUG
         rootContent
-            .alert(item: $resetFailure) { failure in
+            .alert(item: $debugPresentation.resetFailure) { failure in
                 Alert(
                     title: Text(failure.title),
                     message: Text(failure.message),
@@ -25,17 +25,45 @@ struct ContentView: View {
 
     @ViewBuilder
     private var rootContent: some View {
+#if DEBUG
+        switch debugPresentation.root(hasSnapshots: !snapshots.isEmpty) {
+        case .initialAssessment:
+            StateAssessmentView(mode: .initial)
+        case .mainTabs:
+            MainTabView(
+                reportLocalDataResetFailure: { debugPresentation.report($0) }
+            )
+        }
+#else
         if snapshots.isEmpty {
             StateAssessmentView(mode: .initial)
         } else {
-#if DEBUG
-            MainTabView(reportLocalDataResetFailure: { resetFailure = $0 })
-#else
             MainTabView()
+        }
 #endif
+    }
+}
+
+#if DEBUG
+extension ContentView {
+    struct DebugPresentationState {
+        enum Root: Equatable {
+            case initialAssessment
+            case mainTabs
+        }
+
+        var resetFailure: LocalDataResetFailure?
+
+        func root(hasSnapshots: Bool) -> Root {
+            hasSnapshots ? .mainTabs : .initialAssessment
+        }
+
+        mutating func report(_ failure: LocalDataResetFailure) {
+            resetFailure = failure
         }
     }
 }
+#endif
 
 struct TodayView: View {
     @Environment(\.modelContext) private var context

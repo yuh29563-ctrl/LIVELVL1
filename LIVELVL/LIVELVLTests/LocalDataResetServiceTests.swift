@@ -40,19 +40,27 @@ struct LocalDataResetServiceTests {
         )
         defer { try? fileManager.removeItem(at: applicationSupportURL) }
 
-        var rootPresentation: LocalDataResetFailure?
+        var presentation = ContentView.DebugPresentationState()
+        let hadSnapshotsBeforeReset = try !context
+            .fetch(FetchDescriptor<StateSnapshot>())
+            .isEmpty
+        #expect(presentation.root(hasSnapshots: hadSnapshotsBeforeReset) == .mainTabs)
+
         LocalDataResetAction.perform(
             context: context,
             fileManager: fileManager,
             applicationSupportURL: applicationSupportURL,
             removeItem: { _, _ in throw ForcedResetError.remove },
-            reportFailure: { rootPresentation = $0 }
+            reportFailure: { presentation.report($0) }
         )
 
-        #expect(try context.fetch(FetchDescriptor<StateSnapshot>()).isEmpty)
-        #expect(rootPresentation?.title == "重置未完成")
-        #expect(rootPresentation?.message.contains("数据记录已清除") == true)
-        #expect(rootPresentation?.message.contains("奖励图片清理失败") == true)
+        let hasSnapshotsAfterReset = try !context
+            .fetch(FetchDescriptor<StateSnapshot>())
+            .isEmpty
+        #expect(presentation.root(hasSnapshots: hasSnapshotsAfterReset) == .initialAssessment)
+        #expect(presentation.resetFailure?.title == "重置未完成")
+        #expect(presentation.resetFailure?.message.contains("数据记录已清除") == true)
+        #expect(presentation.resetFailure?.message.contains("奖励图片清理失败") == true)
     }
 
     @Test func imageRemovalFailureReportsPartialResetAndKeepsImageDirectory() throws {
