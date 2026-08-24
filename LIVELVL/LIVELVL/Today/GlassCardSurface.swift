@@ -11,7 +11,7 @@ enum GlassCardLayout {
 
 enum CompanionGlassStyle {
     static let mediaScrimOpacity: Double = 0
-    static let usesTransparentGlass = true
+    static let usesTransparentGlass = false
     static let textShadowOpacity: Double = 0.62
     static let textShadowRadius: CGFloat = 2.5
 }
@@ -19,6 +19,7 @@ enum CompanionGlassStyle {
 enum GlassCardSurfaceStyle: Equatable {
     case standard
     case companionTransparent
+    case lifeStateDotWave
 }
 
 struct CompanionCardFixedLayout: Layout {
@@ -78,11 +79,6 @@ struct GlassCardSurface<Content: View>: View {
                         }
                     }
                     .overlay {
-                        Color.clear
-                            .modifier(GlassCardMaterial(shape: shape))
-                            .allowsHitTesting(false)
-                    }
-                    .overlay {
                         content
                             .padding(GlassCardLayout.contentPadding)
                             .shadow(
@@ -91,6 +87,12 @@ struct GlassCardSurface<Content: View>: View {
                                 y: 1
                             )
                     }
+            } else if style == .lifeStateDotWave {
+                ZStack {
+                    DotWaveBackground()
+                    content
+                        .padding(GlassCardLayout.contentPadding)
+                }
             } else {
                 ZStack {
                     Color.white.opacity(0.72)

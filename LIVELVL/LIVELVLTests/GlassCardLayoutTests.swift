@@ -17,12 +17,77 @@ struct GlassCardLayoutTests {
         #expect(GlassCardLayout.companionAspectRatio == 2.2)
     }
 
-    @Test func companionMediaUsesTransparentGlassAndReadableText() {
+    @Test func companionMediaUsesDirectPhotoAndReadableText() {
         #expect(CompanionGlassStyle.mediaScrimOpacity == 0)
-        #expect(CompanionGlassStyle.usesTransparentGlass)
+        #expect(!CompanionGlassStyle.usesTransparentGlass)
         #expect(CompanionGlassStyle.textShadowOpacity == 0.62)
         #expect(CompanionGlassStyle.textShadowRadius == 2.5)
         #expect(GlassCardLayout.contentLayerIsAboveGlass)
+    }
+
+    @Test func dotWaveGridKeepsFixedEvenlySpacedPositions() {
+        let points = DotWaveField.gridPoints(
+            in: CGSize(width: 35, height: 25),
+            spacing: 10,
+            inset: 2.5
+        )
+
+        #expect(points == [
+            CGPoint(x: 2.5, y: 2.5),
+            CGPoint(x: 12.5, y: 2.5),
+            CGPoint(x: 22.5, y: 2.5),
+            CGPoint(x: 32.5, y: 2.5),
+            CGPoint(x: 2.5, y: 12.5),
+            CGPoint(x: 12.5, y: 12.5),
+            CGPoint(x: 22.5, y: 12.5),
+            CGPoint(x: 32.5, y: 12.5),
+            CGPoint(x: 2.5, y: 22.5),
+            CGPoint(x: 12.5, y: 22.5),
+            CGPoint(x: 22.5, y: 22.5),
+            CGPoint(x: 32.5, y: 22.5),
+        ])
+    }
+
+    @Test func dotWaveLoopsSeamlesslyAndKeepsValuesBounded() {
+        let crest = CGPoint(x: 0, y: 0)
+        let trough = CGPoint(x: 0, y: 0.5)
+
+        #expect(DotWaveField.intensity(at: crest, phase: 0) == 1)
+        #expect(DotWaveField.intensity(at: trough, phase: 0) == 0)
+        #expect(
+            abs(
+                DotWaveField.intensity(at: CGPoint(x: 0.37, y: 0.61), phase: 0)
+                    - DotWaveField.intensity(at: CGPoint(x: 0.37, y: 0.61), phase: 1)
+            ) < 0.000_001
+        )
+
+        for phase in stride(from: 0.0, through: 1.0, by: 0.1) {
+            let intensity = DotWaveField.intensity(
+                at: CGPoint(x: 0.23, y: 0.78),
+                phase: phase
+            )
+            #expect((0...1).contains(intensity))
+        }
+    }
+
+    @Test func reduceMotionFreezesDotWavePhase() {
+        #expect(DotWaveField.phase(elapsed: 0, duration: 8, reduceMotion: true) == 0.18)
+        #expect(DotWaveField.phase(elapsed: 80, duration: 8, reduceMotion: true) == 0.18)
+        #expect(DotWaveField.phase(elapsed: 10, duration: 8, reduceMotion: false) == 0.25)
+    }
+
+    @MainActor
+    @Test func dotWaveSurfaceDerivesItsHeightFromContent() throws {
+        let surface = GlassCardSurface(style: .lifeStateDotWave) {
+            Color.red.frame(height: 200)
+        }
+        .frame(width: 300)
+
+        let renderer = ImageRenderer(content: surface)
+        renderer.scale = 1
+        let image = try #require(renderer.uiImage)
+
+        #expect(image.size.height == 240)
     }
 
     @Test func reduceMotionAlwaysSelectsFirstMediaFrame() {

@@ -12,7 +12,7 @@ struct LifeStateCard: View {
     @ScaledMetric(relativeTo: .body) private var radarHeight: CGFloat = 276
 
     var body: some View {
-        GlassCardSurface {
+        GlassCardSurface(style: .lifeStateDotWave) {
             VStack(alignment: .leading, spacing: 16) {
                 VStack(alignment: .leading, spacing: 5) {
                     Text("你的最近 15 天")
