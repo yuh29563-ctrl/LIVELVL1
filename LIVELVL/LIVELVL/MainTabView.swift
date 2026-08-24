@@ -22,9 +22,32 @@ struct CollectionAttentionState: Equatable, Sendable {
     }
 }
 
+struct CardRewardHandoffState: Equatable, Sendable {
+    private(set) var generation = 0
+    private var dismissalCompletedAt: Date?
+
+    mutating func recordDismissalCompletion(at date: Date) {
+        generation &+= 1
+        dismissalCompletedAt = date
+    }
+
+    func presentationNotBefore(rewardEligibleAt: Date) -> Date {
+        guard let dismissalCompletedAt else { return rewardEligibleAt }
+        return max(
+            rewardEligibleAt,
+            dismissalCompletedAt.addingTimeInterval(0.25)
+        )
+    }
+}
+
 private struct RewardQueueHeadIdentity: Hashable {
     let awardKey: String
     let eligibleAt: Date
+}
+
+private struct RewardPresentationTaskIdentity: Hashable {
+    let queueHead: RewardQueueHeadIdentity?
+    let handoffGeneration: Int
 }
 
 struct PresentedCardReward: Equatable, Sendable {
@@ -43,13 +66,15 @@ struct CardRewardPresentationState: Equatable, Sendable {
         locallyClaimingAwardKey = nil
     }
 
-    mutating func reconcile(liveAwardKeys: Set<String>) {
+    @discardableResult
+    mutating func reconcile(liveAwardKeys: Set<String>) -> Bool {
         guard let presentedReward,
               !liveAwardKeys.contains(presentedReward.awardKey),
               locallyClaimingAwardKey != presentedReward.awardKey else {
-            return
+            return false
         }
         self.presentedReward = nil
+        return true
     }
 
     mutating func beginSuccessfulClaim(awardKey: String) -> Bool {
@@ -143,6 +168,24 @@ struct CollectionTabFeedbackGenerationState: Equatable, Sendable {
     }
 }
 
+struct CollectionTabFeedbackAnimationPlan: Equatable, Sendable {
+    let shakeTranslations: [CGFloat]
+    let initialPulseScale: CGFloat
+    let finalPulseScale: CGFloat
+
+    init(reduceMotion: Bool) {
+        if reduceMotion {
+            shakeTranslations = []
+            initialPulseScale = 1
+            finalPulseScale = 1
+        } else {
+            shakeTranslations = [0, -3, 3, -3, 3, 0]
+            initialPulseScale = 0.78
+            finalPulseScale = 1.2
+        }
+    }
+}
+
 enum CollectionTabIdentity {
     static let accessibilityIdentifier = "main-tab.collection"
     static let systemImageName = "square.grid.2x2.fill"
@@ -190,6 +233,7 @@ struct MainTabView: View {
     @State private var selectedTab: AppTab = .today
     @State private var attention = CollectionAttentionState()
     @State private var presentation = CardRewardPresentationState()
+    @State private var handoff = CardRewardHandoffState()
     @State private var collectionTabFrameInWindow: CGRect?
 #if DEBUG
     let reportLocalDataResetFailure: (LocalDataResetFailure) -> Void
@@ -225,6 +269,13 @@ struct MainTabView: View {
         }
     }
 
+    private var rewardPresentationTaskIdentity: RewardPresentationTaskIdentity {
+        RewardPresentationTaskIdentity(
+            queueHead: queueHeadIdentity,
+            handoffGeneration: handoff.generation
+        )
+    }
+
     private var hasUnseenReward: Bool {
         attention.hasUnseenReward || ownedCollectibles.contains(where: \.isUnseen)
     }
@@ -235,14 +286,16 @@ struct MainTabView: View {
 
     var body: some View {
         ZStack {
-            TabView(selection: selectedTabBinding) {
+            TabView(selection: $selectedTab) {
                 TodayView()
                     .tag(AppTab.today)
                     .tabItem { Label("今天", systemImage: "sun.max.fill") }
 
-                CollectionView {
-                    attention.markSeen()
-                }
+                CollectionView(
+                    isCollectionSelected: selectedTab == .collection,
+                    isObscured: presentation.presentedReward != nil,
+                    onMarkedSeen: { attention.markSeen() }
+                )
                     .tag(AppTab.collection)
                     .tabItem {
                         CollectionTabLabel(
@@ -303,39 +356,35 @@ struct MainTabView: View {
                         presentation.finishSuccessfulClaim(
                             awardKey: presentedReward.awardKey
                         )
+                        handoff.recordDismissalCompletion(at: .now)
                     }
                 )
                 .id(presentedReward.awardKey)
                 .zIndex(1)
             }
         }
-        .task(id: queueHeadIdentity) {
-            await presentQueueHead(queueHeadIdentity)
+        .task(id: rewardPresentationTaskIdentity) {
+            await presentQueueHead(rewardPresentationTaskIdentity)
         }
         .onChange(of: livePendingAwardKeys, initial: true) { _, liveAwardKeys in
-            presentation.reconcile(liveAwardKeys: liveAwardKeys)
+            if presentation.reconcile(liveAwardKeys: liveAwardKeys) {
+                handoff.recordDismissalCompletion(at: .now)
+            }
         }
     }
 
-    private var selectedTabBinding: Binding<AppTab> {
-        Binding(
-            get: { selectedTab },
-            set: { newTab in
-                selectedTab = newTab
-                guard newTab == .collection else { return }
-                markCollectionSeen()
-            }
-        )
-    }
-
-    private func presentQueueHead(_ identity: RewardQueueHeadIdentity?) async {
-        guard let identity,
+    private func presentQueueHead(_ taskIdentity: RewardPresentationTaskIdentity) async {
+        guard taskIdentity == rewardPresentationTaskIdentity,
+              presentation.presentedReward == nil,
+              let identity = taskIdentity.queueHead,
               let reward = queueHead,
               reward.awardKey == identity.awardKey else {
             return
         }
 
-        let remainingDelay = reward.eligibleAt.timeIntervalSinceNow
+        let remainingDelay = handoff.presentationNotBefore(
+            rewardEligibleAt: reward.eligibleAt
+        ).timeIntervalSinceNow
         if remainingDelay > 0 {
             do {
                 try await Task.sleep(for: .seconds(remainingDelay))
@@ -347,33 +396,15 @@ struct MainTabView: View {
         }
         guard !Task.isCancelled else { return }
 
-        let waitsBehindCurrentReward = presentation.presentedReward != nil
-        while presentation.presentedReward != nil {
-            do {
-                try await Task.sleep(for: .milliseconds(25))
-            } catch is CancellationError {
-                return
-            } catch {
-                return
-            }
-            guard !Task.isCancelled else { return }
-        }
-
-        if waitsBehindCurrentReward {
-            do {
-                try await Task.sleep(for: .milliseconds(250))
-            } catch is CancellationError {
-                return
-            } catch {
-                return
-            }
-        }
-
         guard !Task.isCancelled,
+              taskIdentity == rewardPresentationTaskIdentity,
+              presentation.presentedReward == nil,
               queueHeadIdentity == identity,
               let currentReward = queueHead,
               currentReward.awardKey == identity.awardKey,
-              Date.now >= currentReward.eligibleAt,
+              Date.now >= handoff.presentationNotBefore(
+                rewardEligibleAt: currentReward.eligibleAt
+              ),
               let definition = CollectionCatalog.definition(id: currentReward.collectibleID) else {
             return
         }
@@ -386,14 +417,6 @@ struct MainTabView: View {
         ))
     }
 
-    private func markCollectionSeen() {
-        do {
-            try CardRewardService.markAllSeen(in: context)
-            attention.markSeen()
-        } catch {
-            return
-        }
-    }
 }
 
 @MainActor
@@ -573,9 +596,10 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
         }
 
         private func animateCollectionItem(_ itemView: UIView, reduceMotion: Bool) {
-            if !reduceMotion {
+            let plan = CollectionTabFeedbackAnimationPlan(reduceMotion: reduceMotion)
+            if !plan.shakeTranslations.isEmpty {
                 let shake = CAKeyframeAnimation(keyPath: "transform.translation.x")
-                shake.values = [0, -3, 3, -3, 3, 0]
+                shake.values = plan.shakeTranslations
                 shake.keyTimes = [0, 0.16, 0.36, 0.56, 0.76, 1]
                 shake.duration = 0.3
                 shake.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
@@ -587,13 +611,19 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
             pulseView.backgroundColor = UIColor(TodayVisualTheme.reward).withAlphaComponent(0.18)
             pulseView.layer.cornerRadius = min(pulseView.bounds.width, pulseView.bounds.height) / 2
             itemView.insertSubview(pulseView, at: 0)
-            pulseView.transform = CGAffineTransform(scaleX: 0.78, y: 0.78)
+            pulseView.transform = CGAffineTransform(
+                scaleX: plan.initialPulseScale,
+                y: plan.initialPulseScale
+            )
             UIView.animate(
                 withDuration: 0.3,
                 delay: 0,
                 options: [.allowUserInteraction, .curveEaseOut]
             ) {
-                pulseView.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
+                pulseView.transform = CGAffineTransform(
+                    scaleX: plan.finalPulseScale,
+                    y: plan.finalPulseScale
+                )
                 pulseView.alpha = 0
             } completion: { _ in
                 pulseView.removeFromSuperview()

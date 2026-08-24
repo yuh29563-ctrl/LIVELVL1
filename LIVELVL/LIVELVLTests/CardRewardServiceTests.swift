@@ -1,6 +1,8 @@
 import Foundation
 import SwiftData
+import SwiftUI
 import Testing
+import UIKit
 @testable import LIVELVL
 
 @MainActor
@@ -50,6 +52,67 @@ struct CardRewardServiceTests {
         let pending = try context.fetch(FetchDescriptor<PendingCardReward>())
         #expect(fetchedProgress.first === collectionProgress)
         #expect(pending.map(\.awardKey) == ["ordinary.level.1"])
+    }
+
+    @Test func levelOneMaturityKeepsTheJuvenileCompanionUntilClaim() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let progress = Progress(totalXP: 200)
+        context.insert(progress)
+        try context.save()
+
+        _ = try CardRewardService.ensureProgress(in: context)
+        try CardRewardService.processCompletion(
+            progress: progress,
+            previousLevel: 0,
+            completions: [],
+            in: context,
+            now: Date(timeIntervalSince1970: 1_100),
+            calendar: Calendar(identifier: .gregorian)
+        )
+
+        let collectionProgress = try #require(
+            context.fetch(FetchDescriptor<CollectionProgress>()).first
+        )
+        #expect(collectionProgress.activeOrdinaryIndex == 0)
+        #expect(collectionProgress.activeStage == .juvenile)
+        #expect(
+            try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey)
+                == ["ordinary.level.1"]
+        )
+    }
+
+    @Test func levelFourMaturityKeepsTheThirdStageCompanionUntilClaim() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let progress = Progress(totalXP: 6_200)
+        context.insert(progress)
+        context.insert(CollectionProgress(
+            highestLevel: 3,
+            activeOrdinaryIndex: 1,
+            activeStage: .stageThree,
+            lastProcessedMaturityLevel: 1
+        ))
+        try context.save()
+
+        try CardRewardService.processCompletion(
+            progress: progress,
+            previousLevel: 3,
+            completions: [],
+            in: context,
+            now: Date(timeIntervalSince1970: 1_200),
+            calendar: Calendar(identifier: .gregorian)
+        )
+
+        let collectionProgress = try #require(
+            context.fetch(FetchDescriptor<CollectionProgress>()).first
+        )
+        #expect(collectionProgress.activeOrdinaryIndex == 1)
+        #expect(collectionProgress.activeStage == .stageThree)
+        #expect(
+            try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey)
+                == ["ordinary.level.4"]
+        )
     }
 
     @Test func ordinaryRewardsSortBeforeHiddenRewardsAtTheSameTime() throws {
@@ -168,6 +231,47 @@ struct CardRewardServiceTests {
         #expect(fetchedProgress.first?.activeStage == .stageTwo)
     }
 
+    @Test func delayedLevelOneClaimStopsAtTheLastNonmatureStageBeforeLevelFour() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let progress = Progress(totalXP: 6_200)
+        context.insert(progress)
+        try context.save()
+
+        _ = try CardRewardService.ensureProgress(in: context)
+        let triggerTime = Date(timeIntervalSince1970: 3_200)
+        try CardRewardService.processCompletion(
+            progress: progress,
+            previousLevel: 0,
+            completions: [],
+            in: context,
+            now: triggerTime,
+            calendar: Calendar(identifier: .gregorian)
+        )
+        let levelOneReward = try #require(
+            context.fetch(FetchDescriptor<PendingCardReward>())
+                .first(where: { $0.awardKey == "ordinary.level.1" })
+        )
+        let collectionProgress = try #require(
+            context.fetch(FetchDescriptor<CollectionProgress>()).first
+        )
+
+        try CardRewardService.claim(
+            levelOneReward,
+            progress: collectionProgress,
+            in: context,
+            now: triggerTime.addingTimeInterval(2)
+        )
+
+        #expect(collectionProgress.highestLevel == 4)
+        #expect(collectionProgress.activeOrdinaryIndex == 1)
+        #expect(collectionProgress.activeStage == .stageThree)
+        #expect(
+            try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey)
+                == ["ordinary.level.4"]
+        )
+    }
+
     @Test func loweringXPCannotRegressHighestLevelOrDuplicateOriginalReward() throws {
         let container = try makeContainer()
         let context = container.mainContext
@@ -250,6 +354,73 @@ struct CardRewardServiceTests {
         #expect(pending.map(\.awardKey) == ["ordinary.level.1"])
     }
 
+    @Test func recreatedTodayViewReconcilesAMissedRewardWriteWithoutDuplicates() async throws {
+        let schema = Schema([
+            Item.self,
+            Progress.self,
+            Completion.self,
+            CollectionProgress.self,
+            OwnedCollectible.self,
+            PendingCardReward.self,
+            DimensionProfile.self,
+            StateSnapshot.self,
+        ])
+        let container = try ModelContainer(
+            for: schema,
+            configurations: .init(isStoredInMemoryOnly: true)
+        )
+        let persistedStateContext = ModelContext(container)
+        persistedStateContext.insert(Progress(totalXP: 200))
+        persistedStateContext.insert(Completion(
+            itemID: UUID(),
+            xp: 200,
+            dimension: .learning,
+            durationMinutes: 30,
+            taskTitle: "学习"
+        ))
+        persistedStateContext.insert(CollectionProgress())
+        try persistedStateContext.save()
+
+        let firstHost = UIHostingController(
+            rootView: TodayView().modelContainer(container)
+        )
+        let firstWindow = UIWindow(frame: UIScreen.main.bounds)
+        firstWindow.rootViewController = firstHost
+        firstWindow.makeKeyAndVisible()
+        defer {
+            firstWindow.isHidden = true
+            firstWindow.rootViewController = nil
+        }
+
+        #expect(await waitUntil {
+            let pending = try? container.mainContext.fetch(
+                FetchDescriptor<PendingCardReward>()
+            )
+            return pending?.map(\.awardKey) == ["ordinary.level.1"]
+        })
+
+        firstWindow.isHidden = true
+        firstWindow.rootViewController = nil
+
+        let recreatedHost = UIHostingController(
+            rootView: TodayView().modelContainer(container)
+        )
+        let recreatedWindow = UIWindow(frame: UIScreen.main.bounds)
+        recreatedWindow.rootViewController = recreatedHost
+        recreatedWindow.makeKeyAndVisible()
+        defer {
+            recreatedWindow.isHidden = true
+            recreatedWindow.rootViewController = nil
+        }
+
+        #expect(await waitUntil {
+            let pending = try? container.mainContext.fetch(
+                FetchDescriptor<PendingCardReward>()
+            )
+            return pending?.map(\.awardKey) == ["ordinary.level.1"]
+        })
+    }
+
     @Test func markingAllSeenClearsEveryUnseenFlag() throws {
         let container = try makeContainer()
         let context = container.mainContext
@@ -272,5 +443,50 @@ struct CardRewardServiceTests {
         let owned = try context.fetch(FetchDescriptor<OwnedCollectible>())
         #expect(owned.count == 2)
         #expect(owned.allSatisfy { !$0.isUnseen })
+    }
+
+    @Test func markingVisibleKeysSeenPreservesOffscreenUnseenRewards() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        context.insert(OwnedCollectible(
+            awardKey: "visible",
+            collectibleID: "ordinary.sprout",
+            kind: .ordinaryMature,
+            reason: "可见"
+        ))
+        context.insert(OwnedCollectible(
+            awardKey: "offscreen",
+            collectibleID: "hidden.long-workout",
+            kind: .hiddenDiscovery,
+            reason: "屏幕外"
+        ))
+        try context.save()
+
+        try CardRewardService.markSeen(
+            awardKeys: ["visible"],
+            in: context
+        )
+
+        let rows = try context.fetch(FetchDescriptor<OwnedCollectible>())
+        #expect(rows.first(where: { $0.awardKey == "visible" })?.isUnseen == false)
+        #expect(rows.first(where: { $0.awardKey == "offscreen" })?.isUnseen == true)
+    }
+
+    private func waitUntil(
+        timeout: Duration = .milliseconds(500),
+        condition: @escaping @MainActor () -> Bool
+    ) async -> Bool {
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: timeout)
+
+        while clock.now < deadline {
+            if condition() {
+                return true
+            }
+            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(10))
+        }
+
+        return condition()
     }
 }

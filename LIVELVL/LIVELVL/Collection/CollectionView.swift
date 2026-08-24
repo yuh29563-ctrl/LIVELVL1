@@ -1,12 +1,47 @@
 import SwiftData
 import SwiftUI
 
+enum CollectionCardFocusTarget: Hashable, Sendable {
+    case featured(awardKey: String)
+    case grid(awardKey: String)
+
+    var awardKey: String {
+        switch self {
+        case let .featured(awardKey), let .grid(awardKey):
+            awardKey
+        }
+    }
+}
+
+struct CollectionSeenVisibilityState: Equatable, Sendable {
+    private var visibleTargets: Set<CollectionCardFocusTarget> = []
+
+    mutating func appeared(_ target: CollectionCardFocusTarget) {
+        visibleTargets.insert(target)
+    }
+
+    mutating func disappeared(_ target: CollectionCardFocusTarget) {
+        visibleTargets.remove(target)
+    }
+
+    func awardKeysToMarkSeen(
+        unseenAwardKeys: Set<String>,
+        isCollectionSelected: Bool,
+        isObscured: Bool
+    ) -> Set<String> {
+        guard isCollectionSelected, !isObscured else { return [] }
+        return Set(visibleTargets.map(\.awardKey)).intersection(unseenAwardKeys)
+    }
+}
+
 struct CollectionSelectionState: Equatable {
     private(set) var selectedAwardKey: String?
     private(set) var isShowingBack = false
+    private var initiatingFocusTarget: CollectionCardFocusTarget?
 
-    mutating func select(awardKey: String) {
-        selectedAwardKey = awardKey
+    mutating func select(focusTarget: CollectionCardFocusTarget) {
+        selectedAwardKey = focusTarget.awardKey
+        initiatingFocusTarget = focusTarget
         isShowingBack = false
     }
 
@@ -14,9 +49,13 @@ struct CollectionSelectionState: Equatable {
         self.isShowingBack = isShowingBack
     }
 
-    mutating func close() {
+    @discardableResult
+    mutating func close() -> CollectionCardFocusTarget? {
+        let focusTarget = initiatingFocusTarget
         selectedAwardKey = nil
+        initiatingFocusTarget = nil
         isShowingBack = false
+        return focusTarget
     }
 
     mutating func reconcile(validAwardKeys: Set<String>) {
@@ -81,7 +120,11 @@ struct CollectionView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selection = CollectionSelectionState()
     @State private var seenRetryState = CollectionSeenRetryState()
+    @State private var seenVisibility = CollectionSeenVisibilityState()
+    @AccessibilityFocusState private var focusedCard: CollectionCardFocusTarget?
 
+    private let isCollectionSelected: Bool
+    private let isObscured: Bool
     private let onMarkedSeen: () -> Void
 
     private let columns = [
@@ -89,7 +132,13 @@ struct CollectionView: View {
         GridItem(.flexible(), spacing: 14)
     ]
 
-    init(onMarkedSeen: @escaping () -> Void = {}) {
+    init(
+        isCollectionSelected: Bool = true,
+        isObscured: Bool = false,
+        onMarkedSeen: @escaping () -> Void = {}
+    ) {
+        self.isCollectionSelected = isCollectionSelected
+        self.isObscured = isObscured
         self.onMarkedSeen = onMarkedSeen
     }
 
@@ -117,6 +166,10 @@ struct CollectionView: View {
 
     private var hasUnseenCollectibles: Bool {
         ownedCollectibles.contains(where: \.isUnseen)
+    }
+
+    private var unseenAwardKeys: Set<String> {
+        Set(ownedCollectibles.lazy.filter(\.isUnseen).map(\.awardKey))
     }
 
     private var showingBackBinding: Binding<Bool> {
@@ -147,7 +200,7 @@ struct CollectionView: View {
                             CollectionSeenRetryView(
                                 message: errorMessage,
                                 isRetrying: seenRetryState.isAttempting,
-                                onRetry: markUnseenCollectiblesSeen
+                                onRetry: { markUnseenCollectiblesSeen() }
                             )
                         }
 
@@ -162,8 +215,11 @@ struct CollectionView: View {
                                     if let definition = CollectionCatalog.definition(
                                         id: collectible.collectibleID
                                     ) {
+                                        let focusTarget = CollectionCardFocusTarget.grid(
+                                            awardKey: collectible.awardKey
+                                        )
                                         Button {
-                                            select(collectible)
+                                            select(focusTarget: focusTarget)
                                         } label: {
                                             CollectibleCardView(
                                                 collectible: collectible,
@@ -171,8 +227,15 @@ struct CollectionView: View {
                                             )
                                         }
                                         .buttonStyle(.plain)
+                                        .accessibilityFocused(
+                                            $focusedCard,
+                                            equals: focusTarget
+                                        )
                                         .onAppear {
-                                            markVisibleCollectiblesSeen(collectible)
+                                            visibleCardAppeared(focusTarget)
+                                        }
+                                        .onDisappear {
+                                            visibleCardDisappeared(focusTarget)
                                         }
                                     }
                                 }
@@ -219,14 +282,26 @@ struct CollectionView: View {
         .onChange(of: hasUnseenCollectibles, initial: true) { _, hasUnseen in
             seenRetryState.reconcile(hasUnseenCollectibles: hasUnseen)
         }
+        .onChange(of: unseenAwardKeys, initial: true) { _, _ in
+            markVisibleCollectiblesSeen()
+        }
+        .onChange(of: isCollectionSelected, initial: true) { _, _ in
+            markVisibleCollectiblesSeen()
+        }
+        .onChange(of: isObscured, initial: true) { _, _ in
+            markVisibleCollectiblesSeen()
+        }
     }
 
     @ViewBuilder
     private var featuredContent: some View {
         if let collectible = ownedCollectibles.first,
            let definition = CollectionCatalog.definition(id: collectible.collectibleID) {
+            let focusTarget = CollectionCardFocusTarget.featured(
+                awardKey: collectible.awardKey
+            )
             Button {
-                select(collectible)
+                select(focusTarget: focusTarget)
             } label: {
                 FeaturedCollectibleCardView(
                     collectible: collectible,
@@ -234,8 +309,12 @@ struct CollectionView: View {
                 )
             }
             .buttonStyle(.plain)
+            .accessibilityFocused($focusedCard, equals: focusTarget)
             .onAppear {
-                markVisibleCollectiblesSeen(collectible)
+                visibleCardAppeared(focusTarget)
+            }
+            .onDisappear {
+                visibleCardDisappeared(focusTarget)
             }
         } else {
             CompanionCardView(
@@ -245,33 +324,60 @@ struct CollectionView: View {
         }
     }
 
-    private func select(_ collectible: OwnedCollectible) {
+    private func select(focusTarget: CollectionCardFocusTarget) {
+        focusedCard = nil
         withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.34)) {
-            selection.select(awardKey: collectible.awardKey)
+            selection.select(focusTarget: focusTarget)
         }
     }
 
     private func closeSelection() {
-        withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .easeInOut(duration: 0.22)) {
+        let focusTarget = withAnimation(
+            reduceMotion ? .easeOut(duration: 0.2) : .easeInOut(duration: 0.22)
+        ) {
             selection.close()
+        }
+        guard let focusTarget else { return }
+        Task { @MainActor in
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+            focusedCard = focusTarget
         }
     }
 
-    private func markVisibleCollectiblesSeen(_ collectible: OwnedCollectible) {
-        guard collectible.isUnseen else { return }
-        markUnseenCollectiblesSeen()
+    private func visibleCardAppeared(_ focusTarget: CollectionCardFocusTarget) {
+        seenVisibility.appeared(focusTarget)
+        markVisibleCollectiblesSeen()
     }
 
-    private func markUnseenCollectiblesSeen() {
+    private func visibleCardDisappeared(_ focusTarget: CollectionCardFocusTarget) {
+        seenVisibility.disappeared(focusTarget)
+    }
+
+    private func markVisibleCollectiblesSeen() {
+        let awardKeys = seenVisibility.awardKeysToMarkSeen(
+            unseenAwardKeys: unseenAwardKeys,
+            isCollectionSelected: isCollectionSelected,
+            isObscured: isObscured
+        )
+        markUnseenCollectiblesSeen(awardKeys: awardKeys)
+    }
+
+    private func markUnseenCollectiblesSeen(awardKeys: Set<String>? = nil) {
+        let awardKeys = awardKeys ?? seenVisibility.awardKeysToMarkSeen(
+            unseenAwardKeys: unseenAwardKeys,
+            isCollectionSelected: isCollectionSelected,
+            isObscured: isObscured
+        )
         guard seenRetryState.beginAttempt(
-            hasUnseenCollectibles: hasUnseenCollectibles
+            hasUnseenCollectibles: !awardKeys.isEmpty
         ) else {
             return
         }
 
         let result: Result<Void, Error>
         do {
-            try CardRewardService.markAllSeen(in: context)
+            try CardRewardService.markSeen(awardKeys: awardKeys, in: context)
             result = .success(())
         } catch {
             result = .failure(error)

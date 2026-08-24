@@ -76,7 +76,6 @@ enum CardRewardService {
                         eligibleAt: eligibleAt
                     ))
                     awardedKeys.insert(awardKey)
-                    collectionProgress.activeStage = .mature
                 }
             }
         }
@@ -130,6 +129,24 @@ enum CardRewardService {
         try processCompletion(
             progress: progress,
             previousLevel: previousLevel,
+            completions: completions,
+            in: context,
+            now: now,
+            calendar: calendar
+        )
+    }
+
+    static func reconcilePersistedRewards(
+        in context: ModelContext,
+        now: Date,
+        calendar: Calendar
+    ) throws {
+        guard let progress = try context.fetch(FetchDescriptor<Progress>()).first else {
+            return
+        }
+        let completions = try context.fetch(FetchDescriptor<Completion>())
+        try reconcile(
+            progress: progress,
             completions: completions,
             in: context,
             now: now,
@@ -208,7 +225,19 @@ enum CardRewardService {
     }
 
     static func markAllSeen(in context: ModelContext) throws {
-        for collectible in try context.fetch(FetchDescriptor<OwnedCollectible>()) {
+        let awardKeys = Set(
+            try context.fetch(FetchDescriptor<OwnedCollectible>()).map(\.awardKey)
+        )
+        try markSeen(awardKeys: awardKeys, in: context)
+    }
+
+    static func markSeen(
+        awardKeys: Set<String>,
+        in context: ModelContext
+    ) throws {
+        guard !awardKeys.isEmpty else { return }
+        for collectible in try context.fetch(FetchDescriptor<OwnedCollectible>())
+        where awardKeys.contains(collectible.awardKey) {
             collectible.isUnseen = false
         }
         do {
@@ -241,7 +270,6 @@ enum CardRewardService {
             case let .active(index, stage) where index == ordinaryIndex:
                 progress.activeStage = stage
             case let .matured(index, _, _) where index == ordinaryIndex:
-                progress.activeStage = .mature
                 return
             case let .active(index, _) where index > ordinaryIndex,
                  let .matured(index, _, _) where index > ordinaryIndex:

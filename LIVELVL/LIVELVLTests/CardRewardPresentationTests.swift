@@ -44,8 +44,9 @@ struct CardRewardPresentationTests {
         var state = CardRewardPresentationState()
         state.present(reward)
 
-        state.reconcile(liveAwardKeys: [])
+        let didDismiss = state.reconcile(liveAwardKeys: [])
 
+        #expect(didDismiss)
         #expect(state.presentedReward == nil)
     }
 
@@ -56,7 +57,8 @@ struct CardRewardPresentationTests {
         let didBeginClaim = state.beginSuccessfulClaim(awardKey: reward.awardKey)
         #expect(didBeginClaim)
 
-        state.reconcile(liveAwardKeys: [])
+        let didDismissEarly = state.reconcile(liveAwardKeys: [])
+        #expect(!didDismissEarly)
         #expect(state.presentedReward == reward)
 
         state.finishSuccessfulClaim(awardKey: reward.awardKey)
@@ -138,6 +140,44 @@ struct CardRewardPresentationTests {
 
         state.cancel()
         #expect(!state.isCurrent(latest))
+    }
+
+    @Test func reducedMotionCollectionAttentionUsesNoSpatialTransform() {
+        let plan = CollectionTabFeedbackAnimationPlan(reduceMotion: true)
+
+        #expect(plan.shakeTranslations.isEmpty)
+        #expect(plan.initialPulseScale == 1)
+        #expect(plan.finalPulseScale == 1)
+    }
+
+    @Test func ordinaryCollectionAttentionRetainsItsSmallSpatialFeedback() {
+        let plan = CollectionTabFeedbackAnimationPlan(reduceMotion: false)
+
+        #expect(plan.shakeTranslations == [0, -3, 3, -3, 3, 0])
+        #expect(plan.initialPulseScale == 0.78)
+        #expect(plan.finalPulseScale == 1.2)
+    }
+
+    @Test func successiveRewardStartsExactlyAQuarterSecondAfterDismissalCompletes() {
+        var handoff = CardRewardHandoffState()
+        let dismissalCompletedAt = Date(timeIntervalSince1970: 12_000)
+        handoff.recordDismissalCompletion(at: dismissalCompletedAt)
+
+        #expect(handoff.generation == 1)
+        #expect(
+            handoff.presentationNotBefore(
+                rewardEligibleAt: dismissalCompletedAt.addingTimeInterval(-5)
+            ) == dismissalCompletedAt.addingTimeInterval(0.25)
+        )
+    }
+
+    @Test func laterRewardEligibilityRemainsAuthoritativeAfterDismissal() {
+        var handoff = CardRewardHandoffState()
+        let dismissalCompletedAt = Date(timeIntervalSince1970: 12_100)
+        let eligibleAt = dismissalCompletedAt.addingTimeInterval(2)
+        handoff.recordDismissalCompletion(at: dismissalCompletedAt)
+
+        #expect(handoff.presentationNotBefore(rewardEligibleAt: eligibleAt) == eligibleAt)
     }
 
     @Test func collectionTargetResolvesByStableIdentityAfterReordering() throws {

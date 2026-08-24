@@ -9,7 +9,7 @@ struct CollectionViewStateTests {
 
     @Test func staleSelectionClosesAndResetsTheCardFace() {
         var state = CollectionSelectionState()
-        state.select(awardKey: "owned.latest")
+        state.select(focusTarget: .grid(awardKey: "owned.latest"))
         state.setShowingBack(true)
 
         state.reconcile(validAwardKeys: [])
@@ -20,13 +20,65 @@ struct CollectionViewStateTests {
 
     @Test func liveSelectionSurvivesQueryReconciliation() {
         var state = CollectionSelectionState()
-        state.select(awardKey: "owned.latest")
+        state.select(focusTarget: .grid(awardKey: "owned.latest"))
         state.setShowingBack(true)
 
         state.reconcile(validAwardKeys: ["owned.latest", "owned.older"])
 
         #expect(state.selectedAwardKey == "owned.latest")
         #expect(state.isShowingBack)
+    }
+
+    @Test func closingExpandedFeaturedCardRestoresFocusToItsInitiator() {
+        var state = CollectionSelectionState()
+        let initiator = CollectionCardFocusTarget.featured(awardKey: "owned.latest")
+        state.select(focusTarget: initiator)
+        state.setShowingBack(true)
+
+        let focusTarget = state.close()
+
+        #expect(focusTarget == initiator)
+        #expect(state.selectedAwardKey == nil)
+        #expect(!state.isShowingBack)
+    }
+
+    @Test func closingExpandedGridCardRestoresFocusToItsInitiator() {
+        var state = CollectionSelectionState()
+        let initiator = CollectionCardFocusTarget.grid(awardKey: "owned.older")
+        state.select(focusTarget: initiator)
+
+        #expect(state.close() == initiator)
+    }
+
+    @Test func claimOnSelectedCollectionMarksVisibleCardOnlyAfterOverlayDismissal() {
+        var visibility = CollectionSeenVisibilityState()
+        let claimedCard = CollectionCardFocusTarget.featured(
+            awardKey: "ordinary.level.1"
+        )
+        visibility.appeared(claimedCard)
+        let unseenKeys: Set<String> = ["ordinary.level.1"]
+
+        #expect(visibility.awardKeysToMarkSeen(
+            unseenAwardKeys: unseenKeys,
+            isCollectionSelected: true,
+            isObscured: true
+        ).isEmpty)
+        #expect(visibility.awardKeysToMarkSeen(
+            unseenAwardKeys: unseenKeys,
+            isCollectionSelected: true,
+            isObscured: false
+        ) == unseenKeys)
+    }
+
+    @Test func leavingCollectionBeforeDismissalPreservesTheClaimAsUnseen() {
+        var visibility = CollectionSeenVisibilityState()
+        visibility.appeared(.grid(awardKey: "ordinary.level.1"))
+
+        #expect(visibility.awardKeysToMarkSeen(
+            unseenAwardKeys: ["ordinary.level.1"],
+            isCollectionSelected: false,
+            isObscured: false
+        ).isEmpty)
     }
 
     @Test func failedSeenAttemptReportsRetryWithoutSignalingSuccess() {

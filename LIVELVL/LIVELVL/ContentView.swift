@@ -90,6 +90,7 @@ extension ContentView {
 struct TodayView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @Query private var items: [Item]
     @Query private var completions: [Completion]
     @Query private var progressItems: [Progress]
@@ -227,7 +228,14 @@ struct TodayView: View {
             } message: {
                 Text("任务和 XP 已保存，但收藏奖励尚未处理。请重试补发奖励。")
             }
-            .onAppear(perform: ensureProgress)
+            .onAppear {
+                ensureProgress()
+                reconcilePersistedRewards()
+            }
+            .onChange(of: scenePhase) { _, phase in
+                guard phase == .active else { return }
+                reconcilePersistedRewards()
+            }
             .task(id: feedbackSequenceID) {
                 guard let feedback = rewardFeedback, feedbackSequenceID == feedback.id else { return }
                 try? await Task.sleep(for: .milliseconds(800))
@@ -335,18 +343,21 @@ struct TodayView: View {
     }
 
     private func retryRewardProcessing() {
+        reconcilePersistedRewards(showSuccessMessage: true)
+    }
+
+    private func reconcilePersistedRewards(showSuccessMessage: Bool = false) {
         do {
-            let persistedCompletions = try context.fetch(FetchDescriptor<Completion>())
-            try CardRewardService.reconcile(
-                progress: progress,
-                completions: persistedCompletions,
+            try CardRewardService.reconcilePersistedRewards(
                 in: context,
                 now: .now,
                 calendar: .current
             )
             rewardFlow.rewardProcessingSucceeded()
-            message = "收藏奖励已补发"
-            showMessage = true
+            if showSuccessMessage {
+                message = "收藏奖励已补发"
+                showMessage = true
+            }
         } catch {
             rewardFlow.rewardProcessingFailed()
         }
