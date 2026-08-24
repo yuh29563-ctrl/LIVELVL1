@@ -2,7 +2,6 @@ import SwiftUI
 
 struct AnimatedMediaView: View {
     let media: DecodedMedia
-    var contentMode: ContentMode = .fill
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var startDate = Date()
@@ -19,7 +18,7 @@ struct AnimatedMediaView: View {
                 )
                 Image(uiImage: media.frames[index].image)
                     .resizable()
-                    .aspectRatio(contentMode: contentMode)
+                    .scaledToFill()
             }
             .onChange(of: media.frames.count) { _, _ in
                 startDate = Date()

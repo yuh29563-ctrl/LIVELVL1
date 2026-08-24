@@ -13,9 +13,8 @@ struct GlassCardLayoutTests {
         #expect(LifeStateCardLayout.horizontalInset == GlassCardLayout.horizontalInset)
     }
 
-    @Test func companionCardUsesStableAspectRatioAndFitExpansion() {
+    @Test func companionCardUsesStableAspectRatio() {
         #expect(GlassCardLayout.companionAspectRatio == 2.2)
-        #expect(GlassCardLayout.expandedMediaUsesFit)
     }
 
     @Test func companionMediaUsesTransparentGlassAndReadableText() {
