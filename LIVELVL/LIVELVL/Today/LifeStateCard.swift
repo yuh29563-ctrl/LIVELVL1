@@ -1,5 +1,9 @@
 import SwiftUI
 
+enum LifeStateCardLayout {
+    static let horizontalInset = GlassCardLayout.horizontalInset
+}
+
 struct LifeStateCard: View {
     let summary: LifeStateSummary
     let pulse: RadarPulse?
@@ -8,64 +12,61 @@ struct LifeStateCard: View {
     @ScaledMetric(relativeTo: .body) private var radarHeight: CGFloat = 276
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 5) {
-                Text("你的最近 15 天")
-                    .font(.headline)
-                    .foregroundStyle(TodayVisualTheme.graphite)
-                Text("综合状态 \(summary.overallScore, format: .number.precision(.fractionLength(1)))")
-                    .font(.title2.bold().monospacedDigit())
-                    .foregroundStyle(pulse == nil ? TodayVisualTheme.ink : TodayVisualTheme.reward)
-                    .animation(.easeInOut(duration: 0.2), value: pulse?.id)
-            }
+        GlassCardSurface {
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("你的最近 15 天")
+                        .font(.headline)
+                        .foregroundStyle(TodayVisualTheme.graphite)
+                    Text("综合状态 \(summary.overallScore, format: .number.precision(.fractionLength(1)))")
+                        .font(.title2.bold().monospacedDigit())
+                        .foregroundStyle(pulse == nil ? TodayVisualTheme.ink : TodayVisualTheme.reward)
+                        .animation(.easeInOut(duration: 0.2), value: pulse?.id)
+                }
 
-            RadarChartView(
-                official: summary.official,
-                projected: summary.projected,
-                pulse: pulse
-            )
-            .frame(height: radarHeight)
-
-            HStack(spacing: 22) {
-                legendItem(title: "正式状态", color: TodayVisualTheme.ink, dashed: false)
-                legendItem(
-                    title: "行动预估",
-                    color: TodayVisualTheme.graphite,
-                    dashed: true
+                RadarChartView(
+                    official: summary.official,
+                    projected: summary.projected,
+                    pulse: pulse
                 )
-            }
-            .font(.subheadline)
-            .foregroundStyle(TodayVisualTheme.graphite)
+                .frame(height: radarHeight)
 
-            annotation
+                HStack(spacing: 22) {
+                    legendItem(title: "正式状态", color: TodayVisualTheme.ink, dashed: false)
+                    legendItem(
+                        title: "行动预估",
+                        color: TodayVisualTheme.graphite,
+                        dashed: true
+                    )
+                }
                 .font(.subheadline)
                 .foregroundStyle(TodayVisualTheme.graphite)
-                .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 11)
-                .background(
-                    TodayVisualTheme.cloud,
-                    in: RoundedRectangle(cornerRadius: 12, style: .continuous)
-                )
 
-            if summary.isAssessmentDue {
-                Button("更新本周状态", action: onAssessment)
-                    .buttonStyle(.bordered)
-                    .tint(TodayVisualTheme.ink)
-            } else {
-                Text("距离下次自评还有 \(summary.daysUntilAssessment) 天")
-                    .font(.footnote.weight(.medium).monospacedDigit())
+                annotation
+                    .font(.subheadline)
                     .foregroundStyle(TodayVisualTheme.graphite)
                     .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 11)
+                    .background(
+                        TodayVisualTheme.cloud,
+                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    )
+
+                if summary.isAssessmentDue {
+                    Button("更新本周状态", action: onAssessment)
+                        .buttonStyle(.bordered)
+                        .tint(TodayVisualTheme.ink)
+                } else {
+                    Text("距离下次自评还有 \(summary.daysUntilAssessment) 天")
+                        .font(.footnote.weight(.medium).monospacedDigit())
+                        .foregroundStyle(TodayVisualTheme.graphite)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
-        .padding(20)
-        .background(
-            Color.white,
-            in: RoundedRectangle(cornerRadius: 22, style: .continuous)
-        )
-        .shadow(color: Color.black.opacity(0.07), radius: 16, y: 6)
+        .padding(.horizontal, LifeStateCardLayout.horizontalInset)
     }
 
     @ViewBuilder

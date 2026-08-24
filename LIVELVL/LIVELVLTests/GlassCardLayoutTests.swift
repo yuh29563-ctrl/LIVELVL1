@@ -7,6 +7,7 @@ struct GlassCardLayoutTests {
         #expect(GlassCardLayout.contentPadding == 20)
         #expect(GlassCardLayout.cornerRadius == 28)
         #expect(GlassCardLayout.shadowRadius == 18)
+        #expect(LifeStateCardLayout.horizontalInset == GlassCardLayout.horizontalInset)
     }
 
     @Test func reduceMotionAlwaysSelectsFirstMediaFrame() {
