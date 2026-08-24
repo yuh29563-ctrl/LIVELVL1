@@ -139,11 +139,6 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    CompanionCardView(
-                        definition: companion.definition,
-                        stage: companion.stage
-                    )
-
                     VStack(spacing: 8) {
                         Text("升级至 Lv.\(levelUpFeedback ?? progress.level)")
                             .font(.subheadline.bold().monospacedDigit())
@@ -154,11 +149,15 @@ struct TodayView: View {
                             .accessibilityHidden(levelUpFeedback == nil)
                             .accessibilityLabel("升级至等级 \(levelUpFeedback ?? progress.level)")
 
-                        LevelCard(
-                            level: progress.level,
-                            currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
-                            requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
-                            remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
+                        TodayCompanionLevelCard(
+                            presentation: TodayCompanionLevelCardPresentation(
+                                definition: companion.definition,
+                                stage: companion.stage,
+                                level: progress.level,
+                                currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
+                                requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
+                                remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP)
+                            ),
                             progress: GrowthEngine.progressToNextLevel(for: progress.totalXP),
                             isRewarding: rewardFeedback != nil,
                             levelUpFeedback: levelUpFeedback
