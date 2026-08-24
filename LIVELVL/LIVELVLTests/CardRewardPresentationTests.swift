@@ -267,7 +267,8 @@ struct CardRewardPresentationTests {
         #expect(plan.buttonPressDuration == 0.12)
         #expect(plan.flightDuration == 0.6)
         #expect(plan.initialCardOpacity == 1)
-        #expect(plan.arrivalCardOpacity == 0.08)
+        #expect(plan.arrivalCardScale == 0.01)
+        #expect(plan.arrivalCardOpacity == 0)
         #expect(plan.usesSpatialFlight)
     }
 

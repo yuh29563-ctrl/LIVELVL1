@@ -23,6 +23,7 @@ struct CardRewardClaimAnimationPlan: Equatable {
     let buttonPressDuration: TimeInterval
     let flightDuration: TimeInterval
     let initialCardOpacity: Double
+    let arrivalCardScale: CGFloat
     let arrivalCardOpacity: Double
     let usesSpatialFlight: Bool
 
@@ -31,7 +32,8 @@ struct CardRewardClaimAnimationPlan: Equatable {
         buttonPressDuration = reduceMotion ? 0 : 0.12
         flightDuration = reduceMotion ? 0.2 : 0.6
         initialCardOpacity = 1
-        arrivalCardOpacity = 0.08
+        arrivalCardScale = reduceMotion ? 1 : 0.01
+        arrivalCardOpacity = 0
         usesSpatialFlight = !reduceMotion
     }
 }
@@ -240,19 +242,16 @@ struct CardRewardOverlay: View {
                     CardRewardFlightGeometry.transform(
                         from: cardFrame,
                         to: $0,
-                        scale: 0.15
+                        scale: plan.arrivalCardScale
                     )
-                } ?? CardRewardFlightTransform(scale: 0.15, offset: .zero)
+                } ?? CardRewardFlightTransform(scale: plan.arrivalCardScale, offset: .zero)
                 withAnimation(.timingCurve(0.18, 0.82, 0.28, 1, duration: plan.flightDuration)) {
                     cardScale = flightTransform.scale
                     cardOffset = flightTransform.offset
+                    cardOpacity = plan.arrivalCardOpacity
                     backdropOpacity = 0
                 }
-                try? await Task.sleep(for: .milliseconds(460))
-                withAnimation(.easeIn(duration: 0.14)) {
-                    cardOpacity = plan.arrivalCardOpacity
-                }
-                try? await Task.sleep(for: .milliseconds(140))
+                try? await Task.sleep(for: .milliseconds(600))
             }
 
             guard !Task.isCancelled else { return }
