@@ -10,15 +10,14 @@ enum GlassCardLayout {
 
 enum CompanionGlassStyle {
     static let mediaScrimOpacity: Double = 0
-    static let frostedMaterialOpacity: Double = 0.88
-    static let frostedTintOpacity: Double = 0
-    static let textHaloOpacity: Double = 0.82
-    static let textHaloRadius: CGFloat = 2.5
+    static let usesTransparentGlass = true
+    static let textShadowOpacity: Double = 0.62
+    static let textShadowRadius: CGFloat = 2.5
 }
 
 enum GlassCardSurfaceStyle: Equatable {
     case standard
-    case companionFrosted
+    case companionTransparent
 }
 
 struct GlassCardSurface<Content: View>: View {
@@ -43,7 +42,7 @@ struct GlassCardSurface<Content: View>: View {
             if let media {
                 AnimatedMediaView(media: media)
             } else {
-                Color.white.opacity(0.72)
+                (style == .companionTransparent ? Color.clear : Color.white.opacity(0.72))
             }
             Color.clear
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -52,9 +51,9 @@ struct GlassCardSurface<Content: View>: View {
             content
                 .padding(GlassCardLayout.contentPadding)
                 .shadow(
-                    color: .white.opacity(style == .companionFrosted ? CompanionGlassStyle.textHaloOpacity : 0),
-                    radius: style == .companionFrosted ? CompanionGlassStyle.textHaloRadius : 0,
-                    y: 0
+                    color: .black.opacity(style == .companionTransparent ? CompanionGlassStyle.textShadowOpacity : 0),
+                    radius: style == .companionTransparent ? CompanionGlassStyle.textShadowRadius : 0,
+                    y: 1
                 )
         }
         .clipShape(shape)
@@ -73,10 +72,12 @@ private struct GlassCardMaterial<S: Shape>: ViewModifier {
     func body(content: Content) -> some View {
         if #available(iOS 26.0, *) {
             GlassEffectContainer(spacing: 16) {
-                content.glassEffect(.regular, in: shape)
+                content.glassEffect(.clear, in: shape)
             }
         } else {
-            content.background(.ultraThinMaterial, in: shape)
+            content.overlay {
+                shape.stroke(Color.white.opacity(0.30), lineWidth: 1)
+            }
         }
     }
 }

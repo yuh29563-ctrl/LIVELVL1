@@ -10,12 +10,11 @@ struct GlassCardLayoutTests {
         #expect(LifeStateCardLayout.horizontalInset == GlassCardLayout.horizontalInset)
     }
 
-    @Test func companionMediaUsesFrostedReadabilityOverlay() {
+    @Test func companionMediaUsesTransparentGlassAndReadableText() {
         #expect(CompanionGlassStyle.mediaScrimOpacity == 0)
-        #expect(CompanionGlassStyle.frostedMaterialOpacity == 0.88)
-        #expect(CompanionGlassStyle.frostedTintOpacity == 0)
-        #expect(CompanionGlassStyle.textHaloOpacity == 0.82)
-        #expect(CompanionGlassStyle.textHaloRadius == 2.5)
+        #expect(CompanionGlassStyle.usesTransparentGlass)
+        #expect(CompanionGlassStyle.textShadowOpacity == 0.62)
+        #expect(CompanionGlassStyle.textShadowRadius == 2.5)
         #expect(GlassCardLayout.contentLayerIsAboveGlass)
     }
 

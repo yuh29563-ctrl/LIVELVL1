@@ -35,22 +35,22 @@ struct TodayCompanionLevelCard: View {
     }
 
     private var primaryTextColor: Color {
-        TodayVisualTheme.ink
+        media == nil ? TodayVisualTheme.ink : .white
     }
 
     private var secondaryTextColor: Color {
-        TodayVisualTheme.graphite
+        media == nil ? TodayVisualTheme.graphite : .white.opacity(0.88)
     }
 
     private var progressTrackColor: Color {
-        TodayVisualTheme.mist
+        media == nil ? TodayVisualTheme.mist : .white.opacity(0.42)
     }
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
             GlassCardSurface(
                 media: media,
-                style: media == nil ? .standard : .companionFrosted
+                style: media == nil ? .standard : .companionTransparent
             ) {
                 HStack(alignment: .top, spacing: 18) {
                     PixelSpeciesArtwork(
