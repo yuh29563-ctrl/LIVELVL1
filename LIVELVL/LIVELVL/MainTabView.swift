@@ -202,21 +202,38 @@ enum CollectionTabTargetResolver {
     }
 
     static func itemView(in tabBar: UITabBar) -> UIView? {
-        guard let stableMarkerView = descendantViews(of: tabBar).first(where: {
-            $0.accessibilityIdentifier == CollectionTabIdentity.accessibilityIdentifier
-                || $0.accessibilityIdentifier == CollectionTabIdentity.systemImageName
-        }) else {
+        guard let items = tabBar.items,
+              let collectionIndex = items.firstIndex(where: {
+                  $0.accessibilityIdentifier == CollectionTabIdentity.accessibilityIdentifier
+                      || $0.image?.accessibilityIdentifier == CollectionTabIdentity.systemImageName
+                      || $0.selectedImage?.accessibilityIdentifier == CollectionTabIdentity.systemImageName
+              }) else {
             return nil
         }
 
-        var ancestor: UIView? = stableMarkerView
-        while let current = ancestor, current !== tabBar {
-            if current is UIControl {
-                return current
+        let controls = descendantViews(of: tabBar)
+            .compactMap { $0 as? UIControl }
+            .filter { control in
+                var ancestor = control.superview
+                while let current = ancestor, current !== tabBar {
+                    if current is UIControl {
+                        return false
+                    }
+                    ancestor = current.superview
+                }
+                return ancestor === tabBar
+                    && control.bounds.width > 0
+                    && control.bounds.width < tabBar.bounds.width
+                    && control.bounds.height > 0
             }
-            ancestor = current.superview
-        }
-        return stableMarkerView
+            .sorted { $0.frame.midX < $1.frame.midX }
+
+        guard controls.count >= items.count else { return nil }
+        let controlIndex = tabBar.effectiveUserInterfaceLayoutDirection == .rightToLeft
+            ? controls.count - 1 - collectionIndex
+            : collectionIndex
+        guard controls.indices.contains(controlIndex) else { return nil }
+        return controls[controlIndex]
     }
 
     private static func descendantViews(of root: UIView) -> [UIView] {

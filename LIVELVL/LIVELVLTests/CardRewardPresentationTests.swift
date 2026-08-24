@@ -197,6 +197,26 @@ struct CardRewardPresentationTests {
         #expect(resolved === collection)
     }
 
+    @Test func collectionTargetUsesTheCollectionItemPositionInsteadOfAnAdjacentTab() throws {
+        let today = UITabBarItem(title: "今天", image: nil, selectedImage: nil)
+        let collection = UITabBarItem(title: "收集", image: nil, selectedImage: nil)
+        collection.accessibilityIdentifier = CollectionTabIdentity.accessibilityIdentifier
+        let rewards = UITabBarItem(title: "奖励", image: nil, selectedImage: nil)
+        let profile = UITabBarItem(title: "我的", image: nil, selectedImage: nil)
+        let tabBar = UITabBar(frame: CGRect(x: 0, y: 0, width: 400, height: 60))
+        tabBar.items = [today, collection, rewards, profile]
+
+        let controls = (0..<4).map { index in
+            let control = UIControl(frame: CGRect(x: CGFloat(index) * 100, y: 0, width: 100, height: 60))
+            tabBar.addSubview(control)
+            return control
+        }
+
+        let target = try #require(CollectionTabTargetResolver.itemView(in: tabBar))
+
+        #expect(target === controls[1])
+    }
+
     @Test func flightOffsetUsesMeasuredFramesInEitherLayoutDirection() {
         let cardFrame = CGRect(x: 100, y: 200, width: 200, height: 300)
         let standardTarget = CGRect(x: 70, y: 760, width: 60, height: 40)
