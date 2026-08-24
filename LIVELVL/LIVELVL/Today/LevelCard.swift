@@ -5,32 +5,17 @@ struct CompanionJournalNameMetrics: Equatable {
     let minimumScaleFactor: CGFloat
 }
 
-struct CompanionJournalGlyphStyle: Equatable {
-    let rotationDegrees: Double
-    let baselineOffset: CGFloat
-}
-
 enum CompanionJournalTypography {
+    static let handwritingFontName = "MaShanZheng-Regular"
+
     static func metrics(for name: String) -> CompanionJournalNameMetrics {
         switch name.count {
         case ...4:
-            CompanionJournalNameMetrics(pointSize: 38, minimumScaleFactor: 0.82)
+            CompanionJournalNameMetrics(pointSize: 42, minimumScaleFactor: 0.82)
         case 5...6:
-            CompanionJournalNameMetrics(pointSize: 28, minimumScaleFactor: 0.76)
+            CompanionJournalNameMetrics(pointSize: 32, minimumScaleFactor: 0.76)
         default:
-            CompanionJournalNameMetrics(pointSize: 21, minimumScaleFactor: 0.68)
-        }
-    }
-
-    static func glyphStyles(for text: String) -> [CompanionJournalGlyphStyle] {
-        let rotations = [-1.8, 1.2, -0.7, 2.1, -1.1]
-        let offsets: [CGFloat] = [0.8, -0.6, 1.2, -0.9, 0.3]
-
-        return text.indices.enumerated().map { index, _ in
-            CompanionJournalGlyphStyle(
-                rotationDegrees: rotations[index % rotations.count],
-                baselineOffset: offsets[index % offsets.count]
-            )
+            CompanionJournalNameMetrics(pointSize: 24, minimumScaleFactor: 0.68)
         }
     }
 }
@@ -88,7 +73,7 @@ struct TodayCompanionLevelCard: View {
                     media: media,
                     style: .companionTransparent
                 ) {
-                    HStack(alignment: .center, spacing: 14) {
+                    HStack(alignment: .center, spacing: 16) {
                         CompanionPolaroidArtwork(
                             definition: presentation.definition,
                             stage: presentation.stage
@@ -169,7 +154,7 @@ private struct CompanionPolaroidArtwork: View {
                 .rotationEffect(.degrees(1.5))
                 .offset(y: -5)
         }
-        .frame(width: 88, height: 102)
+        .frame(width: 94, height: 118)
         .rotationEffect(.degrees(-2))
         .accessibilityHidden(true)
     }
@@ -194,8 +179,7 @@ private struct CompanionJournalDetails: View {
             HStack(alignment: .firstTextBaseline, spacing: 7) {
                 CompanionJournalWordmark(
                     text: "正在陪伴",
-                    pointSize: 14,
-                    weight: .medium
+                    pointSize: 15
                 )
 
                 Text(presentation.stageTitle)
@@ -218,8 +202,7 @@ private struct CompanionJournalDetails: View {
                 ViewThatFits(in: .horizontal) {
                     CompanionJournalWordmark(
                         text: presentation.companionName,
-                        pointSize: nameMetrics.pointSize,
-                        weight: .semibold
+                        pointSize: nameMetrics.pointSize
                     )
 
                     Text(presentation.companionName)
@@ -241,6 +224,8 @@ private struct CompanionJournalDetails: View {
                 .foregroundStyle(secondaryTextColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.78)
+
+            Spacer(minLength: 1)
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("Lv.\(presentation.level)")
@@ -281,23 +266,13 @@ private struct CompanionJournalDetails: View {
 private struct CompanionJournalWordmark: View {
     let text: String
     let pointSize: CGFloat
-    let weight: Font.Weight
 
     var body: some View {
-        let characters = Array(text)
-        let styles = CompanionJournalTypography.glyphStyles(for: text)
-
-        HStack(alignment: .firstTextBaseline, spacing: -1.5) {
-            ForEach(characters.indices, id: \.self) { index in
-                Text(String(characters[index]))
-                    .font(.system(size: pointSize, weight: weight, design: .rounded))
-                    .rotationEffect(.degrees(styles[index].rotationDegrees))
-                    .offset(y: styles[index].baselineOffset)
-            }
-        }
-        .fixedSize(horizontal: true, vertical: false)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(text)
+        Text(text)
+            .font(.custom(CompanionJournalTypography.handwritingFontName, size: pointSize))
+            .lineLimit(1)
+            .minimumScaleFactor(0.68)
+            .accessibilityLabel(text)
     }
 }
 

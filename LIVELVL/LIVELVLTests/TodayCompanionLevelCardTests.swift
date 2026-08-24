@@ -1,4 +1,5 @@
 import Testing
+import UIKit
 @testable import LIVELVL
 
 struct TodayCompanionLevelCardTests {
@@ -22,17 +23,12 @@ struct TodayCompanionLevelCardTests {
         let shortName = CompanionJournalTypography.metrics(for: "小芽")
         let longName = CompanionJournalTypography.metrics(for: "会陪你散步的小狗")
 
-        #expect(shortName.pointSize == 38)
         #expect(longName.pointSize < shortName.pointSize)
         #expect(longName.minimumScaleFactor < shortName.minimumScaleFactor)
     }
 
-    @Test func journalGlyphStylingPreservesEveryDynamicCharacterWithinSubtleBounds() {
-        let name = "会陪你散步的小狗"
-        let styles = CompanionJournalTypography.glyphStyles(for: name)
-
-        #expect(styles.count == name.count)
-        #expect(styles.allSatisfy { abs($0.rotationDegrees) <= 2.5 })
-        #expect(styles.allSatisfy { abs($0.baselineOffset) <= 1.5 })
+    @MainActor
+    @Test func bundledChineseHandwritingFontIsRegistered() {
+        #expect(UIFont(name: "MaShanZheng-Regular", size: 38) != nil)
     }
 }

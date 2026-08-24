@@ -3,9 +3,11 @@ import SwiftUI
 enum GlassCardLayout {
     static let horizontalInset: CGFloat = 16
     static let contentPadding: CGFloat = 20
+    static let companionHorizontalPadding: CGFloat = 14
+    static let companionVerticalPadding: CGFloat = 12
     static let cornerRadius: CGFloat = 28
     static let shadowRadius: CGFloat = 18
-    static let companionAspectRatio: CGFloat = 2.2
+    static let companionAspectRatio: CGFloat = 2.0
     static let contentLayerIsAboveGlass = true
 }
 
@@ -80,7 +82,8 @@ struct GlassCardSurface<Content: View>: View {
                     }
                     .overlay {
                         content
-                            .padding(GlassCardLayout.contentPadding)
+                            .padding(.horizontal, GlassCardLayout.companionHorizontalPadding)
+                            .padding(.vertical, GlassCardLayout.companionVerticalPadding)
                             .shadow(
                                 color: .black.opacity(CompanionGlassStyle.textShadowOpacity),
                                 radius: CompanionGlassStyle.textShadowRadius,
