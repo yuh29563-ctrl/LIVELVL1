@@ -5,13 +5,15 @@ enum GlassCardLayout {
     static let contentPadding: CGFloat = 20
     static let cornerRadius: CGFloat = 28
     static let shadowRadius: CGFloat = 18
+    static let contentLayerIsAboveGlass = true
 }
 
 enum CompanionGlassStyle {
-    static let mediaScrimOpacity: Double = 0.30
+    static let mediaScrimOpacity: Double = 0
     static let frostedMaterialOpacity: Double = 0.88
-    static let frostedTintOpacity: Double = 0.10
-    static let textShadowOpacity: Double = 0.18
+    static let frostedTintOpacity: Double = 0
+    static let textHaloOpacity: Double = 0.82
+    static let textHaloRadius: CGFloat = 2.5
 }
 
 enum GlassCardSurfaceStyle: Equatable {
@@ -40,31 +42,22 @@ struct GlassCardSurface<Content: View>: View {
         ZStack {
             if let media {
                 AnimatedMediaView(media: media)
-                if style == .companionFrosted {
-                    Color.black.opacity(CompanionGlassStyle.mediaScrimOpacity)
-                    LinearGradient(
-                        colors: [.clear, .black.opacity(0.28)],
-                        startPoint: .leading,
-                        endPoint: .trailing
-                    )
-                    Rectangle()
-                        .fill(.regularMaterial)
-                        .opacity(CompanionGlassStyle.frostedMaterialOpacity)
-                    Color.white.opacity(CompanionGlassStyle.frostedTintOpacity)
-                }
             } else {
                 Color.white.opacity(0.72)
             }
+            Color.clear
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .modifier(GlassCardMaterial(shape: shape))
+                .allowsHitTesting(false)
             content
                 .padding(GlassCardLayout.contentPadding)
                 .shadow(
-                    color: .black.opacity(style == .companionFrosted ? CompanionGlassStyle.textShadowOpacity : 0),
-                    radius: style == .companionFrosted ? 1.5 : 0,
-                    y: style == .companionFrosted ? 1 : 0
+                    color: .white.opacity(style == .companionFrosted ? CompanionGlassStyle.textHaloOpacity : 0),
+                    radius: style == .companionFrosted ? CompanionGlassStyle.textHaloRadius : 0,
+                    y: 0
                 )
         }
         .clipShape(shape)
-        .modifier(GlassCardMaterial(shape: shape))
         .shadow(
             color: .black.opacity(0.10),
             radius: GlassCardLayout.shadowRadius,

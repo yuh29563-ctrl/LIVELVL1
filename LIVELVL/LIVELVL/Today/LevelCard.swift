@@ -35,15 +35,15 @@ struct TodayCompanionLevelCard: View {
     }
 
     private var primaryTextColor: Color {
-        media == nil ? TodayVisualTheme.ink : .white
+        TodayVisualTheme.ink
     }
 
     private var secondaryTextColor: Color {
-        media == nil ? TodayVisualTheme.graphite : .white.opacity(0.82)
+        TodayVisualTheme.graphite
     }
 
     private var progressTrackColor: Color {
-        media == nil ? TodayVisualTheme.mist : .white.opacity(0.30)
+        TodayVisualTheme.mist
     }
 
     var body: some View {

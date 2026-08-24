@@ -11,10 +11,12 @@ struct GlassCardLayoutTests {
     }
 
     @Test func companionMediaUsesFrostedReadabilityOverlay() {
-        #expect(CompanionGlassStyle.mediaScrimOpacity == 0.30)
+        #expect(CompanionGlassStyle.mediaScrimOpacity == 0)
         #expect(CompanionGlassStyle.frostedMaterialOpacity == 0.88)
-        #expect(CompanionGlassStyle.frostedTintOpacity == 0.10)
-        #expect(CompanionGlassStyle.textShadowOpacity == 0.18)
+        #expect(CompanionGlassStyle.frostedTintOpacity == 0)
+        #expect(CompanionGlassStyle.textHaloOpacity == 0.82)
+        #expect(CompanionGlassStyle.textHaloRadius == 2.5)
+        #expect(GlassCardLayout.contentLayerIsAboveGlass)
     }
 
     @Test func reduceMotionAlwaysSelectsFirstMediaFrame() {
