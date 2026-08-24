@@ -29,6 +29,7 @@ struct TodayCompanionLevelCard: View {
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var levelPulseScale = 1.0
+    @State private var isMediaExpanded = false
 
     private var clampedProgress: Double {
         min(1, max(0, progress))
@@ -47,7 +48,10 @@ struct TodayCompanionLevelCard: View {
     }
 
     var body: some View {
-        ZStack(alignment: .topTrailing) {
+        Color.clear
+            .aspectRatio(GlassCardLayout.companionAspectRatio, contentMode: .fit)
+            .overlay {
+                ZStack(alignment: .topTrailing) {
             GlassCardSurface(
                 media: media,
                 style: media == nil ? .standard : .companionTransparent
@@ -122,25 +126,45 @@ struct TodayCompanionLevelCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Menu {
-                Button("更换背景图片", action: onChooseMedia)
+            HStack(spacing: 8) {
                 if media != nil {
-                    Button("移除背景图片", role: .destructive, action: onRemoveMedia)
+                    Button {
+                        isMediaExpanded = true
+                    } label: {
+                        Image(systemName: "arrow.up.left.and.arrow.down.right")
+                            .font(.caption.weight(.bold))
+                            .padding(10)
+                            .background(.thinMaterial, in: Circle())
+                    }
+                    .accessibilityLabel("展开完整背景图片")
                 }
-            } label: {
-                Image(systemName: media == nil ? "photo" : "photo.fill")
-                    .font(.subheadline.weight(.semibold))
-                    .padding(10)
-                    .background(.thinMaterial, in: Circle())
+
+                Menu {
+                    Button("更换背景图片", action: onChooseMedia)
+                    if media != nil {
+                        Button("移除背景图片", role: .destructive, action: onRemoveMedia)
+                    }
+                } label: {
+                    Image(systemName: media == nil ? "photo" : "photo.fill")
+                        .font(.subheadline.weight(.semibold))
+                        .padding(10)
+                        .background(.thinMaterial, in: Circle())
+                }
+                .accessibilityLabel(media == nil ? "设置陪伴卡背景图片" : "管理陪伴卡背景图片")
             }
             .padding(12)
-            .accessibilityLabel(media == nil ? "设置陪伴卡背景图片" : "管理陪伴卡背景图片")
-        }
+                }
+            }
         .padding(.horizontal, GlassCardLayout.horizontalInset)
         .foregroundStyle(primaryTextColor)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(presentation.accessibilityLabel)
         .accessibilityValue(presentation.accessibilityValue)
+        .sheet(isPresented: $isMediaExpanded) {
+            if let media {
+                CompanionMediaViewer(media: media)
+            }
+        }
         .task(id: levelUpFeedback) {
             levelPulseScale = 1
             guard levelUpFeedback != nil, !reduceMotion else { return }
@@ -148,6 +172,35 @@ struct TodayCompanionLevelCard: View {
                 levelPulseScale = 1.045
             }
         }
+    }
+}
+
+private struct CompanionMediaViewer: View {
+    let media: DecodedMedia
+
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Color.black.ignoresSafeArea()
+
+            AnimatedMediaView(media: media, contentMode: .fit)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(24)
+
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "xmark")
+            }
+            .labelStyle(.iconOnly)
+            .buttonStyle(.borderedProminent)
+            .tint(.white.opacity(0.18))
+            .foregroundStyle(.white)
+            .padding()
+            .accessibilityLabel("关闭完整背景图片")
+        }
+        .presentationBackground(.black)
     }
 }
 

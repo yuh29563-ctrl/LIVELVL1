@@ -10,6 +10,11 @@ struct GlassCardLayoutTests {
         #expect(LifeStateCardLayout.horizontalInset == GlassCardLayout.horizontalInset)
     }
 
+    @Test func companionCardUsesStableAspectRatioAndFitExpansion() {
+        #expect(GlassCardLayout.companionAspectRatio == 1.28)
+        #expect(GlassCardLayout.expandedMediaUsesFit)
+    }
+
     @Test func companionMediaUsesTransparentGlassAndReadableText() {
         #expect(CompanionGlassStyle.mediaScrimOpacity == 0)
         #expect(CompanionGlassStyle.usesTransparentGlass)

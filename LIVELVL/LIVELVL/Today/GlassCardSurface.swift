@@ -5,6 +5,8 @@ enum GlassCardLayout {
     static let contentPadding: CGFloat = 20
     static let cornerRadius: CGFloat = 28
     static let shadowRadius: CGFloat = 18
+    static let companionAspectRatio: CGFloat = 1.28
+    static let expandedMediaUsesFit = true
     static let contentLayerIsAboveGlass = true
 }
 
