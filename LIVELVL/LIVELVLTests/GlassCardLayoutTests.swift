@@ -11,7 +11,7 @@ struct GlassCardLayoutTests {
     }
 
     @Test func companionCardUsesStableAspectRatioAndFitExpansion() {
-        #expect(GlassCardLayout.companionAspectRatio == 1.28)
+        #expect(GlassCardLayout.companionAspectRatio == 2.2)
         #expect(GlassCardLayout.expandedMediaUsesFit)
     }
 
