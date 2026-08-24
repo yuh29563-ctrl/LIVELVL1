@@ -36,7 +36,10 @@ struct TodayCompanionLevelCard: View {
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
-            GlassCardSurface(media: media) {
+            GlassCardSurface(
+                media: media,
+                style: media == nil ? .standard : .companionFrosted
+            ) {
                 HStack(alignment: .top, spacing: 18) {
                     PixelSpeciesArtwork(
                         definition: presentation.definition,

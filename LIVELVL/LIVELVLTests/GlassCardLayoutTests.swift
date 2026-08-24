@@ -10,6 +10,12 @@ struct GlassCardLayoutTests {
         #expect(LifeStateCardLayout.horizontalInset == GlassCardLayout.horizontalInset)
     }
 
+    @Test func companionMediaUsesFrostedReadabilityOverlay() {
+        #expect(CompanionGlassStyle.mediaScrimOpacity == 0.22)
+        #expect(CompanionGlassStyle.frostedMaterialOpacity == 0.72)
+        #expect(CompanionGlassStyle.textShadowOpacity == 0.18)
+    }
+
     @Test func reduceMotionAlwaysSelectsFirstMediaFrame() {
         let frames = [
             DecodedMediaFrame(image: .init(), duration: 0.1),
