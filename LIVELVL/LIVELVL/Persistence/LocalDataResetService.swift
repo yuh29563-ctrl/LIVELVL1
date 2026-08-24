@@ -36,31 +36,54 @@ enum LocalDataResetService {
             for model in try context.fetch(FetchDescriptor<DimensionProfile>()) {
                 context.delete(model)
             }
+            if let mediaModels = try? context.fetch(FetchDescriptor<UserCardMedia>()) {
+                for model in mediaModels {
+                    context.delete(model)
+                }
+            }
             try save(context)
         } catch {
             context.rollback()
             throw error
         }
 
-        let imageDirectoryURL = applicationSupportURL
-            .appending(path: "RewardProductImages", directoryHint: .isDirectory)
-        guard fileManager.fileExists(atPath: imageDirectoryURL.path) else { return }
+        let cleanupTargets: [(url: URL, error: (Error) -> LocalDataResetError)] = [
+            (
+                applicationSupportURL.appending(
+                    path: "RewardProductImages",
+                    directoryHint: .isDirectory
+                ),
+                { LocalDataResetError.imageCleanupFailed(underlying: $0) }
+            ),
+            (
+                applicationSupportURL.appending(
+                    path: "UserCardMedia",
+                    directoryHint: .isDirectory
+                ),
+                { LocalDataResetError.mediaCleanupFailed(underlying: $0) }
+            )
+        ]
 
-        do {
-            try removeItem(fileManager, imageDirectoryURL)
-        } catch {
-            throw LocalDataResetError.imageCleanupFailed(underlying: error)
+        for target in cleanupTargets where fileManager.fileExists(atPath: target.url.path) {
+            do {
+                try removeItem(fileManager, target.url)
+            } catch {
+                throw target.error(error)
+            }
         }
     }
 }
 
 private enum LocalDataResetError: LocalizedError {
     case imageCleanupFailed(underlying: Error)
+    case mediaCleanupFailed(underlying: Error)
 
     var errorDescription: String? {
         switch self {
         case let .imageCleanupFailed(underlying):
             "数据记录已清除，但奖励图片清理失败：\(underlying.localizedDescription)"
+        case let .mediaCleanupFailed(underlying):
+            "数据记录已清除，但陪伴卡背景清理失败：\(underlying.localizedDescription)"
         }
     }
 }
