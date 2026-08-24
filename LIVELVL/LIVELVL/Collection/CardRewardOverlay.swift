@@ -18,6 +18,24 @@ struct CardRewardFlightTransform: Equatable {
     }
 }
 
+struct CardRewardClaimAnimationPlan: Equatable {
+    let buttonPressScale: CGFloat
+    let buttonPressDuration: TimeInterval
+    let flightDuration: TimeInterval
+    let initialCardOpacity: Double
+    let arrivalCardOpacity: Double
+    let usesSpatialFlight: Bool
+
+    init(reduceMotion: Bool) {
+        buttonPressScale = reduceMotion ? 1 : 0.94
+        buttonPressDuration = reduceMotion ? 0 : 0.12
+        flightDuration = reduceMotion ? 0.2 : 0.6
+        initialCardOpacity = 1
+        arrivalCardOpacity = 0.08
+        usesSpatialFlight = !reduceMotion
+    }
+}
+
 enum CardRewardFlightGeometry {
     static func offset(from cardFrame: CGRect, to targetFrame: CGRect) -> CGSize {
         CGSize(
@@ -64,6 +82,7 @@ struct CardRewardOverlay: View {
     @State private var cardOpacity = 1.0
     @State private var backdropOpacity = 1.0
     @State private var cardFrame = CGRect.zero
+    @State private var claimButtonScale: CGFloat = 1
 
     private var title: String {
         kind == .ordinaryMature ? "陪伴成熟" : "隐藏发现"
@@ -172,6 +191,7 @@ struct CardRewardOverlay: View {
                 )
             }
             .buttonStyle(.plain)
+            .scaleEffect(claimButtonScale)
             .disabled(isClaiming)
             .accessibilityLabel(isClaiming ? "正在收下" : "收下")
         }
@@ -201,8 +221,16 @@ struct CardRewardOverlay: View {
         }
 
         Task { @MainActor in
-            if reduceMotion {
-                withAnimation(.easeOut(duration: 0.2)) {
+            let plan = CardRewardClaimAnimationPlan(reduceMotion: reduceMotion)
+            if plan.buttonPressDuration > 0 {
+                withAnimation(.easeOut(duration: plan.buttonPressDuration)) {
+                    claimButtonScale = plan.buttonPressScale
+                }
+                try? await Task.sleep(for: .milliseconds(120))
+            }
+
+            if !plan.usesSpatialFlight {
+                withAnimation(.easeOut(duration: plan.flightDuration)) {
                     cardOpacity = 0
                     backdropOpacity = 0
                 }
@@ -215,13 +243,16 @@ struct CardRewardOverlay: View {
                         scale: 0.15
                     )
                 } ?? CardRewardFlightTransform(scale: 0.15, offset: .zero)
-                withAnimation(.easeInOut(duration: 0.45)) {
+                withAnimation(.timingCurve(0.18, 0.82, 0.28, 1, duration: plan.flightDuration)) {
                     cardScale = flightTransform.scale
                     cardOffset = flightTransform.offset
-                    cardOpacity = 0.08
                     backdropOpacity = 0
                 }
-                try? await Task.sleep(for: .milliseconds(450))
+                try? await Task.sleep(for: .milliseconds(460))
+                withAnimation(.easeIn(duration: 0.14)) {
+                    cardOpacity = plan.arrivalCardOpacity
+                }
+                try? await Task.sleep(for: .milliseconds(140))
             }
 
             guard !Task.isCancelled else { return }

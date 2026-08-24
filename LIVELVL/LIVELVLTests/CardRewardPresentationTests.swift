@@ -239,4 +239,23 @@ struct CardRewardPresentationTests {
         #expect(abs(legacyScrollAnchoredCenter.y - 859) < 0.001)
         #expect(legacyScrollAnchoredCenter != CGPoint(x: 300, y: 740))
     }
+
+    @Test func standardClaimFlightKeepsTheRewardVisibleUntilItsCollectionArrival() {
+        let plan = CardRewardClaimAnimationPlan(reduceMotion: false)
+
+        #expect(plan.buttonPressScale == 0.94)
+        #expect(plan.buttonPressDuration == 0.12)
+        #expect(plan.flightDuration == 0.6)
+        #expect(plan.initialCardOpacity == 1)
+        #expect(plan.arrivalCardOpacity == 0.08)
+        #expect(plan.usesSpatialFlight)
+    }
+
+    @Test func reducedMotionClaimAvoidsSpatialFlight() {
+        let plan = CardRewardClaimAnimationPlan(reduceMotion: true)
+
+        #expect(plan.buttonPressScale == 1)
+        #expect(plan.flightDuration == 0.2)
+        #expect(!plan.usesSpatialFlight)
+    }
 }
