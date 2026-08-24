@@ -21,6 +21,9 @@ struct TodayCompanionLevelCardPresentation: Equatable {
 struct TodayCompanionLevelCard: View {
     let presentation: TodayCompanionLevelCardPresentation
     let progress: Double
+    var media: DecodedMedia?
+    var onChooseMedia: () -> Void = {}
+    var onRemoveMedia: () -> Void = {}
     var isRewarding = false
     var levelUpFeedback: Int?
 
@@ -32,19 +35,21 @@ struct TodayCompanionLevelCard: View {
     }
 
     var body: some View {
-        HStack(alignment: .top, spacing: 18) {
-            PixelSpeciesArtwork(
-                definition: presentation.definition,
-                stage: presentation.stage,
-                isSilhouette: false
-            )
-            .frame(width: 112, height: 132)
+        ZStack(alignment: .topTrailing) {
+            GlassCardSurface(media: media) {
+                HStack(alignment: .top, spacing: 18) {
+                    PixelSpeciesArtwork(
+                        definition: presentation.definition,
+                        stage: presentation.stage,
+                        isSilhouette: false
+                    )
+                    .frame(width: 112, height: 132)
 
-            VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("正在陪伴")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(TodayVisualTheme.graphite)
+                    VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("正在陪伴")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(TodayVisualTheme.graphite)
 
                     ViewThatFits(in: .horizontal) {
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -70,40 +75,54 @@ struct TodayCompanionLevelCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text("Lv.\(presentation.level)")
-                        .font(.system(.title, design: .rounded, weight: .bold))
-                        .monospacedDigit()
-                        .foregroundStyle(levelUpFeedback == nil ? TodayVisualTheme.ink : TodayVisualTheme.reward)
-                        .scaleEffect(levelPulseScale)
-                    Spacer(minLength: 8)
-                    Text("\(presentation.currentXP) / \(presentation.requiredXP) XP")
-                        .font(.subheadline.bold().monospacedDigit())
-                        .foregroundStyle(isRewarding ? TodayVisualTheme.reward : TodayVisualTheme.graphite)
-                        .fixedSize(horizontal: true, vertical: false)
-                }
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text("Lv.\(presentation.level)")
+                                .font(.system(.title, design: .rounded, weight: .bold))
+                                .monospacedDigit()
+                                .foregroundStyle(levelUpFeedback == nil ? TodayVisualTheme.ink : TodayVisualTheme.reward)
+                                .scaleEffect(levelPulseScale)
+                            Spacer(minLength: 8)
+                            Text("\(presentation.currentXP) / \(presentation.requiredXP) XP")
+                                .font(.subheadline.bold().monospacedDigit())
+                                .foregroundStyle(isRewarding ? TodayVisualTheme.reward : TodayVisualTheme.graphite)
+                                .fixedSize(horizontal: true, vertical: false)
+                        }
 
-                GeometryReader { proxy in
-                    ZStack(alignment: .leading) {
-                        Capsule().fill(TodayVisualTheme.mist)
-                        Capsule()
-                            .fill(isRewarding ? TodayVisualTheme.reward : TodayVisualTheme.ink)
-                            .frame(width: proxy.size.width * clampedProgress)
+                        GeometryReader { proxy in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(TodayVisualTheme.mist)
+                                Capsule()
+                                    .fill(isRewarding ? TodayVisualTheme.reward : TodayVisualTheme.ink)
+                                    .frame(width: proxy.size.width * clampedProgress)
+                            }
+                            .animation(.easeInOut(duration: 0.2), value: isRewarding)
+                        }
+                        .frame(height: 8)
+
+                        Text("还需 \(presentation.remainingXP) XP 升级")
+                            .font(.caption.monospacedDigit())
+                            .foregroundStyle(TodayVisualTheme.graphite)
                     }
-                    .animation(.easeInOut(duration: 0.2), value: isRewarding)
                 }
-                .frame(height: 8)
-
-                Text("还需 \(presentation.remainingXP) XP 升级")
-                    .font(.caption.monospacedDigit())
-                    .foregroundStyle(TodayVisualTheme.graphite)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+
+            Menu {
+                Button("更换背景图片", action: onChooseMedia)
+                if media != nil {
+                    Button("移除背景图片", role: .destructive, action: onRemoveMedia)
+                }
+            } label: {
+                Image(systemName: media == nil ? "photo" : "photo.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .padding(10)
+                    .background(.thinMaterial, in: Circle())
+            }
+            .padding(12)
+            .accessibilityLabel(media == nil ? "设置陪伴卡背景图片" : "管理陪伴卡背景图片")
         }
-        .padding(20)
+        .padding(.horizontal, GlassCardLayout.horizontalInset)
         .foregroundStyle(TodayVisualTheme.ink)
-        .background(Color.white, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .shadow(color: Color.black.opacity(0.06), radius: 16, y: 6)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(presentation.accessibilityLabel)
         .accessibilityValue(presentation.accessibilityValue)

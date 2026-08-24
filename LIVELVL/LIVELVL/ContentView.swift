@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
 #if DEBUG
 import Combine
 #endif
@@ -96,6 +97,7 @@ struct TodayView: View {
     @Query private var progressItems: [Progress]
     @Query private var collectionProgressItems: [CollectionProgress]
     @Query private var profiles: [DimensionProfile]
+    @StateObject private var companionMediaController = TodayCompanionMediaController()
     @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
     private var snapshots: [StateSnapshot]
     @State private var showAdd = false
@@ -109,6 +111,8 @@ struct TodayView: View {
     @State private var feedbackSequenceID: UUID?
     @State private var levelUpFeedback: Int?
     @State private var rewardFlow = CompletionRewardFlowState()
+    @State private var showMediaPicker = false
+    @State private var selectedMediaItem: PhotosPickerItem?
 
     private var progress: Progress { progressItems.first ?? Progress() }
 
@@ -159,6 +163,9 @@ struct TodayView: View {
                             remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP)
                         ),
                         progress: GrowthEngine.progressToNextLevel(for: progress.totalXP),
+                        media: companionMediaController.state.decoded,
+                        onChooseMedia: { showMediaPicker = true },
+                        onRemoveMedia: { try? companionMediaController.removeMedia() },
                         isRewarding: rewardFeedback != nil,
                         levelUpFeedback: levelUpFeedback
                     )
@@ -213,6 +220,11 @@ struct TodayView: View {
             }
             .sheet(isPresented: $showAdd) { AddTaskView() }
             .sheet(isPresented: $showAssessment) { StateAssessmentView(mode: .weekly) }
+            .photosPicker(
+                isPresented: $showMediaPicker,
+                selection: $selectedMediaItem,
+                matching: .images
+            )
             .alert("确认完成任务？", isPresented: $showConfirm) {
                 Button("确认完成") { confirmCompletion() }
                 Button("先不完成", role: .cancel) { pendingItemID = nil }
@@ -231,6 +243,20 @@ struct TodayView: View {
             .onAppear {
                 ensureProgress()
                 reconcilePersistedRewards()
+                companionMediaController.configure(context: context)
+            }
+            .onChange(of: selectedMediaItem) { _, item in
+                guard let item else { return }
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self) {
+                        await companionMediaController.importMedia(data: data)
+                    }
+                    selectedMediaItem = nil
+                }
+            }
+            .task {
+                companionMediaController.configure(context: context)
+                await companionMediaController.load()
             }
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active else { return }
