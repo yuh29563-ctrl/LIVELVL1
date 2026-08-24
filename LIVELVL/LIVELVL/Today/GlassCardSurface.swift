@@ -22,6 +22,32 @@ enum GlassCardSurfaceStyle: Equatable {
     case companionTransparent
 }
 
+struct CompanionCardFixedLayout: Layout {
+    func sizeThatFits(
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) -> CGSize {
+        let width = proposal.width ?? subviews.first?.sizeThatFits(.unspecified).width ?? 0
+        return CGSize(width: width, height: width / GlassCardLayout.companionAspectRatio)
+    }
+
+    func placeSubviews(
+        in bounds: CGRect,
+        proposal: ProposedViewSize,
+        subviews: Subviews,
+        cache: inout ()
+    ) {
+        for subview in subviews {
+            subview.place(
+                at: bounds.origin,
+                anchor: .topLeading,
+                proposal: ProposedViewSize(width: bounds.width, height: bounds.height)
+            )
+        }
+    }
+}
+
 struct GlassCardSurface<Content: View>: View {
     private let media: DecodedMedia?
     private let style: GlassCardSurfaceStyle
@@ -40,23 +66,43 @@ struct GlassCardSurface<Content: View>: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: GlassCardLayout.cornerRadius, style: .continuous)
 
-        ZStack {
-            if let media {
-                AnimatedMediaView(media: media)
+        Group {
+            if style == .companionTransparent {
+                Color.clear
+                    .background {
+                        if let media {
+                            AnimatedMediaView(media: media)
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                .clipped()
+                        } else {
+                            Color.white.opacity(0.72)
+                        }
+                    }
+                    .overlay {
+                        Color.clear
+                            .modifier(GlassCardMaterial(shape: shape))
+                            .allowsHitTesting(false)
+                    }
+                    .overlay {
+                        content
+                            .padding(GlassCardLayout.contentPadding)
+                            .shadow(
+                                color: .black.opacity(CompanionGlassStyle.textShadowOpacity),
+                                radius: CompanionGlassStyle.textShadowRadius,
+                                y: 1
+                            )
+                    }
             } else {
-                (style == .companionTransparent ? Color.clear : Color.white.opacity(0.72))
+                ZStack {
+                    Color.white.opacity(0.72)
+                    Color.clear
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .modifier(GlassCardMaterial(shape: shape))
+                        .allowsHitTesting(false)
+                    content
+                        .padding(GlassCardLayout.contentPadding)
+                }
             }
-            Color.clear
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .modifier(GlassCardMaterial(shape: shape))
-                .allowsHitTesting(false)
-            content
-                .padding(GlassCardLayout.contentPadding)
-                .shadow(
-                    color: .black.opacity(style == .companionTransparent ? CompanionGlassStyle.textShadowOpacity : 0),
-                    radius: style == .companionTransparent ? CompanionGlassStyle.textShadowRadius : 0,
-                    y: 1
-                )
         }
         .clipShape(shape)
         .shadow(

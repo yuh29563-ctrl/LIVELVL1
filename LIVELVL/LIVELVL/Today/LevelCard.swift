@@ -48,113 +48,119 @@ struct TodayCompanionLevelCard: View {
     }
 
     var body: some View {
-        Color.clear
-            .aspectRatio(GlassCardLayout.companionAspectRatio, contentMode: .fit)
-            .overlay {
-                ZStack(alignment: .topTrailing) {
-            GlassCardSurface(
-                media: media,
-                style: media == nil ? .standard : .companionTransparent
-            ) {
-                HStack(alignment: .top, spacing: 18) {
-                    PixelSpeciesArtwork(
-                        definition: presentation.definition,
-                        stage: presentation.stage,
-                        isSilhouette: false
-                    )
-                    .frame(width: 112, height: 132)
+        CompanionCardFixedLayout {
+            ZStack(alignment: .topTrailing) {
+                GlassCardSurface(
+                    media: media,
+                    style: .companionTransparent
+                ) {
+                    HStack(alignment: .top, spacing: 18) {
+                        PixelSpeciesArtwork(
+                            definition: presentation.definition,
+                            stage: presentation.stage,
+                            isSilhouette: false
+                        )
+                        .frame(width: 112, height: 132)
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("正在陪伴")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(secondaryTextColor)
+                        VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("正在陪伴")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(secondaryTextColor)
 
-                    ViewThatFits(in: .horizontal) {
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(presentation.companionName)
-                                .font(.title3.bold())
-                            Text(presentation.stageTitle)
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(secondaryTextColor)
-                        }
+                                ViewThatFits(in: .horizontal) {
+                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                        Text(presentation.companionName)
+                                            .font(.title3.bold())
+                                        Text(presentation.stageTitle)
+                                            .font(.subheadline.weight(.medium))
+                                            .foregroundStyle(secondaryTextColor)
+                                    }
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(presentation.companionName)
-                                .font(.title3.bold())
-                            Text(presentation.stageTitle)
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(secondaryTextColor)
-                        }
-                    }
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(presentation.companionName)
+                                            .font(.title3.bold())
+                                        Text(presentation.stageTitle)
+                                            .font(.subheadline.weight(.medium))
+                                            .foregroundStyle(secondaryTextColor)
+                                    }
+                                }
 
-                    Text(presentation.definition.summary)
-                        .font(.caption)
-                        .foregroundStyle(secondaryTextColor)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text("Lv.\(presentation.level)")
-                                .font(.system(.title, design: .rounded, weight: .bold))
-                                .monospacedDigit()
-                                .foregroundStyle(levelUpFeedback == nil ? primaryTextColor : TodayVisualTheme.reward)
-                                .scaleEffect(levelPulseScale)
-                            Spacer(minLength: 8)
-                            Text("\(presentation.currentXP) / \(presentation.requiredXP) XP")
-                                .font(.subheadline.bold().monospacedDigit())
-                                .foregroundStyle(isRewarding ? TodayVisualTheme.reward : secondaryTextColor)
-                                .fixedSize(horizontal: true, vertical: false)
-                        }
-
-                        GeometryReader { proxy in
-                            ZStack(alignment: .leading) {
-                                Capsule().fill(progressTrackColor)
-                                Capsule()
-                                    .fill(isRewarding ? TodayVisualTheme.reward : primaryTextColor)
-                                    .frame(width: proxy.size.width * clampedProgress)
+                                Text(presentation.definition.summary)
+                                    .font(.caption)
+                                    .foregroundStyle(secondaryTextColor)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
-                            .animation(.easeInOut(duration: 0.2), value: isRewarding)
-                        }
-                        .frame(height: 8)
 
-                        Text("还需 \(presentation.remainingXP) XP 升级")
-                            .font(.caption.monospacedDigit())
-                            .foregroundStyle(secondaryTextColor)
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Text("Lv.\(presentation.level)")
+                                    .font(.system(.title, design: .rounded, weight: .bold))
+                                    .monospacedDigit()
+                                    .foregroundStyle(
+                                        levelUpFeedback == nil ? primaryTextColor : TodayVisualTheme.reward
+                                    )
+                                    .scaleEffect(levelPulseScale)
+                                Spacer(minLength: 8)
+                                Text("\(presentation.currentXP) / \(presentation.requiredXP) XP")
+                                    .font(.subheadline.bold().monospacedDigit())
+                                    .foregroundStyle(isRewarding ? TodayVisualTheme.reward : secondaryTextColor)
+                                    .fixedSize(horizontal: true, vertical: false)
+                            }
+
+                            GeometryReader { proxy in
+                                ZStack(alignment: .leading) {
+                                    Capsule().fill(progressTrackColor)
+                                    Capsule()
+                                        .fill(isRewarding ? TodayVisualTheme.reward : primaryTextColor)
+                                        .frame(width: proxy.size.width * clampedProgress)
+                                }
+                                .animation(.easeInOut(duration: 0.2), value: isRewarding)
+                            }
+                            .frame(height: 8)
+
+                            Text("还需 \(presentation.remainingXP) XP 升级")
+                                .font(.caption.monospacedDigit())
+                                .foregroundStyle(secondaryTextColor)
+                        }
                     }
                 }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            HStack(spacing: 8) {
-                if media != nil {
-                    Button {
-                        isMediaExpanded = true
+                HStack(spacing: 8) {
+                    if media != nil {
+                        Button {
+                            isMediaExpanded = true
+                        } label: {
+                            Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .font(.caption.weight(.bold))
+                                .padding(10)
+                                .background(.thinMaterial, in: Circle())
+                        }
+                        .accessibilityLabel("展开完整背景图片")
+                    }
+
+                    Menu {
+                        Button("更换背景图片", action: onChooseMedia)
+                        if media != nil {
+                            Button("移除背景图片", role: .destructive, action: onRemoveMedia)
+                        }
                     } label: {
-                        Image(systemName: "arrow.up.left.and.arrow.down.right")
-                            .font(.caption.weight(.bold))
+                        Image(systemName: media == nil ? "photo" : "photo.fill")
+                            .font(.subheadline.weight(.semibold))
                             .padding(10)
                             .background(.thinMaterial, in: Circle())
                     }
-                    .accessibilityLabel("展开完整背景图片")
+                    .accessibilityLabel(media == nil ? "设置陪伴卡背景图片" : "管理陪伴卡背景图片")
                 }
-
-                Menu {
-                    Button("更换背景图片", action: onChooseMedia)
-                    if media != nil {
-                        Button("移除背景图片", role: .destructive, action: onRemoveMedia)
-                    }
-                } label: {
-                    Image(systemName: media == nil ? "photo" : "photo.fill")
-                        .font(.subheadline.weight(.semibold))
-                        .padding(10)
-                        .background(.thinMaterial, in: Circle())
-                }
-                .accessibilityLabel(media == nil ? "设置陪伴卡背景图片" : "管理陪伴卡背景图片")
+                .padding(12)
             }
-            .padding(12)
-                }
-            }
+        }
+        .clipShape(
+            RoundedRectangle(
+                cornerRadius: GlassCardLayout.cornerRadius,
+                style: .continuous
+            )
+        )
         .padding(.horizontal, GlassCardLayout.horizontalInset)
         .foregroundStyle(primaryTextColor)
         .accessibilityElement(children: .ignore)
