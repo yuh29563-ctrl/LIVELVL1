@@ -32,7 +32,8 @@ struct CardRewardPresentationTests {
 
     @Test func claimRegistersAttention() {
         var state = CollectionAttentionState()
-        state.registerClaim()
+        let token = state.registerClaim()
+        #expect(token == 1)
         #expect(state.shakeToken == 1)
         #expect(state.hasUnseenReward)
         state.markSeen()
@@ -50,7 +51,7 @@ struct CardRewardPresentationTests {
         #expect(state.presentedReward == nil)
     }
 
-    @Test func locallyClaimedSnapshotSurvivesOnlyThroughItsSuccessAnimation() {
+    @Test func locallyClaimedSnapshotSurvivesUntilItsMatchingTabFeedbackCompletes() {
         let reward = snapshot()
         var state = CardRewardPresentationState()
         state.present(reward)
@@ -61,7 +62,16 @@ struct CardRewardPresentationTests {
         #expect(!didDismissEarly)
         #expect(state.presentedReward == reward)
 
-        state.finishSuccessfulClaim(awardKey: reward.awardKey)
+        let didBeginWaiting = state.waitForCollectionFeedback(
+            awardKey: reward.awardKey,
+            attentionToken: 7
+        )
+        #expect(didBeginWaiting)
+        let didFinishWrongFeedback = state.finishSuccessfulClaim(feedbackToken: 6)
+        #expect(!didFinishWrongFeedback)
+        #expect(state.presentedReward == reward)
+        let didFinishMatchingFeedback = state.finishSuccessfulClaim(feedbackToken: 7)
+        #expect(didFinishMatchingFeedback)
         #expect(state.presentedReward == nil)
     }
 
@@ -146,6 +156,7 @@ struct CardRewardPresentationTests {
         let plan = CollectionTabFeedbackAnimationPlan(reduceMotion: true)
 
         #expect(plan.shakeTranslations.isEmpty)
+        #expect(plan.bounceScales.isEmpty)
         #expect(plan.initialPulseScale == 1)
         #expect(plan.finalPulseScale == 1)
     }
@@ -153,9 +164,10 @@ struct CardRewardPresentationTests {
     @Test func ordinaryCollectionAttentionRetainsItsSmallSpatialFeedback() {
         let plan = CollectionTabFeedbackAnimationPlan(reduceMotion: false)
 
-        #expect(plan.shakeTranslations == [0, -3, 3, -3, 3, 0])
-        #expect(plan.initialPulseScale == 0.78)
-        #expect(plan.finalPulseScale == 1.2)
+        #expect(plan.shakeTranslations == [0, -5, 4, -3, 2, 0])
+        #expect(plan.bounceScales == [1, 0.88, 1.16, 0.96, 1])
+        #expect(plan.initialPulseScale == 0.65)
+        #expect(plan.finalPulseScale == 1.45)
     }
 
     @Test func successiveRewardStartsExactlyAQuarterSecondAfterDismissalCompletes() {
@@ -217,6 +229,42 @@ struct CardRewardPresentationTests {
         #expect(target === controls[1])
     }
 
+    @Test func collectionTargetIgnoresExtraUIKitControlsAndChoosesTheNearestStableSlot() throws {
+        let today = UITabBarItem(title: "今天", image: nil, selectedImage: nil)
+        let collection = UITabBarItem(title: "收集", image: nil, selectedImage: nil)
+        collection.accessibilityIdentifier = CollectionTabIdentity.accessibilityIdentifier
+        let rewards = UITabBarItem(title: "奖励", image: nil, selectedImage: nil)
+        let profile = UITabBarItem(title: "我的", image: nil, selectedImage: nil)
+        let tabBar = UITabBar(frame: CGRect(x: 0, y: 0, width: 400, height: 60))
+        tabBar.items = [today, collection, rewards, profile]
+
+        let decorationControl = UIControl(frame: CGRect(x: 0, y: 0, width: 20, height: 60))
+        tabBar.addSubview(decorationControl)
+        let controls = (0..<4).map { index in
+            let control = UIControl(frame: CGRect(x: CGFloat(index) * 100, y: 0, width: 100, height: 60))
+            tabBar.addSubview(control)
+            return control
+        }
+
+        let target = try #require(CollectionTabTargetResolver.itemView(in: tabBar))
+
+        #expect(target === controls[1])
+    }
+
+    @Test func collectionTargetFallsBackToTheStableSlotBeforeUIKitCreatesItemControls() throws {
+        let today = UITabBarItem(title: "今天", image: nil, selectedImage: nil)
+        let collection = UITabBarItem(title: "收集", image: nil, selectedImage: nil)
+        collection.accessibilityIdentifier = CollectionTabIdentity.accessibilityIdentifier
+        let rewards = UITabBarItem(title: "奖励", image: nil, selectedImage: nil)
+        let profile = UITabBarItem(title: "我的", image: nil, selectedImage: nil)
+        let tabBar = UITabBar(frame: CGRect(x: 0, y: 0, width: 400, height: 80))
+        tabBar.items = [today, collection, rewards, profile]
+
+        let target = try #require(CollectionTabTargetResolver.targetFrame(in: tabBar))
+
+        #expect(target == CGRect(x: 128, y: 18, width: 44, height: 44))
+    }
+
     @Test func flightOffsetUsesMeasuredFramesInEitherLayoutDirection() {
         let cardFrame = CGRect(x: 100, y: 200, width: 200, height: 300)
         let standardTarget = CGRect(x: 70, y: 760, width: 60, height: 40)
@@ -264,19 +312,56 @@ struct CardRewardPresentationTests {
         let plan = CardRewardClaimAnimationPlan(reduceMotion: false)
 
         #expect(plan.buttonPressScale == 0.94)
-        #expect(plan.buttonPressDuration == 0.12)
-        #expect(plan.flightDuration == 0.6)
+        #expect(plan.buttonPressDuration == 0.1)
+        #expect(plan.liftDuration == 0.12)
+        #expect(plan.travelDuration == 0.44)
+        #expect(plan.implodeDuration == 0.16)
         #expect(plan.initialCardOpacity == 1)
-        #expect(plan.arrivalCardScale == 0.01)
+        #expect(plan.arrivalCardScale == 0)
         #expect(plan.arrivalCardOpacity == 0)
         #expect(plan.usesSpatialFlight)
+    }
+
+    @Test func flightTrajectoryLiftsThenArcsBeforeExactCollectionArrival() {
+        let cardFrame = CGRect(x: 80, y: 180, width: 240, height: 240)
+        let targetFrame = CGRect(x: 78, y: 738, width: 44, height: 44)
+
+        let trajectory = CardRewardFlightTrajectory.make(
+            from: cardFrame,
+            to: targetFrame
+        )
+
+        #expect(trajectory.lift.center == CGPoint(x: 200, y: 278))
+        #expect(trajectory.lift.scale == 1.02)
+        #expect(abs(trajectory.approach.center.x - 128) < 0.001)
+        #expect(abs(trajectory.approach.center.y - 577.2) < 0.001)
+        #expect(trajectory.approach.scale == 0.34)
+        #expect(trajectory.approach.opacity == 1)
+        #expect(trajectory.arrival.center == CGPoint(x: 100, y: 760))
+        #expect(trajectory.arrival.scale == 0)
+        #expect(trajectory.arrival.opacity == 0)
+    }
+
+    @Test func spatialClaimWaitsForATargetWhileReducedMotionCanFadeInPlace() {
+        #expect(!CardRewardClaimReadiness.canClaim(
+            collectionTargetFrame: nil,
+            reduceMotion: false
+        ))
+        #expect(CardRewardClaimReadiness.canClaim(
+            collectionTargetFrame: CGRect(x: 10, y: 20, width: 44, height: 44),
+            reduceMotion: false
+        ))
+        #expect(CardRewardClaimReadiness.canClaim(
+            collectionTargetFrame: nil,
+            reduceMotion: true
+        ))
     }
 
     @Test func reducedMotionClaimAvoidsSpatialFlight() {
         let plan = CardRewardClaimAnimationPlan(reduceMotion: true)
 
         #expect(plan.buttonPressScale == 1)
-        #expect(plan.flightDuration == 0.2)
+        #expect(plan.implodeDuration == 0.2)
         #expect(!plan.usesSpatialFlight)
     }
 }

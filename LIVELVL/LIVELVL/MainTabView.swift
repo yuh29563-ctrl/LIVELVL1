@@ -12,9 +12,11 @@ struct CollectionAttentionState: Equatable, Sendable {
     private(set) var shakeToken = 0
     private(set) var hasUnseenReward = false
 
-    mutating func registerClaim() {
+    @discardableResult
+    mutating func registerClaim() -> Int {
         shakeToken += 1
         hasUnseenReward = true
+        return shakeToken
     }
 
     mutating func markSeen() {
@@ -60,10 +62,12 @@ struct PresentedCardReward: Equatable, Sendable {
 struct CardRewardPresentationState: Equatable, Sendable {
     private(set) var presentedReward: PresentedCardReward?
     private var locallyClaimingAwardKey: String?
+    private var awaitedFeedbackToken: Int?
 
     mutating func present(_ reward: PresentedCardReward) {
         presentedReward = reward
         locallyClaimingAwardKey = nil
+        awaitedFeedbackToken = nil
     }
 
     @discardableResult
@@ -74,6 +78,7 @@ struct CardRewardPresentationState: Equatable, Sendable {
             return false
         }
         self.presentedReward = nil
+        awaitedFeedbackToken = nil
         return true
     }
 
@@ -83,13 +88,31 @@ struct CardRewardPresentationState: Equatable, Sendable {
             return false
         }
         locallyClaimingAwardKey = awardKey
+        awaitedFeedbackToken = nil
         return true
     }
 
-    mutating func finishSuccessfulClaim(awardKey: String) {
-        guard locallyClaimingAwardKey == awardKey else { return }
+    mutating func waitForCollectionFeedback(
+        awardKey: String,
+        attentionToken: Int
+    ) -> Bool {
+        guard locallyClaimingAwardKey == awardKey,
+              attentionToken > 0 else {
+            return false
+        }
+        awaitedFeedbackToken = attentionToken
+        return true
+    }
+
+    mutating func finishSuccessfulClaim(feedbackToken: Int) -> Bool {
+        guard awaitedFeedbackToken == feedbackToken,
+              locallyClaimingAwardKey != nil else {
+            return false
+        }
         locallyClaimingAwardKey = nil
+        awaitedFeedbackToken = nil
         presentedReward = nil
+        return true
     }
 }
 
@@ -170,18 +193,21 @@ struct CollectionTabFeedbackGenerationState: Equatable, Sendable {
 
 struct CollectionTabFeedbackAnimationPlan: Equatable, Sendable {
     let shakeTranslations: [CGFloat]
+    let bounceScales: [CGFloat]
     let initialPulseScale: CGFloat
     let finalPulseScale: CGFloat
 
     init(reduceMotion: Bool) {
         if reduceMotion {
             shakeTranslations = []
+            bounceScales = []
             initialPulseScale = 1
             finalPulseScale = 1
         } else {
-            shakeTranslations = [0, -3, 3, -3, 3, 0]
-            initialPulseScale = 0.78
-            finalPulseScale = 1.2
+            shakeTranslations = [0, -5, 4, -3, 2, 0]
+            bounceScales = [1, 0.88, 1.16, 0.96, 1]
+            initialPulseScale = 0.65
+            finalPulseScale = 1.45
         }
     }
 }
@@ -226,14 +252,50 @@ enum CollectionTabTargetResolver {
                     && control.bounds.width < tabBar.bounds.width
                     && control.bounds.height > 0
             }
-            .sorted { $0.frame.midX < $1.frame.midX }
 
-        guard controls.count >= items.count else { return nil }
-        let controlIndex = tabBar.effectiveUserInterfaceLayoutDirection == .rightToLeft
-            ? controls.count - 1 - collectionIndex
+        guard !controls.isEmpty else { return nil }
+        let slotWidth = tabBar.bounds.width / CGFloat(items.count)
+        let visualIndex = tabBar.effectiveUserInterfaceLayoutDirection == .rightToLeft
+            ? items.count - 1 - collectionIndex
             : collectionIndex
-        guard controls.indices.contains(controlIndex) else { return nil }
-        return controls[controlIndex]
+        let targetMidX = tabBar.bounds.minX
+            + (slotWidth * (CGFloat(visualIndex) + 0.5))
+        return controls.min { lhs, rhs in
+            let lhsMidX = lhs.convert(lhs.bounds, to: tabBar).midX
+            let rhsMidX = rhs.convert(rhs.bounds, to: tabBar).midX
+            return abs(lhsMidX - targetMidX) < abs(rhsMidX - targetMidX)
+        }
+    }
+
+    static func targetFrame(in tabBar: UITabBar) -> CGRect? {
+        guard let items = tabBar.items,
+              !items.isEmpty,
+              let collectionIndex = items.firstIndex(where: {
+                  $0.accessibilityIdentifier == CollectionTabIdentity.accessibilityIdentifier
+                      || $0.image?.accessibilityIdentifier == CollectionTabIdentity.systemImageName
+                      || $0.selectedImage?.accessibilityIdentifier == CollectionTabIdentity.systemImageName
+              }) else {
+            return nil
+        }
+
+        let slotWidth = tabBar.bounds.width / CGFloat(items.count)
+        let visualIndex = tabBar.effectiveUserInterfaceLayoutDirection == .rightToLeft
+            ? items.count - 1 - collectionIndex
+            : collectionIndex
+        let contentHeight = max(
+            44,
+            tabBar.bounds.height - tabBar.safeAreaInsets.bottom
+        )
+        let center = CGPoint(
+            x: tabBar.bounds.minX + (slotWidth * (CGFloat(visualIndex) + 0.5)),
+            y: tabBar.bounds.minY + (contentHeight / 2)
+        )
+        return CGRect(
+            x: center.x - 22,
+            y: center.y - 22,
+            width: 44,
+            height: 44
+        )
     }
 
     private static func descendantViews(of root: UIView) -> [UIView] {
@@ -346,7 +408,8 @@ struct MainTabView: View {
                     attentionToken: attention.shakeToken,
                     hasUnseenReward: hasUnseenReward,
                     reduceMotion: reduceMotion,
-                    targetFrameInWindow: $collectionTabFrameInWindow
+                    targetFrameInWindow: $collectionTabFrameInWindow,
+                    attentionAnimationCompleted: completeClaimAfterCollectionFeedback
                 )
                 .frame(width: 0, height: 0)
             }
@@ -368,12 +431,12 @@ struct MainTabView: View {
                             awardKey: presentedReward.awardKey
                         )
                     },
-                    onClaimed: {
-                        attention.registerClaim()
-                        presentation.finishSuccessfulClaim(
-                            awardKey: presentedReward.awardKey
+                    onArrived: {
+                        let token = attention.registerClaim()
+                        _ = presentation.waitForCollectionFeedback(
+                            awardKey: presentedReward.awardKey,
+                            attentionToken: token
                         )
-                        handoff.recordDismissalCompletion(at: .now)
                     }
                 )
                 .id(presentedReward.awardKey)
@@ -434,6 +497,13 @@ struct MainTabView: View {
         ))
     }
 
+    private func completeClaimAfterCollectionFeedback(_ feedbackToken: Int) {
+        guard presentation.finishSuccessfulClaim(feedbackToken: feedbackToken) else {
+            return
+        }
+        handoff.recordDismissalCompletion(at: .now)
+    }
+
 }
 
 @MainActor
@@ -451,6 +521,7 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
     let hasUnseenReward: Bool
     let reduceMotion: Bool
     @Binding var targetFrameInWindow: CGRect?
+    let attentionAnimationCompleted: (Int) -> Void
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -471,7 +542,8 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
             targetFrameDidChange: { measuredFrame in
                 guard targetFrameInWindow != measuredFrame else { return }
                 targetFrameInWindow = measuredFrame
-            }
+            },
+            attentionAnimationCompleted: attentionAnimationCompleted
         )
     }
 
@@ -484,13 +556,15 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
         private var generationState = CollectionTabFeedbackGenerationState()
         private var pendingWorkItem: DispatchWorkItem?
         private var targetFrameDidChange: ((CGRect?) -> Void)?
+        private var attentionAnimationCompleted: ((Int) -> Void)?
 
         func scheduleUpdate(
             from sourceView: UIView,
             attentionToken: Int,
             hasUnseenReward: Bool,
             reduceMotion: Bool,
-            targetFrameDidChange: @escaping (CGRect?) -> Void
+            targetFrameDidChange: @escaping (CGRect?) -> Void,
+            attentionAnimationCompleted: @escaping (Int) -> Void
         ) {
             let request = generationState.replaceDesiredState(
                 attentionToken: attentionToken,
@@ -498,6 +572,7 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
                 reduceMotion: reduceMotion
             )
             self.targetFrameDidChange = targetFrameDidChange
+            self.attentionAnimationCompleted = attentionAnimationCompleted
             enqueue(request, from: sourceView, remainingAttempts: 4, delay: 0)
         }
 
@@ -505,6 +580,7 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
             pendingWorkItem?.cancel()
             pendingWorkItem = nil
             targetFrameDidChange = nil
+            attentionAnimationCompleted = nil
             generationState.cancel()
         }
 
@@ -546,7 +622,7 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
             }
             guard generationState.isCurrent(request),
                   let collectionItem = CollectionTabTargetResolver.item(in: tabBar),
-                  let itemView = CollectionTabTargetResolver.itemView(in: tabBar),
+                  let fallbackTargetFrame = CollectionTabTargetResolver.targetFrame(in: tabBar),
                   let window = sourceView.window else {
                 retry(
                     request,
@@ -557,11 +633,29 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
             }
 
             updateBadge(collectionItem, isVisible: request.hasUnseenReward)
-            targetFrameDidChange?(itemView.convert(itemView.bounds, to: window))
-            guard generationState.takeAnimationToken(for: request) != nil else {
+            let itemView = CollectionTabTargetResolver.itemView(in: tabBar)
+            let targetFrameInTabBar = itemView?.convert(itemView?.bounds ?? .zero, to: tabBar)
+                ?? fallbackTargetFrame
+            targetFrameDidChange?(tabBar.convert(targetFrameInTabBar, to: window))
+            guard let animationToken = generationState.takeAnimationToken(for: request) else {
                 return
             }
-            animateCollectionItem(itemView, reduceMotion: request.reduceMotion)
+            if let itemView {
+                animateCollectionItem(
+                    itemView,
+                    reduceMotion: request.reduceMotion
+                ) { [weak self] in
+                    self?.attentionAnimationCompleted?(animationToken)
+                }
+            } else {
+                animateCollectionFallback(
+                    in: tabBar,
+                    frame: fallbackTargetFrame,
+                    reduceMotion: request.reduceMotion
+                ) { [weak self] in
+                    self?.attentionAnimationCompleted?(animationToken)
+                }
+            }
         }
 
         private func retry(
@@ -612,20 +706,35 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
             )
         }
 
-        private func animateCollectionItem(_ itemView: UIView, reduceMotion: Bool) {
+        private func animateCollectionItem(
+            _ itemView: UIView,
+            reduceMotion: Bool,
+            completion: @escaping () -> Void
+        ) {
             let plan = CollectionTabFeedbackAnimationPlan(reduceMotion: reduceMotion)
             if !plan.shakeTranslations.isEmpty {
                 let shake = CAKeyframeAnimation(keyPath: "transform.translation.x")
                 shake.values = plan.shakeTranslations
                 shake.keyTimes = [0, 0.16, 0.36, 0.56, 0.76, 1]
-                shake.duration = 0.3
+                shake.duration = 0.42
                 shake.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
                 itemView.layer.add(shake, forKey: "collectionAttentionShake")
             }
 
+            if !plan.bounceScales.isEmpty {
+                let bounce = CAKeyframeAnimation(keyPath: "transform.scale")
+                bounce.values = plan.bounceScales
+                bounce.keyTimes = [0, 0.2, 0.5, 0.75, 1]
+                bounce.duration = 0.42
+                bounce.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+                itemView.layer.add(bounce, forKey: "collectionAttentionBounce")
+            }
+
             let pulseView = UIView(frame: itemView.bounds.insetBy(dx: 4, dy: 2))
             pulseView.isUserInteractionEnabled = false
-            pulseView.backgroundColor = UIColor(TodayVisualTheme.reward).withAlphaComponent(0.18)
+            pulseView.backgroundColor = UIColor(TodayVisualTheme.reward).withAlphaComponent(0.1)
+            pulseView.layer.borderColor = UIColor(TodayVisualTheme.reward).withAlphaComponent(0.55).cgColor
+            pulseView.layer.borderWidth = 2
             pulseView.layer.cornerRadius = min(pulseView.bounds.width, pulseView.bounds.height) / 2
             itemView.insertSubview(pulseView, at: 0)
             pulseView.transform = CGAffineTransform(
@@ -633,7 +742,7 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
                 y: plan.initialPulseScale
             )
             UIView.animate(
-                withDuration: 0.3,
+                withDuration: 0.46,
                 delay: 0,
                 options: [.allowUserInteraction, .curveEaseOut]
             ) {
@@ -644,6 +753,23 @@ private struct CollectionTabFeedbackBridge: UIViewRepresentable {
                 pulseView.alpha = 0
             } completion: { _ in
                 pulseView.removeFromSuperview()
+                completion()
+            }
+        }
+
+        private func animateCollectionFallback(
+            in tabBar: UITabBar,
+            frame: CGRect,
+            reduceMotion: Bool,
+            completion: @escaping () -> Void
+        ) {
+            let targetView = UIView(frame: frame)
+            targetView.isUserInteractionEnabled = false
+            targetView.backgroundColor = .clear
+            tabBar.addSubview(targetView)
+            animateCollectionItem(targetView, reduceMotion: reduceMotion) {
+                targetView.removeFromSuperview()
+                completion()
             }
         }
     }

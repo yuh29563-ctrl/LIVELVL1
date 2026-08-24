@@ -21,7 +21,9 @@ struct CardRewardFlightTransform: Equatable {
 struct CardRewardClaimAnimationPlan: Equatable {
     let buttonPressScale: CGFloat
     let buttonPressDuration: TimeInterval
-    let flightDuration: TimeInterval
+    let liftDuration: TimeInterval
+    let travelDuration: TimeInterval
+    let implodeDuration: TimeInterval
     let initialCardOpacity: Double
     let arrivalCardScale: CGFloat
     let arrivalCardOpacity: Double
@@ -29,12 +31,65 @@ struct CardRewardClaimAnimationPlan: Equatable {
 
     init(reduceMotion: Bool) {
         buttonPressScale = reduceMotion ? 1 : 0.94
-        buttonPressDuration = reduceMotion ? 0 : 0.12
-        flightDuration = reduceMotion ? 0.2 : 0.6
+        buttonPressDuration = reduceMotion ? 0 : 0.1
+        liftDuration = reduceMotion ? 0 : 0.12
+        travelDuration = reduceMotion ? 0 : 0.44
+        implodeDuration = reduceMotion ? 0.2 : 0.16
         initialCardOpacity = 1
-        arrivalCardScale = reduceMotion ? 1 : 0.01
+        arrivalCardScale = reduceMotion ? 1 : 0
         arrivalCardOpacity = 0
         usesSpatialFlight = !reduceMotion
+    }
+}
+
+enum CardRewardClaimReadiness {
+    static func canClaim(
+        collectionTargetFrame: CGRect?,
+        reduceMotion: Bool
+    ) -> Bool {
+        reduceMotion || collectionTargetFrame?.isEmpty == false
+    }
+}
+
+struct CardRewardFlightPose: Equatable {
+    let center: CGPoint
+    let scale: CGFloat
+    let opacity: Double
+}
+
+struct CardRewardFlightTrajectory: Equatable {
+    let lift: CardRewardFlightPose
+    let approach: CardRewardFlightPose
+    let arrival: CardRewardFlightPose
+
+    static func make(
+        from cardFrame: CGRect,
+        to targetFrame: CGRect
+    ) -> CardRewardFlightTrajectory {
+        let start = CGPoint(x: cardFrame.midX, y: cardFrame.midY)
+        let target = CGPoint(x: targetFrame.midX, y: targetFrame.midY)
+        let approachProgress: CGFloat = 0.72
+        let approach = CGPoint(
+            x: start.x + ((target.x - start.x) * approachProgress),
+            y: start.y + ((target.y - start.y) * approachProgress) - 54
+        )
+        return CardRewardFlightTrajectory(
+            lift: CardRewardFlightPose(
+                center: CGPoint(x: start.x, y: start.y - 22),
+                scale: 1.02,
+                opacity: 1
+            ),
+            approach: CardRewardFlightPose(
+                center: approach,
+                scale: 0.34,
+                opacity: 1
+            ),
+            arrival: CardRewardFlightPose(
+                center: target,
+                scale: 0,
+                opacity: 0
+            )
+        )
     }
 }
 
@@ -73,7 +128,7 @@ struct CardRewardOverlay: View {
     let reason: String
     let collectionTargetFrame: CGRect?
     let onClaim: () throws -> Bool
-    let onClaimed: () -> Void
+    let onArrived: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @AccessibilityFocusState private var isTitleFocused: Bool
@@ -194,7 +249,13 @@ struct CardRewardOverlay: View {
             }
             .buttonStyle(.plain)
             .scaleEffect(claimButtonScale)
-            .disabled(isClaiming)
+            .disabled(
+                isClaiming
+                    || !CardRewardClaimReadiness.canClaim(
+                        collectionTargetFrame: collectionTargetFrame,
+                        reduceMotion: reduceMotion
+                    )
+            )
             .accessibilityLabel(isClaiming ? "正在收下" : "收下")
         }
         .padding(24)
@@ -206,7 +267,13 @@ struct CardRewardOverlay: View {
     }
 
     private func claim() {
-        guard !isClaiming else { return }
+        guard !isClaiming,
+              CardRewardClaimReadiness.canClaim(
+                  collectionTargetFrame: collectionTargetFrame,
+                  reduceMotion: reduceMotion
+              ) else {
+            return
+        }
         isClaiming = true
         errorMessage = nil
 
@@ -228,34 +295,61 @@ struct CardRewardOverlay: View {
                 withAnimation(.easeOut(duration: plan.buttonPressDuration)) {
                     claimButtonScale = plan.buttonPressScale
                 }
-                try? await Task.sleep(for: .milliseconds(120))
+                await sleep(for: plan.buttonPressDuration)
             }
 
             if !plan.usesSpatialFlight {
-                withAnimation(.easeOut(duration: plan.flightDuration)) {
+                withAnimation(.easeOut(duration: plan.implodeDuration)) {
                     cardOpacity = 0
                     backdropOpacity = 0
                 }
-                try? await Task.sleep(for: .milliseconds(200))
+                await sleep(for: plan.implodeDuration)
             } else {
-                let flightTransform = collectionTargetFrame.map {
-                    CardRewardFlightGeometry.transform(
-                        from: cardFrame,
-                        to: $0,
-                        scale: plan.arrivalCardScale
-                    )
-                } ?? CardRewardFlightTransform(scale: plan.arrivalCardScale, offset: .zero)
-                withAnimation(.timingCurve(0.18, 0.82, 0.28, 1, duration: plan.flightDuration)) {
-                    cardScale = flightTransform.scale
-                    cardOffset = flightTransform.offset
-                    cardOpacity = plan.arrivalCardOpacity
+                let targetFrame = collectionTargetFrame ?? CGRect(
+                    x: cardFrame.midX,
+                    y: cardFrame.midY,
+                    width: 0,
+                    height: 0
+                )
+                let trajectory = CardRewardFlightTrajectory.make(
+                    from: cardFrame,
+                    to: targetFrame
+                )
+
+                withAnimation(.easeOut(duration: plan.liftDuration)) {
+                    apply(trajectory.lift)
+                }
+                await sleep(for: plan.liftDuration)
+
+                withAnimation(.timingCurve(0.18, 0.78, 0.24, 1, duration: plan.travelDuration)) {
+                    apply(trajectory.approach)
+                    backdropOpacity = 0.12
+                }
+                await sleep(for: plan.travelDuration)
+
+                withAnimation(.easeIn(duration: plan.implodeDuration)) {
+                    apply(trajectory.arrival)
                     backdropOpacity = 0
                 }
-                try? await Task.sleep(for: .milliseconds(600))
+                await sleep(for: plan.implodeDuration)
             }
 
             guard !Task.isCancelled else { return }
-            onClaimed()
+            onArrived()
         }
+    }
+
+    private func apply(_ pose: CardRewardFlightPose) {
+        cardScale = pose.scale
+        cardOffset = CGSize(
+            width: pose.center.x - cardFrame.midX,
+            height: pose.center.y - cardFrame.midY
+        )
+        cardOpacity = pose.opacity
+    }
+
+    private func sleep(for duration: TimeInterval) async {
+        let milliseconds = Int((duration * 1_000).rounded())
+        try? await Task.sleep(for: .milliseconds(milliseconds))
     }
 }
