@@ -322,24 +322,31 @@ struct CardRewardPresentationTests {
         #expect(plan.usesSpatialFlight)
     }
 
-    @Test func flightTrajectoryLiftsThenArcsBeforeExactCollectionArrival() {
-        let cardFrame = CGRect(x: 80, y: 180, width: 240, height: 240)
-        let targetFrame = CGRect(x: 78, y: 738, width: 44, height: 44)
+    @Test func flightTrajectoryUsesTheOverlayCenterInsteadOfAnUnmeasuredCardFrame() {
+        let overlayFrame = CGRect(x: 0, y: 0, width: 402, height: 874)
+        let targetFrame = CGRect(
+            x: 109.6666666667,
+            y: 795,
+            width: 98,
+            height: 54
+        )
 
         let trajectory = CardRewardFlightTrajectory.make(
-            from: cardFrame,
+            in: overlayFrame,
             to: targetFrame
         )
 
-        #expect(trajectory.lift.center == CGPoint(x: 200, y: 278))
+        #expect(trajectory.lift.center == CGPoint(x: 201, y: 415))
         #expect(trajectory.lift.scale == 1.02)
-        #expect(abs(trajectory.approach.center.x - 128) < 0.001)
-        #expect(abs(trajectory.approach.center.y - 577.2) < 0.001)
+        #expect(abs(trajectory.approach.center.x - 170.52) < 0.001)
+        #expect(abs(trajectory.approach.center.y - 660.2) < 0.001)
         #expect(trajectory.approach.scale == 0.34)
         #expect(trajectory.approach.opacity == 1)
-        #expect(trajectory.arrival.center == CGPoint(x: 100, y: 760))
+        #expect(abs(trajectory.arrival.center.x - 158.6666666667) < 0.001)
+        #expect(trajectory.arrival.center.y == 822)
         #expect(trajectory.arrival.scale == 0)
         #expect(trajectory.arrival.opacity == 0)
+        #expect(trajectory.arrival.center.x < overlayFrame.midX)
     }
 
     @Test func spatialClaimWaitsForATargetWhileReducedMotionCanFadeInPlace() {

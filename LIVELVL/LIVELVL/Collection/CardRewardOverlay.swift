@@ -63,11 +63,17 @@ struct CardRewardFlightTrajectory: Equatable {
     let arrival: CardRewardFlightPose
 
     static func make(
-        from cardFrame: CGRect,
+        in overlayGlobalFrame: CGRect,
         to targetFrame: CGRect
     ) -> CardRewardFlightTrajectory {
-        let start = CGPoint(x: cardFrame.midX, y: cardFrame.midY)
-        let target = CGPoint(x: targetFrame.midX, y: targetFrame.midY)
+        let start = CGPoint(
+            x: overlayGlobalFrame.width / 2,
+            y: overlayGlobalFrame.height / 2
+        )
+        let target = CGPoint(
+            x: targetFrame.midX - overlayGlobalFrame.minX,
+            y: targetFrame.midY - overlayGlobalFrame.minY
+        )
         let approachProgress: CGFloat = 0.72
         let approach = CGPoint(
             x: start.x + ((target.x - start.x) * approachProgress),
@@ -113,14 +119,6 @@ enum CardRewardFlightGeometry {
     }
 }
 
-private struct CardRewardFramePreferenceKey: PreferenceKey {
-    static var defaultValue = CGRect.zero
-
-    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
-        value = nextValue()
-    }
-}
-
 @MainActor
 struct CardRewardOverlay: View {
     let kind: CardRewardKind
@@ -138,7 +136,6 @@ struct CardRewardOverlay: View {
     @State private var cardOffset = CGSize.zero
     @State private var cardOpacity = 1.0
     @State private var backdropOpacity = 1.0
-    @State private var cardFrame = CGRect.zero
     @State private var claimButtonScale: CGFloat = 1
 
     private var title: String {
@@ -147,22 +144,15 @@ struct CardRewardOverlay: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let overlayGlobalFrame = geometry.frame(in: .global)
             ZStack {
                 Color.black
                     .opacity(0.28 * backdropOpacity)
                     .ignoresSafeArea()
 
                 ScrollView {
-                    rewardCard
+                    rewardCard(in: overlayGlobalFrame)
                         .frame(maxWidth: 360)
-                        .background {
-                            GeometryReader { cardGeometry in
-                                Color.clear.preference(
-                                    key: CardRewardFramePreferenceKey.self,
-                                    value: cardGeometry.frame(in: .global)
-                                )
-                            }
-                        }
                         .scaleEffect(cardScale)
                         .offset(cardOffset)
                         .opacity(cardOpacity)
@@ -174,9 +164,6 @@ struct CardRewardOverlay: View {
                         )
                 }
                 .scrollIndicators(.hidden)
-                .onPreferenceChange(CardRewardFramePreferenceKey.self) {
-                    cardFrame = $0
-                }
             }
             .contentShape(Rectangle())
             .onTapGesture { }
@@ -189,7 +176,7 @@ struct CardRewardOverlay: View {
         .ignoresSafeArea()
     }
 
-    private var rewardCard: some View {
+    private func rewardCard(in overlayGlobalFrame: CGRect) -> some View {
         VStack(spacing: 18) {
             Text(title)
                 .font(.headline.weight(.semibold))
@@ -228,7 +215,7 @@ struct CardRewardOverlay: View {
             }
 
             Button {
-                claim()
+                claim(in: overlayGlobalFrame)
             } label: {
                 HStack(spacing: 8) {
                     if isClaiming {
@@ -266,7 +253,7 @@ struct CardRewardOverlay: View {
         .shadow(color: Color.black.opacity(0.14), radius: 24, y: 10)
     }
 
-    private func claim() {
+    private func claim(in overlayGlobalFrame: CGRect) {
         guard !isClaiming,
               CardRewardClaimReadiness.canClaim(
                   collectionTargetFrame: collectionTargetFrame,
@@ -305,30 +292,29 @@ struct CardRewardOverlay: View {
                 }
                 await sleep(for: plan.implodeDuration)
             } else {
-                let targetFrame = collectionTargetFrame ?? CGRect(
-                    x: cardFrame.midX,
-                    y: cardFrame.midY,
-                    width: 0,
-                    height: 0
-                )
+                guard let targetFrame = collectionTargetFrame else { return }
                 let trajectory = CardRewardFlightTrajectory.make(
-                    from: cardFrame,
+                    in: overlayGlobalFrame,
                     to: targetFrame
+                )
+                let sourceCenter = CGPoint(
+                    x: overlayGlobalFrame.width / 2,
+                    y: overlayGlobalFrame.height / 2
                 )
 
                 withAnimation(.easeOut(duration: plan.liftDuration)) {
-                    apply(trajectory.lift)
+                    apply(trajectory.lift, from: sourceCenter)
                 }
                 await sleep(for: plan.liftDuration)
 
                 withAnimation(.timingCurve(0.18, 0.78, 0.24, 1, duration: plan.travelDuration)) {
-                    apply(trajectory.approach)
+                    apply(trajectory.approach, from: sourceCenter)
                     backdropOpacity = 0.12
                 }
                 await sleep(for: plan.travelDuration)
 
                 withAnimation(.easeIn(duration: plan.implodeDuration)) {
-                    apply(trajectory.arrival)
+                    apply(trajectory.arrival, from: sourceCenter)
                     backdropOpacity = 0
                 }
                 await sleep(for: plan.implodeDuration)
@@ -339,11 +325,14 @@ struct CardRewardOverlay: View {
         }
     }
 
-    private func apply(_ pose: CardRewardFlightPose) {
+    private func apply(
+        _ pose: CardRewardFlightPose,
+        from sourceCenter: CGPoint
+    ) {
         cardScale = pose.scale
         cardOffset = CGSize(
-            width: pose.center.x - cardFrame.midX,
-            height: pose.center.y - cardFrame.midY
+            width: pose.center.x - sourceCenter.x,
+            height: pose.center.y - sourceCenter.y
         )
         cardOpacity = pose.opacity
     }
