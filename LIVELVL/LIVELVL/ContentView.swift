@@ -139,70 +139,71 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    VStack(spacing: 8) {
-                        Text("升级至 Lv.\(levelUpFeedback ?? progress.level)")
+                    if let levelUpFeedback {
+                        Text("升级至 Lv.\(levelUpFeedback)")
                             .font(.subheadline.bold().monospacedDigit())
                             .foregroundStyle(TodayVisualTheme.reward)
                             .fixedSize(horizontal: false, vertical: true)
-                            .opacity(levelUpFeedback == nil ? 0 : 1)
-                            .scaleEffect(reduceMotion || levelUpFeedback != nil ? 1 : 0.96)
-                            .accessibilityHidden(levelUpFeedback == nil)
-                            .accessibilityLabel("升级至等级 \(levelUpFeedback ?? progress.level)")
-
-                        TodayCompanionLevelCard(
-                            presentation: TodayCompanionLevelCardPresentation(
-                                definition: companion.definition,
-                                stage: companion.stage,
-                                level: progress.level,
-                                currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
-                                requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
-                                remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP)
-                            ),
-                            progress: GrowthEngine.progressToNextLevel(for: progress.totalXP),
-                            isRewarding: rewardFeedback != nil,
-                            levelUpFeedback: levelUpFeedback
-                        )
+                            .scaleEffect(reduceMotion ? 1 : 0.96)
+                            .accessibilityLabel("升级至等级 \(levelUpFeedback)")
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
-                    if let currentSummary {
-                        LifeStateCard(
-                            summary: currentSummary,
-                            pulse: radarPulse,
-                            onAssessment: { showAssessment = true }
+                    TodayCompanionLevelCard(
+                        presentation: TodayCompanionLevelCardPresentation(
+                            definition: companion.definition,
+                            stage: companion.stage,
+                            level: progress.level,
+                            currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
+                            requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
+                            remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP)
+                        ),
+                        progress: GrowthEngine.progressToNextLevel(for: progress.totalXP),
+                        isRewarding: rewardFeedback != nil,
+                        levelUpFeedback: levelUpFeedback
+                    )
+                }
+
+                if let currentSummary {
+                    LifeStateCard(
+                        summary: currentSummary,
+                        pulse: radarPulse,
+                        onAssessment: { showAssessment = true }
+                    )
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("今日任务")
+                        .font(.headline)
+                        .foregroundStyle(TodayVisualTheme.ink)
+                        .padding(.horizontal, 4)
+
+                    if items.isEmpty {
+                        ContentUnavailableView(
+                            "今天还没有任务",
+                            systemImage: "checkmark.circle",
+                            description: Text("创建一个值得完成的现实行动吧")
                         )
+                        .foregroundStyle(TodayVisualTheme.ink)
+                        .frame(maxWidth: .infinity, minHeight: 150)
                     }
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("今日任务")
-                            .font(.headline)
-                            .foregroundStyle(TodayVisualTheme.ink)
-                            .padding(.horizontal, 4)
-
-                        if items.isEmpty {
-                            ContentUnavailableView(
-                                "今天还没有任务",
-                                systemImage: "checkmark.circle",
-                                description: Text("创建一个值得完成的现实行动吧")
-                            )
-                            .foregroundStyle(TodayVisualTheme.ink)
-                            .frame(maxWidth: .infinity, minHeight: 150)
-                        }
-
-                        ForEach(items) { item in
-                            TaskRowView(
-                                item: item,
-                                completed: isCompleted(item),
-                                feedback: rewardFeedback,
-                                onToggle: { toggle(item) }
-                            )
-                        }
+                    ForEach(items) { item in
+                        TaskRowView(
+                            item: item,
+                            completed: isCompleted(item),
+                            feedback: rewardFeedback,
+                            onToggle: { toggle(item) }
+                        )
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.bottom, 24)
+                .padding(.top, RootTabPageLayout.contentTopPadding)
+                .padding(.bottom, RootTabPageLayout.contentBottomPadding)
             }
             .background(TodayVisualTheme.pageBackground)
             .navigationTitle("今天")
+            .navigationBarTitleDisplayMode(RootTabPageLayout.navigationTitleMode)
             .toolbar {
                 Button { showAdd = true } label: {
                     Image(systemName: "plus")

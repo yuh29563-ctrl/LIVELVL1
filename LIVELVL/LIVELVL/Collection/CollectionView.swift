@@ -243,11 +243,12 @@ struct CollectionView: View {
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 12)
-                    .padding(.bottom, 28)
+                    .padding(.top, RootTabPageLayout.contentTopPadding)
+                    .padding(.bottom, RootTabPageLayout.contentBottomPadding)
                 }
                 .background(TodayVisualTheme.pageBackground)
                 .navigationTitle("收集")
+                .navigationBarTitleDisplayMode(RootTabPageLayout.navigationTitleMode)
                 .toolbar {
                     ToolbarItem(placement: .topBarTrailing) {
                         NavigationLink {

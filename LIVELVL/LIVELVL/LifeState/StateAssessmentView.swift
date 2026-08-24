@@ -70,11 +70,12 @@ struct StateAssessmentView: View {
 
                 Spacer()
 
-                HStack(spacing: 12) {
+                HStack(spacing: AssessmentNavigationLayout.buttonSpacing) {
                     Button("上一项") {
                         pageIndex -= 1
                     }
                     .buttonStyle(.bordered)
+                    .frame(maxWidth: .infinity)
                     .disabled(pageIndex == 0)
 
                     Button(pageIndex == entries.count - 1 ? completionTitle : "下一项") {
@@ -87,8 +88,10 @@ struct StateAssessmentView: View {
                     .buttonStyle(.borderedProminent)
                     .frame(maxWidth: .infinity)
                 }
+                .frame(maxWidth: .infinity)
             }
-            .padding()
+            .padding(.horizontal, AssessmentNavigationLayout.buttonHorizontalPadding)
+            .padding(.vertical, 16)
             .navigationTitle(mode == .initial ? "Day 0 状态评估" : "每周状态评估")
             .navigationBarTitleDisplayMode(.inline)
         }
