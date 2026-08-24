@@ -11,8 +11,9 @@ struct GlassCardLayoutTests {
     }
 
     @Test func companionMediaUsesFrostedReadabilityOverlay() {
-        #expect(CompanionGlassStyle.mediaScrimOpacity == 0.22)
-        #expect(CompanionGlassStyle.frostedMaterialOpacity == 0.72)
+        #expect(CompanionGlassStyle.mediaScrimOpacity == 0.30)
+        #expect(CompanionGlassStyle.frostedMaterialOpacity == 0.88)
+        #expect(CompanionGlassStyle.frostedTintOpacity == 0.10)
         #expect(CompanionGlassStyle.textShadowOpacity == 0.18)
     }
 

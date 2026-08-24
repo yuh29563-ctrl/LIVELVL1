@@ -8,8 +8,9 @@ enum GlassCardLayout {
 }
 
 enum CompanionGlassStyle {
-    static let mediaScrimOpacity: Double = 0.22
-    static let frostedMaterialOpacity: Double = 0.72
+    static let mediaScrimOpacity: Double = 0.30
+    static let frostedMaterialOpacity: Double = 0.88
+    static let frostedTintOpacity: Double = 0.10
     static let textShadowOpacity: Double = 0.18
 }
 
@@ -41,9 +42,15 @@ struct GlassCardSurface<Content: View>: View {
                 AnimatedMediaView(media: media)
                 if style == .companionFrosted {
                     Color.black.opacity(CompanionGlassStyle.mediaScrimOpacity)
+                    LinearGradient(
+                        colors: [.clear, .black.opacity(0.28)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
                     Rectangle()
                         .fill(.regularMaterial)
                         .opacity(CompanionGlassStyle.frostedMaterialOpacity)
+                    Color.white.opacity(CompanionGlassStyle.frostedTintOpacity)
                 }
             } else {
                 Color.white.opacity(0.72)

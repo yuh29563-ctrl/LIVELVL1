@@ -34,6 +34,18 @@ struct TodayCompanionLevelCard: View {
         min(1, max(0, progress))
     }
 
+    private var primaryTextColor: Color {
+        media == nil ? TodayVisualTheme.ink : .white
+    }
+
+    private var secondaryTextColor: Color {
+        media == nil ? TodayVisualTheme.graphite : .white.opacity(0.82)
+    }
+
+    private var progressTrackColor: Color {
+        media == nil ? TodayVisualTheme.mist : .white.opacity(0.30)
+    }
+
     var body: some View {
         ZStack(alignment: .topTrailing) {
             GlassCardSurface(
@@ -52,7 +64,7 @@ struct TodayCompanionLevelCard: View {
                         VStack(alignment: .leading, spacing: 3) {
                             Text("正在陪伴")
                                 .font(.caption.weight(.semibold))
-                                .foregroundStyle(TodayVisualTheme.graphite)
+                                .foregroundStyle(secondaryTextColor)
 
                     ViewThatFits(in: .horizontal) {
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -60,7 +72,7 @@ struct TodayCompanionLevelCard: View {
                                 .font(.title3.bold())
                             Text(presentation.stageTitle)
                                 .font(.subheadline.weight(.medium))
-                                .foregroundStyle(TodayVisualTheme.graphite)
+                                .foregroundStyle(secondaryTextColor)
                         }
 
                         VStack(alignment: .leading, spacing: 2) {
@@ -68,13 +80,13 @@ struct TodayCompanionLevelCard: View {
                                 .font(.title3.bold())
                             Text(presentation.stageTitle)
                                 .font(.subheadline.weight(.medium))
-                                .foregroundStyle(TodayVisualTheme.graphite)
+                                .foregroundStyle(secondaryTextColor)
                         }
                     }
 
                     Text(presentation.definition.summary)
                         .font(.caption)
-                        .foregroundStyle(TodayVisualTheme.graphite)
+                        .foregroundStyle(secondaryTextColor)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -82,20 +94,20 @@ struct TodayCompanionLevelCard: View {
                             Text("Lv.\(presentation.level)")
                                 .font(.system(.title, design: .rounded, weight: .bold))
                                 .monospacedDigit()
-                                .foregroundStyle(levelUpFeedback == nil ? TodayVisualTheme.ink : TodayVisualTheme.reward)
+                                .foregroundStyle(levelUpFeedback == nil ? primaryTextColor : TodayVisualTheme.reward)
                                 .scaleEffect(levelPulseScale)
                             Spacer(minLength: 8)
                             Text("\(presentation.currentXP) / \(presentation.requiredXP) XP")
                                 .font(.subheadline.bold().monospacedDigit())
-                                .foregroundStyle(isRewarding ? TodayVisualTheme.reward : TodayVisualTheme.graphite)
+                                .foregroundStyle(isRewarding ? TodayVisualTheme.reward : secondaryTextColor)
                                 .fixedSize(horizontal: true, vertical: false)
                         }
 
                         GeometryReader { proxy in
                             ZStack(alignment: .leading) {
-                                Capsule().fill(TodayVisualTheme.mist)
+                                Capsule().fill(progressTrackColor)
                                 Capsule()
-                                    .fill(isRewarding ? TodayVisualTheme.reward : TodayVisualTheme.ink)
+                                    .fill(isRewarding ? TodayVisualTheme.reward : primaryTextColor)
                                     .frame(width: proxy.size.width * clampedProgress)
                             }
                             .animation(.easeInOut(duration: 0.2), value: isRewarding)
@@ -104,7 +116,7 @@ struct TodayCompanionLevelCard: View {
 
                         Text("还需 \(presentation.remainingXP) XP 升级")
                             .font(.caption.monospacedDigit())
-                            .foregroundStyle(TodayVisualTheme.graphite)
+                            .foregroundStyle(secondaryTextColor)
                     }
                 }
             }
@@ -125,7 +137,7 @@ struct TodayCompanionLevelCard: View {
             .accessibilityLabel(media == nil ? "设置陪伴卡背景图片" : "管理陪伴卡背景图片")
         }
         .padding(.horizontal, GlassCardLayout.horizontalInset)
-        .foregroundStyle(TodayVisualTheme.ink)
+        .foregroundStyle(primaryTextColor)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(presentation.accessibilityLabel)
         .accessibilityValue(presentation.accessibilityValue)
