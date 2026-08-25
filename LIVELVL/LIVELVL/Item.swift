@@ -32,6 +32,7 @@ enum GrowthEngine {
 @Model final class Item { var id: UUID; var title: String; var dimensionRaw: String; var minutes: Int; var difficulty: Int; var xp: Int; var recurrenceRaw: String; var createdAt: Date; init(title: String, dimension: LifeDimension, minutes: Int, difficulty: Int, xp: Int, recurrence: Recurrence) { id = UUID(); self.title = title; dimensionRaw = dimension.rawValue; self.minutes = minutes; self.difficulty = difficulty; self.xp = xp; recurrenceRaw = recurrence.rawValue; createdAt = .now }; var dimension: LifeDimension { LifeDimension(rawValue: dimensionRaw) ?? .learning } }
 @Model final class Progress { var totalXP: Int; var onboardingCompleted: Bool; init(totalXP: Int = 0, onboardingCompleted: Bool = true) { self.totalXP = totalXP; self.onboardingCompleted = onboardingCompleted }; var level: Int { GrowthEngine.level(for: totalXP) } }
 @Model final class Completion {
+    var id: UUID?
     var itemID: UUID
     var date: Date
     var xp: Int
@@ -41,6 +42,7 @@ enum GrowthEngine {
 
     init(itemID: UUID, xp: Int, dimension: LifeDimension? = nil,
          durationMinutes: Int? = nil, taskTitle: String? = nil, date: Date = .now) {
+        id = UUID()
         self.itemID = itemID
         self.xp = xp
         self.dimensionRaw = dimension?.rawValue

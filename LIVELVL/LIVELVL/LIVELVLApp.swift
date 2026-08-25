@@ -16,6 +16,7 @@ struct LIVELVLApp: App {
             DimensionProfile.self, StateSnapshot.self,
             CollectionProgress.self, OwnedCollectible.self, PendingCardReward.self,
             UserCardMedia.self,
+            CoinTransaction.self, RewardProduct.self, RewardRedemption.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
