@@ -296,9 +296,17 @@ struct TodayView: View {
 
     private func toggle(_ item: Item) {
         if let completion = completions.first(where: { $0.itemID == item.id && Calendar.current.isDateInToday($0.date) }) {
-            context.delete(completion)
-            progress.totalXP = max(0, progress.totalXP - completion.xp)
-            try? context.save()
+            do {
+                try TaskRewardCoordinator.revoke(
+                    completion: completion,
+                    progress: progress,
+                    in: context
+                )
+            } catch {
+                message = "取消完成失败，请重试"
+                showMessage = true
+                return
+            }
             radarPulse = nil
             rewardFeedback = nil
             feedbackSequenceID = nil
@@ -314,25 +322,19 @@ struct TodayView: View {
     private func confirmCompletion() {
         guard let id = pendingItemID, let item = items.first(where: { $0.id == id }) else { return }
         let levelBefore = progress.level
-        let completion = Completion(
-            itemID: item.id,
-            xp: item.xp,
-            dimension: item.dimension,
-            durationMinutes: item.minutes,
-            taskTitle: item.title
-        )
-        context.insert(completion)
-        progress.totalXP += item.xp
-        let levelAfter = progress.level
         do {
-            try context.save()
+            _ = try TaskRewardCoordinator.complete(
+                item: item,
+                progress: progress,
+                in: context
+            )
         } catch {
-            context.rollback()
             pendingItemID = nil
             message = "任务保存失败，请重试"
             showMessage = true
             return
         }
+        let levelAfter = progress.level
 
         do {
             let persistedCompletions = try context.fetch(FetchDescriptor<Completion>())
@@ -391,10 +393,18 @@ struct TodayView: View {
     }
 
     private func ensureProgress() {
+        let currentProgress: Progress
         if progressItems.isEmpty {
-            context.insert(Progress())
+            currentProgress = Progress()
+            context.insert(currentProgress)
             try? context.save()
+        } else {
+            currentProgress = progressItems[0]
         }
+        _ = try? CoinLedgerService.ensureLegacyXPImported(
+            progress: currentProgress,
+            in: context
+        )
         _ = try? CardRewardService.ensureProgress(in: context)
     }
 }
