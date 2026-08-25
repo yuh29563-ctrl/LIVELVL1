@@ -6,17 +6,83 @@ struct CompanionJournalNameMetrics: Equatable {
 }
 
 enum CompanionJournalTypography {
-    static let handwritingFontName = "MaShanZheng-Regular"
+    static let handwritingFontName = "LongCang-Regular"
+    static let statusPointSize: CGFloat = 20
+    static let stagePointSize: CGFloat = 24
+    static let summaryPointSize: CGFloat = 20
+    static let remainingPointSize: CGFloat = 18
 
     static func metrics(for name: String) -> CompanionJournalNameMetrics {
         switch name.count {
         case ...4:
-            CompanionJournalNameMetrics(pointSize: 42, minimumScaleFactor: 0.82)
+            CompanionJournalNameMetrics(pointSize: 56, minimumScaleFactor: 0.82)
         case 5...6:
             CompanionJournalNameMetrics(pointSize: 32, minimumScaleFactor: 0.76)
         default:
             CompanionJournalNameMetrics(pointSize: 24, minimumScaleFactor: 0.68)
         }
+    }
+}
+
+enum CompanionMediaControlStyle {
+    static let photoSymbol = "photo"
+    static let animatedPhotoSymbol = "livephoto"
+}
+
+struct CompanionJournalComposition: Equatable {
+    private static let referenceSize = CGSize(width: 338, height: 376)
+
+    let artworkFrame: CGRect
+    let statusFrame: CGRect
+    let photoControlFrame: CGRect
+    let animatedControlFrame: CGRect
+    let titleFrame: CGRect
+    let nameFrame: CGRect
+    let stageFrame: CGRect
+    let summaryFrame: CGRect
+    let levelFrame: CGRect
+    let xpFrame: CGRect
+    let progressFrame: CGRect
+    let remainingFrame: CGRect
+    let smileFrame: CGRect
+    let flowerFrame: CGRect
+    let sparklesFrame: CGRect
+
+    var statusOrigin: CGPoint { statusFrame.origin }
+    var nameOrigin: CGPoint { nameFrame.origin }
+    var stageOrigin: CGPoint { stageFrame.origin }
+    var summaryOrigin: CGPoint { summaryFrame.origin }
+    var levelOrigin: CGPoint { levelFrame.origin }
+    var remainingOrigin: CGPoint { remainingFrame.origin }
+
+    init(in size: CGSize) {
+        let scaleX = size.width / Self.referenceSize.width
+        let scaleY = size.height / Self.referenceSize.height
+
+        func frame(_ x: CGFloat, _ y: CGFloat, _ width: CGFloat, _ height: CGFloat) -> CGRect {
+            CGRect(
+                x: x * scaleX,
+                y: y * scaleY,
+                width: width * scaleX,
+                height: height * scaleY
+            )
+        }
+
+        artworkFrame = frame(18, 46, 116, 116)
+        statusFrame = frame(142, 46, 106, 26)
+        photoControlFrame = frame(14, 14, 32, 32)
+        animatedControlFrame = frame(292, 14, 32, 32)
+        titleFrame = frame(142, 72, 176, 78)
+        nameFrame = frame(143, 82, 106, 68)
+        stageFrame = frame(252, 116, 52, 28)
+        summaryFrame = frame(26, 184, 286, 30)
+        levelFrame = frame(26, 252, 86, 36)
+        xpFrame = frame(216, 258, 96, 28)
+        progressFrame = frame(26, 291, 286, 7)
+        remainingFrame = frame(106, 318, 206, 28)
+        smileFrame = frame(281, 52, 32, 28)
+        flowerFrame = frame(278, 178, 38, 45)
+        sparklesFrame = frame(17, 337, 43, 36)
     }
 }
 
@@ -43,6 +109,7 @@ struct TodayCompanionLevelCard: View {
     let progress: Double
     var media: DecodedMedia?
     var onChooseMedia: () -> Void = {}
+    var onChooseAnimatedMedia: () -> Void = {}
     var onRemoveMedia: () -> Void = {}
     var isRewarding = false
     var levelUpFeedback: Int?
@@ -68,44 +135,23 @@ struct TodayCompanionLevelCard: View {
 
     var body: some View {
         CompanionCardFixedLayout {
-            ZStack(alignment: .topTrailing) {
-                GlassCardSurface(
+            GlassCardSurface(
+                media: media,
+                style: .companionTransparent
+            ) {
+                CompanionJournalCanvas(
+                    presentation: presentation,
+                    progress: clampedProgress,
+                    primaryTextColor: primaryTextColor,
+                    secondaryTextColor: secondaryTextColor,
+                    progressTrackColor: progressTrackColor,
                     media: media,
-                    style: .companionTransparent
-                ) {
-                    HStack(alignment: .center, spacing: 16) {
-                        CompanionPolaroidArtwork(
-                            definition: presentation.definition,
-                            stage: presentation.stage
-                        )
-
-                        CompanionJournalDetails(
-                            presentation: presentation,
-                            progress: clampedProgress,
-                            primaryTextColor: primaryTextColor,
-                            secondaryTextColor: secondaryTextColor,
-                            progressTrackColor: progressTrackColor,
-                            isRewarding: isRewarding,
-                            levelUpFeedback: levelUpFeedback,
-                            levelPulseScale: levelPulseScale
-                        )
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-
-                Menu {
-                    Button("更换背景图片", action: onChooseMedia)
-                    if media != nil {
-                        Button("移除背景图片", role: .destructive, action: onRemoveMedia)
-                    }
-                } label: {
-                    Image(systemName: media == nil ? "photo" : "photo.fill")
-                        .font(.subheadline.weight(.semibold))
-                        .padding(10)
-                        .background(.thinMaterial, in: Circle())
-                }
-                .accessibilityLabel(media == nil ? "设置陪伴卡背景图片" : "管理陪伴卡背景图片")
-                .padding(12)
+                    onChooseMedia: onChooseMedia,
+                    onRemoveMedia: onRemoveMedia,
+                    isRewarding: isRewarding,
+                    levelUpFeedback: levelUpFeedback,
+                    levelPulseScale: levelPulseScale
+                )
             }
         }
         .clipShape(
@@ -114,9 +160,30 @@ struct TodayCompanionLevelCard: View {
                 style: .continuous
             )
         )
+        .overlay {
+            GeometryReader { proxy in
+                let composition = CompanionJournalComposition(in: proxy.size)
+
+                ZStack(alignment: .topLeading) {
+                    CompanionMediaControlButton(
+                        symbol: CompanionMediaControlStyle.photoSymbol,
+                        accessibilityLabel: "更换背景图片",
+                        action: onChooseMedia
+                    )
+                    .companionFrame(composition.photoControlFrame)
+
+                    CompanionMediaControlButton(
+                        symbol: CompanionMediaControlStyle.animatedPhotoSymbol,
+                        accessibilityLabel: "选择背景动图",
+                        action: onChooseAnimatedMedia
+                    )
+                    .companionFrame(composition.animatedControlFrame)
+                }
+            }
+        }
         .padding(.horizontal, GlassCardLayout.horizontalInset)
         .foregroundStyle(primaryTextColor)
-        .accessibilityElement(children: .ignore)
+        .accessibilityElement(children: .contain)
         .accessibilityLabel(presentation.accessibilityLabel)
         .accessibilityValue(presentation.accessibilityValue)
         .task(id: levelUpFeedback) {
@@ -129,43 +196,15 @@ struct TodayCompanionLevelCard: View {
     }
 }
 
-private struct CompanionPolaroidArtwork: View {
-    let definition: CollectibleDefinition
-    let stage: CompanionStage
-
-    var body: some View {
-        ZStack(alignment: .top) {
-            RoundedRectangle(cornerRadius: 13, style: .continuous)
-                .fill(Color(red: 0.98, green: 0.97, blue: 0.93))
-                .shadow(color: .black.opacity(0.20), radius: 5, y: 3)
-
-            PixelSpeciesArtwork(
-                definition: definition,
-                stage: stage,
-                isSilhouette: false
-            )
-            .padding(.horizontal, 8)
-            .padding(.top, 9)
-            .padding(.bottom, 17)
-
-            Capsule()
-                .fill(Color(red: 0.92, green: 0.82, blue: 0.55).opacity(0.78))
-                .frame(width: 38, height: 11)
-                .rotationEffect(.degrees(1.5))
-                .offset(y: -5)
-        }
-        .frame(width: 94, height: 118)
-        .rotationEffect(.degrees(-2))
-        .accessibilityHidden(true)
-    }
-}
-
-private struct CompanionJournalDetails: View {
+private struct CompanionJournalCanvas: View {
     let presentation: TodayCompanionLevelCardPresentation
     let progress: Double
     let primaryTextColor: Color
     let secondaryTextColor: Color
     let progressTrackColor: Color
+    let media: DecodedMedia?
+    let onChooseMedia: () -> Void
+    let onRemoveMedia: () -> Void
     let isRewarding: Bool
     let levelUpFeedback: Int?
     let levelPulseScale: CGFloat
@@ -175,59 +214,64 @@ private struct CompanionJournalDetails: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(alignment: .firstTextBaseline, spacing: 7) {
-                CompanionJournalWordmark(
-                    text: "正在陪伴",
-                    pointSize: 15
+        GeometryReader { proxy in
+            let composition = CompanionJournalComposition(in: proxy.size)
+
+            ZStack(alignment: .topLeading) {
+                Menu {
+                    Button("更换背景图片", action: onChooseMedia)
+                    if media != nil {
+                        Button("移除背景图片", role: .destructive, action: onRemoveMedia)
+                    }
+                } label: {
+                    CompanionPolaroidArtwork(
+                        definition: presentation.definition,
+                        stage: presentation.stage
+                    )
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(media == nil ? "设置陪伴卡背景图片" : "管理陪伴卡背景图片")
+                .frame(
+                    width: composition.artworkFrame.width,
+                    height: composition.artworkFrame.height
+                )
+                .position(
+                    x: composition.artworkFrame.midX,
+                    y: composition.artworkFrame.midY
                 )
 
-                Text(presentation.stageTitle)
-                    .font(.caption2.weight(.semibold))
-                    .padding(.horizontal, 7)
-                    .padding(.vertical, 2)
-                    .overlay {
-                        Capsule().stroke(secondaryTextColor.opacity(0.82), lineWidth: 1)
-                    }
+                CompanionJournalWordmark(
+                    text: "正在陪伴",
+                    pointSize: CompanionJournalTypography.statusPointSize
+                )
+                    .foregroundStyle(secondaryTextColor)
+                    .companionFrame(composition.statusFrame)
 
-                CompanionJournalSmile()
-                    .frame(width: 22, height: 15)
-                    .foregroundStyle(Color(red: 1.0, green: 0.82, blue: 0.18))
-
-                Spacer(minLength: 34)
-            }
-            .foregroundStyle(secondaryTextColor)
-
-            HStack(alignment: .center, spacing: 5) {
-                ViewThatFits(in: .horizontal) {
+                HStack(alignment: .firstTextBaseline, spacing: 9) {
                     CompanionJournalWordmark(
                         text: presentation.companionName,
                         pointSize: nameMetrics.pointSize
                     )
+                    .minimumScaleFactor(nameMetrics.minimumScaleFactor)
+                    .foregroundStyle(primaryTextColor)
+                    .layoutPriority(1)
 
-                    Text(presentation.companionName)
-                        .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        .lineLimit(1)
-                        .minimumScaleFactor(nameMetrics.minimumScaleFactor)
+                    CompanionJournalWordmark(
+                        text: presentation.stageTitle,
+                        pointSize: CompanionJournalTypography.stagePointSize
+                    )
+                    .foregroundStyle(secondaryTextColor)
+                    .fixedSize(horizontal: true, vertical: false)
                 }
+                .companionFrame(composition.titleFrame, alignment: .leading)
 
-                CompanionJournalFlower()
-                    .frame(width: 19, height: 19)
-                    .foregroundStyle(Color(red: 1.0, green: 0.82, blue: 0.18))
+                CompanionJournalWordmark(
+                    text: presentation.definition.summary,
+                    pointSize: CompanionJournalTypography.summaryPointSize
+                )
+                    .foregroundStyle(secondaryTextColor)
+                    .companionFrame(composition.summaryFrame)
 
-                Spacer(minLength: 0)
-            }
-            .foregroundStyle(primaryTextColor)
-
-            Text(presentation.definition.summary)
-                .font(.caption2.weight(.medium))
-                .foregroundStyle(secondaryTextColor)
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
-
-            Spacer(minLength: 1)
-
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text("Lv.\(presentation.level)")
                     .font(.system(.title2, design: .rounded, weight: .bold))
                     .monospacedDigit()
@@ -235,31 +279,100 @@ private struct CompanionJournalDetails: View {
                         levelUpFeedback == nil ? primaryTextColor : TodayVisualTheme.reward
                     )
                     .scaleEffect(levelPulseScale)
-
-                Spacer(minLength: 6)
+                    .companionFrame(composition.levelFrame)
 
                 Text("\(presentation.currentXP) / \(presentation.requiredXP) XP")
                     .font(.caption.weight(.bold).monospacedDigit())
                     .foregroundStyle(isRewarding ? TodayVisualTheme.reward : secondaryTextColor)
-                    .fixedSize(horizontal: true, vertical: false)
-            }
+                    .companionFrame(composition.xpFrame, alignment: .bottomTrailing)
 
-            GeometryReader { proxy in
-                ZStack(alignment: .leading) {
-                    Capsule().fill(progressTrackColor)
-                    Capsule()
-                        .fill(isRewarding ? TodayVisualTheme.reward : primaryTextColor)
-                        .frame(width: proxy.size.width * progress)
+                GeometryReader { progressProxy in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(progressTrackColor)
+                        Capsule()
+                            .fill(isRewarding ? TodayVisualTheme.reward : primaryTextColor)
+                            .frame(width: progressProxy.size.width * progress)
+                    }
+                    .animation(.easeInOut(duration: 0.2), value: isRewarding)
                 }
-                .animation(.easeInOut(duration: 0.2), value: isRewarding)
-            }
-            .frame(height: 6)
+                .companionFrame(composition.progressFrame)
 
-            Text("还需 \(presentation.remainingXP) XP 升级")
-                .font(.caption2.monospacedDigit())
+                CompanionJournalWordmark(
+                    text: "还需 \(presentation.remainingXP) XP 升级",
+                    pointSize: CompanionJournalTypography.remainingPointSize
+                )
                 .foregroundStyle(secondaryTextColor)
-                .lineLimit(1)
+                .companionFrame(composition.remainingFrame)
+
+                CompanionJournalSmile()
+                    .foregroundStyle(Color(red: 1.0, green: 0.82, blue: 0.18))
+                    .companionFrame(composition.smileFrame)
+
+                CompanionJournalFlower()
+                    .companionFrame(composition.flowerFrame)
+
+                CompanionJournalSparkles()
+                    .foregroundStyle(Color(red: 1.0, green: 0.82, blue: 0.18))
+                    .companionFrame(composition.sparklesFrame)
+            }
         }
+    }
+}
+
+private extension View {
+    func companionFrame(
+        _ frame: CGRect,
+        alignment: Alignment = .topLeading
+    ) -> some View {
+        self
+            .frame(width: frame.width, height: frame.height, alignment: alignment)
+            .position(x: frame.midX, y: frame.midY)
+    }
+}
+
+private struct CompanionMediaControlButton: View {
+    let symbol: String
+    let accessibilityLabel: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 15, weight: .semibold))
+                .frame(width: 32, height: 32)
+                .foregroundStyle(Color.black.opacity(0.78))
+                .background(Color.white.opacity(0.88), in: Circle())
+                .overlay {
+                    Circle().stroke(Color.white.opacity(0.72), lineWidth: 1)
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(accessibilityLabel)
+    }
+}
+
+private struct CompanionPolaroidArtwork: View {
+    let definition: CollectibleDefinition
+    let stage: CompanionStage
+
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 17, style: .continuous)
+                .fill(Color.white.opacity(0.95))
+                .shadow(color: .black.opacity(0.22), radius: 5, y: 3)
+
+            RoundedRectangle(cornerRadius: 13, style: .continuous)
+                .fill(Color(red: 0.94, green: 0.95, blue: 0.96))
+                .padding(6)
+
+            PixelSpeciesArtwork(
+                definition: definition,
+                stage: stage,
+                isSilhouette: false
+            )
+            .padding(13)
+        }
+        .rotationEffect(.degrees(-3))
     }
 }
 
@@ -307,18 +420,90 @@ private struct CompanionJournalSmile: View {
 
 private struct CompanionJournalFlower: View {
     var body: some View {
-        ZStack {
-            ForEach(0..<5, id: \.self) { index in
-                Capsule()
-                    .frame(width: 5, height: 10)
-                    .offset(y: -5)
-                    .rotationEffect(.degrees(Double(index) * 72))
+        Canvas { context, size in
+            let yellow = Color(red: 1.0, green: 0.82, blue: 0.18)
+            let green = Color(red: 0.42, green: 0.68, blue: 0.23)
+            let center = CGPoint(x: size.width * 0.38, y: size.height * 0.31)
+
+            for index in 0..<6 {
+                let angle = Double(index) * .pi / 3
+                let petalCenter = CGPoint(
+                    x: center.x + cos(angle) * size.width * 0.16,
+                    y: center.y + sin(angle) * size.height * 0.14
+                )
+                let petal = Path(
+                    ellipseIn: CGRect(
+                        x: petalCenter.x - size.width * 0.08,
+                        y: petalCenter.y - size.height * 0.10,
+                        width: size.width * 0.16,
+                        height: size.height * 0.20
+                    )
+                )
+                context.fill(petal, with: .color(yellow))
             }
-            Circle()
-                .fill(Color.white.opacity(0.92))
-                .frame(width: 5, height: 5)
+
+            context.fill(
+                Path(ellipseIn: CGRect(x: center.x - 3, y: center.y - 3, width: 6, height: 6)),
+                with: .color(.white.opacity(0.94))
+            )
+
+            var stem = Path()
+            stem.move(to: CGPoint(x: center.x, y: center.y + size.height * 0.10))
+            stem.addQuadCurve(
+                to: CGPoint(x: size.width * 0.54, y: size.height * 0.94),
+                control: CGPoint(x: size.width * 0.40, y: size.height * 0.68)
+            )
+            context.stroke(stem, with: .color(green), lineWidth: 3)
+
+            let leftLeaf = Path(
+                ellipseIn: CGRect(
+                    x: size.width * 0.22,
+                    y: size.height * 0.65,
+                    width: size.width * 0.30,
+                    height: size.height * 0.14
+                )
+            )
+            let rightLeaf = Path(
+                ellipseIn: CGRect(
+                    x: size.width * 0.48,
+                    y: size.height * 0.73,
+                    width: size.width * 0.30,
+                    height: size.height * 0.14
+                )
+            )
+            context.fill(leftLeaf, with: .color(green))
+            context.fill(rightLeaf, with: .color(green))
         }
         .rotationEffect(.degrees(-8))
+        .accessibilityHidden(true)
+    }
+}
+
+private struct CompanionJournalSparkles: View {
+    var body: some View {
+        Canvas { context, size in
+            let centers = [
+                CGPoint(x: size.width * 0.20, y: size.height * 0.24),
+                CGPoint(x: size.width * 0.58, y: size.height * 0.50),
+                CGPoint(x: size.width * 0.30, y: size.height * 0.82),
+            ]
+            let radii = [size.width * 0.14, size.width * 0.10, size.width * 0.08]
+
+            for (center, radius) in zip(centers, radii) {
+                var sparkle = Path()
+                sparkle.move(to: CGPoint(x: center.x, y: center.y - radius))
+                sparkle.addLine(to: CGPoint(x: center.x + radius * 0.32, y: center.y - radius * 0.22))
+                sparkle.addLine(to: CGPoint(x: center.x + radius, y: center.y))
+                sparkle.addLine(to: CGPoint(x: center.x + radius * 0.30, y: center.y + radius * 0.22))
+                sparkle.addLine(to: CGPoint(x: center.x, y: center.y + radius))
+                sparkle.addLine(to: CGPoint(x: center.x - radius * 0.30, y: center.y + radius * 0.22))
+                sparkle.addLine(to: CGPoint(x: center.x - radius, y: center.y))
+                sparkle.addLine(to: CGPoint(x: center.x - radius * 0.32, y: center.y - radius * 0.22))
+                sparkle.closeSubpath()
+                context.fill(sparkle, with: .foreground)
+            }
+        }
+        .rotationEffect(.degrees(-7))
         .accessibilityHidden(true)
     }
 }

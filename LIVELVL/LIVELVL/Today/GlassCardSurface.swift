@@ -3,11 +3,9 @@ import SwiftUI
 enum GlassCardLayout {
     static let horizontalInset: CGFloat = 16
     static let contentPadding: CGFloat = 20
-    static let companionHorizontalPadding: CGFloat = 14
-    static let companionVerticalPadding: CGFloat = 12
     static let cornerRadius: CGFloat = 28
     static let shadowRadius: CGFloat = 18
-    static let companionAspectRatio: CGFloat = 2.0
+    static let companionAspectRatio: CGFloat = 0.9
     static let contentLayerIsAboveGlass = true
 }
 
@@ -16,6 +14,21 @@ enum CompanionGlassStyle {
     static let usesTransparentGlass = false
     static let textShadowOpacity: Double = 0.62
     static let textShadowRadius: CGFloat = 2.5
+}
+
+enum LifeStateGlassStyle {
+    static let usesFrostedMaterial = true
+    static let usesDarkSurface = true
+    static let materialOpacity: Double = 1
+    static let gradientOpacity: Double = 0.90
+    static let topLuminance: Double = 0.20
+    static let middleWarmRed: Double = 0.17
+    static let middleWarmBlue: Double = 0.12
+    static let bottomLuminance: Double = 0.08
+    static let dotSurfaceOpacity: Double = 0.62
+    static let borderOpacity: Double = 0.28
+    static let borderWidth: CGFloat = 1
+    static let highlightOpacity: Double = 0.34
 }
 
 enum GlassCardSurfaceStyle: Equatable {
@@ -82,8 +95,6 @@ struct GlassCardSurface<Content: View>: View {
                     }
                     .overlay {
                         content
-                            .padding(.horizontal, GlassCardLayout.companionHorizontalPadding)
-                            .padding(.vertical, GlassCardLayout.companionVerticalPadding)
                             .shadow(
                                 color: .black.opacity(CompanionGlassStyle.textShadowOpacity),
                                 radius: CompanionGlassStyle.textShadowRadius,
@@ -92,9 +103,59 @@ struct GlassCardSurface<Content: View>: View {
                     }
             } else if style == .lifeStateDotWave {
                 ZStack {
-                    DotWaveBackground()
+                    Rectangle()
+                        .fill(.regularMaterial)
+                        .opacity(LifeStateGlassStyle.materialOpacity)
+                    Rectangle()
+                        .fill(
+                            LinearGradient(
+                                stops: [
+                                    .init(
+                                        color: Color(
+                                            red: LifeStateGlassStyle.topLuminance,
+                                            green: LifeStateGlassStyle.topLuminance,
+                                            blue: LifeStateGlassStyle.topLuminance + 0.01
+                                        ),
+                                        location: 0
+                                    ),
+                                    .init(
+                                        color: Color(
+                                            red: LifeStateGlassStyle.middleWarmRed,
+                                            green: 0.145,
+                                            blue: LifeStateGlassStyle.middleWarmBlue
+                                        ),
+                                        location: 0.48
+                                    ),
+                                    .init(
+                                        color: Color(
+                                            red: LifeStateGlassStyle.bottomLuminance,
+                                            green: LifeStateGlassStyle.bottomLuminance,
+                                            blue: LifeStateGlassStyle.bottomLuminance + 0.01
+                                        ),
+                                        location: 1
+                                    ),
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottom
+                            )
+                        )
+                        .opacity(LifeStateGlassStyle.gradientOpacity)
+                    DotWaveBackground(appearance: .dark)
+                        .opacity(LifeStateGlassStyle.dotSurfaceOpacity)
                     content
                         .padding(GlassCardLayout.contentPadding)
+                    shape.stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(LifeStateGlassStyle.highlightOpacity),
+                                Color.white.opacity(LifeStateGlassStyle.borderOpacity * 0.35),
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: LifeStateGlassStyle.borderWidth
+                    )
+                    .allowsHitTesting(false)
                 }
             } else {
                 ZStack {

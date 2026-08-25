@@ -31,17 +31,33 @@ struct RadarPulse: Identifiable, Equatable {
     let dimension: LifeDimension
 }
 
+enum RadarChartStyle: Equatable {
+    case standard
+    case darkEditorial
+}
+
 struct RadarChartView: View {
     let official: LifeStateValues
     let projected: LifeStateValues
     let pulse: RadarPulse?
+    var style: RadarChartStyle = .standard
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ScaledMetric(relativeTo: .caption) private var labelMargin: CGFloat = 24
     @State private var pulsingDimension: LifeDimension?
     @State private var markerScale = 1.0
 
-    private let projectedColor = TodayVisualTheme.graphite
+    private var projectedColor: Color {
+        style == .darkEditorial ? Color.white.opacity(0.62) : TodayVisualTheme.graphite
+    }
+
+    private var officialColor: Color {
+        style == .darkEditorial ? .white : TodayVisualTheme.ink
+    }
+
+    private var labelColor: Color {
+        style == .darkEditorial ? Color.white.opacity(0.72) : TodayVisualTheme.graphite
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -71,7 +87,12 @@ struct RadarChartView: View {
                         center: center,
                         radius: radius
                     ))
-                    .stroke(Color.secondary.opacity(0.18), lineWidth: 1)
+                    .stroke(
+                        style == .darkEditorial
+                            ? Color.white.opacity(0.18)
+                            : Color.secondary.opacity(0.18),
+                        lineWidth: 1
+                    )
                 }
 
                 ForEach(Array(fullPoints.enumerated()), id: \.offset) { _, point in
@@ -79,15 +100,24 @@ struct RadarChartView: View {
                         path.move(to: center)
                         path.addLine(to: point)
                     }
-                    .stroke(Color.secondary.opacity(0.16), lineWidth: 1)
+                    .stroke(
+                        style == .darkEditorial
+                            ? Color.white.opacity(0.14)
+                            : Color.secondary.opacity(0.16),
+                        lineWidth: 1
+                    )
                 }
 
                 RadarPolygonShape(values: official, radius: radius)
-                    .fill(TodayVisualTheme.graphite.opacity(0.10))
+                    .fill(
+                        style == .darkEditorial
+                            ? Color.white.opacity(0.16)
+                            : TodayVisualTheme.graphite.opacity(0.10)
+                    )
 
                 RadarPolygonShape(values: official, radius: radius)
                     .stroke(
-                        TodayVisualTheme.ink,
+                        officialColor,
                         style: StrokeStyle(lineWidth: 2.5, lineJoin: .round)
                     )
 
@@ -122,7 +152,14 @@ struct RadarChartView: View {
                                 ? TodayVisualTheme.reward
                                 : projectedColor
                         )
-                        .overlay(Circle().stroke(Color.white, lineWidth: 1.5))
+                        .overlay(
+                            Circle().stroke(
+                                style == .darkEditorial
+                                    ? Color.white.opacity(0.92)
+                                    : Color.white,
+                                lineWidth: 1.5
+                            )
+                        )
                         .frame(width: 8, height: 8)
                         .scaleEffect(dimension == pulsingDimension ? markerScale : 1)
                         .position(projectedPoints[index])
@@ -136,7 +173,7 @@ struct RadarChartView: View {
                         .foregroundStyle(
                             dimension == pulsingDimension
                                 ? TodayVisualTheme.reward
-                                : TodayVisualTheme.graphite
+                                : labelColor
                         )
                         .fixedSize(horizontal: true, vertical: false)
                         .position(

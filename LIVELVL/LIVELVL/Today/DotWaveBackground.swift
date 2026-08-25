@@ -44,8 +44,19 @@ enum DotWaveField {
     }
 }
 
+enum DotWaveAppearance {
+    case light
+    case dark
+}
+
 struct DotWaveBackground: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    let appearance: DotWaveAppearance
+
+    init(appearance: DotWaveAppearance = .light) {
+        self.appearance = appearance
+    }
 
     private let spacing: CGFloat = 14
     private let inset: CGFloat = 7
@@ -69,7 +80,7 @@ struct DotWaveBackground: View {
                 }
             }
         }
-        .background(Color(red: 0.955, green: 0.958, blue: 0.965))
+        .background(backgroundColor)
         .accessibilityHidden(true)
         .allowsHitTesting(false)
     }
@@ -93,9 +104,19 @@ struct DotWaveBackground: View {
                 )
                 context.fill(
                     Path(ellipseIn: dot),
-                    with: .color(Color.gray.opacity(opacity))
+                    with: .color(dotColor.opacity(opacity))
                 )
             }
         }
+    }
+
+    private var backgroundColor: Color {
+        appearance == .dark
+            ? .clear
+            : Color(red: 0.955, green: 0.958, blue: 0.965)
+    }
+
+    private var dotColor: Color {
+        appearance == .dark ? .white : .gray
     }
 }

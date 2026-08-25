@@ -165,6 +165,7 @@ struct TodayView: View {
                         progress: GrowthEngine.progressToNextLevel(for: progress.totalXP),
                         media: companionMediaController.state.decoded,
                         onChooseMedia: { showMediaPicker = true },
+                        onChooseAnimatedMedia: { showMediaPicker = true },
                         onRemoveMedia: { try? companionMediaController.removeMedia() },
                         isRewarding: rewardFeedback != nil,
                         levelUpFeedback: levelUpFeedback

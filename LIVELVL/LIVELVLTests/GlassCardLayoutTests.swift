@@ -14,7 +14,7 @@ struct GlassCardLayoutTests {
     }
 
     @Test func companionCardUsesStableAspectRatio() {
-        #expect(GlassCardLayout.companionAspectRatio == 2.0)
+        #expect(GlassCardLayout.companionAspectRatio == 0.9)
     }
 
     @Test func companionMediaUsesDirectPhotoAndReadableText() {
@@ -23,6 +23,22 @@ struct GlassCardLayoutTests {
         #expect(CompanionGlassStyle.textShadowOpacity == 0.62)
         #expect(CompanionGlassStyle.textShadowRadius == 2.5)
         #expect(GlassCardLayout.contentLayerIsAboveGlass)
+    }
+
+    @Test func lifeStateCardUsesDarkEditorialSurface() {
+        #expect(LifeStateGlassStyle.usesFrostedMaterial)
+        #expect(LifeStateGlassStyle.usesDarkSurface)
+        #expect(LifeStateGlassStyle.materialOpacity == 1)
+        #expect(LifeStateGlassStyle.gradientOpacity == 0.90)
+        #expect(LifeStateGlassStyle.topLuminance == 0.20)
+        #expect(LifeStateGlassStyle.middleWarmRed == 0.17)
+        #expect(LifeStateGlassStyle.middleWarmBlue == 0.12)
+        #expect(LifeStateGlassStyle.bottomLuminance == 0.08)
+        #expect(LifeStateGlassStyle.dotSurfaceOpacity == 0.62)
+        #expect(LifeStateGlassStyle.borderOpacity == 0.28)
+        #expect(LifeStateGlassStyle.borderWidth == 1)
+        #expect(LifeStateGlassStyle.highlightOpacity == 0.34)
+        #expect(LifeStateCardLayout.radarStyle == .darkEditorial)
     }
 
     @Test func dotWaveGridKeepsFixedEvenlySpacedPositions() {
@@ -118,6 +134,8 @@ struct GlassCardLayoutTests {
             requiredXP: 2_000,
             remainingXP: 1_990
         )
+        let cardWidth: CGFloat = 252
+        let cardHeight = cardWidth / GlassCardLayout.companionAspectRatio
         let canvas = ZStack(alignment: .topLeading) {
             Color.green
             TodayCompanionLevelCard(
@@ -125,10 +143,10 @@ struct GlassCardLayoutTests {
                 progress: 0.005,
                 media: media
             )
-            .frame(width: 252)
+            .frame(width: cardWidth)
             .offset(x: 24, y: 40)
         }
-        .frame(width: 300, height: 260)
+        .frame(width: 300, height: cardHeight + 120)
 
         let renderer = ImageRenderer(content: canvas)
         renderer.scale = 1
