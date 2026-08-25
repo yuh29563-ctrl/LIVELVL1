@@ -383,7 +383,7 @@ struct MainTabView: View {
                         .accessibilityIdentifier(CollectionTabIdentity.accessibilityIdentifier)
                     }
 
-                RewardPlaceholderView()
+                RewardStoreView()
                     .tag(AppTab.rewards)
                     .tabItem { Label("奖励", systemImage: "gift.fill") }
 
