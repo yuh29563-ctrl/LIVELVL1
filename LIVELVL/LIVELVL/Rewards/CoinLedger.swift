@@ -9,6 +9,25 @@ enum CoinDisplayFormatter {
             Double(max(0, units)) / 10.0
         )
     }
+
+    static func coinUnits(fromDisplayText text: String) throws -> Int {
+        let normalized = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let decimal = Decimal(
+            string: normalized,
+            locale: Locale(identifier: "en_US_POSIX")
+        ) else {
+            throw RewardValidationError.invalidPrice
+        }
+        var scaled = decimal * Decimal(10)
+        var rounded = Decimal()
+        NSDecimalRound(&rounded, &scaled, 0, .plain)
+        guard decimal > 0, rounded == scaled else {
+            throw RewardValidationError.invalidPrice
+        }
+        let units = NSDecimalNumber(decimal: rounded).intValue
+        guard units > 0 else { throw RewardValidationError.invalidPrice }
+        return units
+    }
 }
 
 @MainActor

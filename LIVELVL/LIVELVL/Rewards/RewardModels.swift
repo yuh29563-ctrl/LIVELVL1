@@ -99,10 +99,16 @@ final class RewardProduct {
         isArchived = false
     }
 
-    static func validate(name: String, priceCoinUnits: Int) throws {
-        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+    static func validatedName(_ name: String) throws -> String {
+        let normalized = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !normalized.isEmpty else {
             throw RewardValidationError.emptyName
         }
+        return normalized
+    }
+
+    static func validate(name: String, priceCoinUnits: Int) throws {
+        _ = try validatedName(name)
         guard priceCoinUnits > 0 else {
             throw RewardValidationError.invalidPrice
         }
