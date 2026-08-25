@@ -59,6 +59,7 @@ struct ProfileView: View {
                 }
             }
             .navigationTitle("我的")
+            .navigationBarTitleDisplayMode(RootTabPageLayout.navigationTitleMode)
         }
     }
 }

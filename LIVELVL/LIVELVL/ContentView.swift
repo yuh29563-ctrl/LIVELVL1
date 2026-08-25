@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import PhotosUI
 #if DEBUG
 import Combine
 #endif
@@ -96,6 +97,7 @@ struct TodayView: View {
     @Query private var progressItems: [Progress]
     @Query private var collectionProgressItems: [CollectionProgress]
     @Query private var profiles: [DimensionProfile]
+    @StateObject private var companionMediaController = TodayCompanionMediaController()
     @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
     private var snapshots: [StateSnapshot]
     @State private var showAdd = false
@@ -109,6 +111,8 @@ struct TodayView: View {
     @State private var feedbackSequenceID: UUID?
     @State private var levelUpFeedback: Int?
     @State private var rewardFlow = CompletionRewardFlowState()
+    @State private var showMediaPicker = false
+    @State private var selectedMediaItem: PhotosPickerItem?
 
     private var progress: Progress { progressItems.first ?? Progress() }
 
@@ -139,70 +143,75 @@ struct TodayView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
-                    VStack(spacing: 8) {
-                        Text("升级至 Lv.\(levelUpFeedback ?? progress.level)")
+                    if let levelUpFeedback {
+                        Text("升级至 Lv.\(levelUpFeedback)")
                             .font(.subheadline.bold().monospacedDigit())
                             .foregroundStyle(TodayVisualTheme.reward)
                             .fixedSize(horizontal: false, vertical: true)
-                            .opacity(levelUpFeedback == nil ? 0 : 1)
-                            .scaleEffect(reduceMotion || levelUpFeedback != nil ? 1 : 0.96)
-                            .accessibilityHidden(levelUpFeedback == nil)
-                            .accessibilityLabel("升级至等级 \(levelUpFeedback ?? progress.level)")
-
-                        TodayCompanionLevelCard(
-                            presentation: TodayCompanionLevelCardPresentation(
-                                definition: companion.definition,
-                                stage: companion.stage,
-                                level: progress.level,
-                                currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
-                                requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
-                                remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP)
-                            ),
-                            progress: GrowthEngine.progressToNextLevel(for: progress.totalXP),
-                            isRewarding: rewardFeedback != nil,
-                            levelUpFeedback: levelUpFeedback
-                        )
+                            .scaleEffect(reduceMotion ? 1 : 0.96)
+                            .accessibilityLabel("升级至等级 \(levelUpFeedback)")
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
-                    if let currentSummary {
-                        LifeStateCard(
-                            summary: currentSummary,
-                            pulse: radarPulse,
-                            onAssessment: { showAssessment = true }
+                    TodayCompanionLevelCard(
+                        presentation: TodayCompanionLevelCardPresentation(
+                            definition: companion.definition,
+                            stage: companion.stage,
+                            level: progress.level,
+                            currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
+                            requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
+                            remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP)
+                        ),
+                        progress: GrowthEngine.progressToNextLevel(for: progress.totalXP),
+                        media: companionMediaController.state.decoded,
+                        onChooseMedia: { showMediaPicker = true },
+                        onChooseAnimatedMedia: { showMediaPicker = true },
+                        onRemoveMedia: { try? companionMediaController.removeMedia() },
+                        isRewarding: rewardFeedback != nil,
+                        levelUpFeedback: levelUpFeedback
+                    )
+                }
+
+                if let currentSummary {
+                    LifeStateCard(
+                        summary: currentSummary,
+                        pulse: radarPulse,
+                        onAssessment: { showAssessment = true }
+                    )
+                }
+
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("今日任务")
+                        .font(.headline)
+                        .foregroundStyle(TodayVisualTheme.ink)
+                        .padding(.horizontal, 4)
+
+                    if items.isEmpty {
+                        ContentUnavailableView(
+                            "今天还没有任务",
+                            systemImage: "checkmark.circle",
+                            description: Text("创建一个值得完成的现实行动吧")
                         )
+                        .foregroundStyle(TodayVisualTheme.ink)
+                        .frame(maxWidth: .infinity, minHeight: 150)
                     }
 
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("今日任务")
-                            .font(.headline)
-                            .foregroundStyle(TodayVisualTheme.ink)
-                            .padding(.horizontal, 4)
-
-                        if items.isEmpty {
-                            ContentUnavailableView(
-                                "今天还没有任务",
-                                systemImage: "checkmark.circle",
-                                description: Text("创建一个值得完成的现实行动吧")
-                            )
-                            .foregroundStyle(TodayVisualTheme.ink)
-                            .frame(maxWidth: .infinity, minHeight: 150)
-                        }
-
-                        ForEach(items) { item in
-                            TaskRowView(
-                                item: item,
-                                completed: isCompleted(item),
-                                feedback: rewardFeedback,
-                                onToggle: { toggle(item) }
-                            )
-                        }
+                    ForEach(items) { item in
+                        TaskRowView(
+                            item: item,
+                            completed: isCompleted(item),
+                            feedback: rewardFeedback,
+                            onToggle: { toggle(item) }
+                        )
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.bottom, 24)
+                .padding(.top, RootTabPageLayout.contentTopPadding)
+                .padding(.bottom, RootTabPageLayout.contentBottomPadding)
             }
             .background(TodayVisualTheme.pageBackground)
             .navigationTitle("今天")
+            .navigationBarTitleDisplayMode(RootTabPageLayout.navigationTitleMode)
             .toolbar {
                 Button { showAdd = true } label: {
                     Image(systemName: "plus")
@@ -212,6 +221,11 @@ struct TodayView: View {
             }
             .sheet(isPresented: $showAdd) { AddTaskView() }
             .sheet(isPresented: $showAssessment) { StateAssessmentView(mode: .weekly) }
+            .photosPicker(
+                isPresented: $showMediaPicker,
+                selection: $selectedMediaItem,
+                matching: .images
+            )
             .alert("确认完成任务？", isPresented: $showConfirm) {
                 Button("确认完成") { confirmCompletion() }
                 Button("先不完成", role: .cancel) { pendingItemID = nil }
@@ -230,6 +244,20 @@ struct TodayView: View {
             .onAppear {
                 ensureProgress()
                 reconcilePersistedRewards()
+                companionMediaController.configure(context: context)
+            }
+            .onChange(of: selectedMediaItem) { _, item in
+                guard let item else { return }
+                Task {
+                    if let data = try? await item.loadTransferable(type: Data.self) {
+                        await companionMediaController.importMedia(data: data)
+                    }
+                    selectedMediaItem = nil
+                }
+            }
+            .task {
+                companionMediaController.configure(context: context)
+                await companionMediaController.load()
             }
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active else { return }

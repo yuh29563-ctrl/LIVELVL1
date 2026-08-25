@@ -10,6 +10,7 @@ struct RewardPlaceholderView: View {
             )
             .foregroundStyle(TodayVisualTheme.ink)
             .navigationTitle("奖励")
+            .navigationBarTitleDisplayMode(RootTabPageLayout.navigationTitleMode)
         }
     }
 }
