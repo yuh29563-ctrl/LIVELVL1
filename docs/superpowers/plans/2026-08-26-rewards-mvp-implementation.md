@@ -178,4 +178,3 @@ Files:
   xcodebuild test -project LIVELVL/LIVELVL.xcodeproj -scheme LIVELVL -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=26.5' -configuration Debug -derivedDataPath /tmp/LIVELVLRewardsFinal CODE_SIGNING_ALLOWED=NO
   xcodebuild build -project LIVELVL/LIVELVL.xcodeproj -scheme LIVELVL -destination 'generic/platform=iOS Simulator' -configuration Release -derivedDataPath /tmp/LIVELVLRewardsRelease CODE_SIGNING_ALLOWED=NO
 - [ ] Step 4: Report exact branch, commits, test counts, simulator evidence, and non-blocking warnings. Do not merge or push.
-
