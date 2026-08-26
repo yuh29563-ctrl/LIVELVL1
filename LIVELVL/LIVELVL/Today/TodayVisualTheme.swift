@@ -1,13 +1,13 @@
 import SwiftUI
 
 enum TodayVisualTheme {
-    static let ink = Color(red: 0.14, green: 0.14, blue: 0.15)
-    static let graphite = Color(red: 0.39, green: 0.40, blue: 0.42)
-    static let mist = Color(red: 0.86, green: 0.87, blue: 0.89)
-    static let cloud = Color(red: 0.94, green: 0.95, blue: 0.96)
-    static let reward = Color(red: 0.04, green: 0.65, blue: 0.63)
-    static let rewardSoft = Color(red: 0.82, green: 0.95, blue: 0.94)
-    static let pageBackground = Color(uiColor: .systemGroupedBackground)
+    static let ink = LivingOSTheme.ink
+    static let graphite = LivingOSTheme.graphite
+    static let mist = LivingOSTheme.mist
+    static let cloud = LivingOSTheme.surface
+    static let reward = LivingOSTheme.ink
+    static let rewardSoft = LivingOSTheme.mist
+    static let pageBackground = LivingOSTheme.canvas
 }
 
 struct TaskRewardFeedback: Identifiable, Equatable {
