@@ -6,6 +6,24 @@ enum AppTab: Hashable {
     case collection
     case rewards
     case profile
+
+    var title: String {
+        switch self {
+        case .today: "今天"
+        case .collection: "收集"
+        case .rewards: "奖励"
+        case .profile: "我的"
+        }
+    }
+
+    var systemImageName: String {
+        switch self {
+        case .today: "sun.max"
+        case .collection: CollectionTabIdentity.systemImageName
+        case .rewards: "gift"
+        case .profile: "person"
+        }
+    }
 }
 
 struct CollectionAttentionState: Equatable, Sendable {
@@ -368,7 +386,9 @@ struct MainTabView: View {
             TabView(selection: $selectedTab) {
                 TodayView()
                     .tag(AppTab.today)
-                    .tabItem { Label("今天", systemImage: "sun.max.fill") }
+                    .tabItem {
+                        Label(AppTab.today.title, systemImage: AppTab.today.systemImageName)
+                    }
 
                 CollectionView(
                     isCollectionSelected: selectedTab == .collection,
@@ -385,7 +405,9 @@ struct MainTabView: View {
 
                 RewardStoreView()
                     .tag(AppTab.rewards)
-                    .tabItem { Label("奖励", systemImage: "gift.fill") }
+                    .tabItem {
+                        Label(AppTab.rewards.title, systemImage: AppTab.rewards.systemImageName)
+                    }
 
                 Group {
 #if DEBUG
@@ -399,7 +421,9 @@ struct MainTabView: View {
 #endif
                 }
                     .tag(AppTab.profile)
-                    .tabItem { Label("我的", systemImage: "person.crop.circle") }
+                    .tabItem {
+                        Label(AppTab.profile.title, systemImage: AppTab.profile.systemImageName)
+                    }
             }
             .tint(TodayVisualTheme.ink)
             .accessibilityHidden(presentation.presentedReward != nil)
@@ -511,8 +535,12 @@ struct CollectionTabLabel: View {
     let hasUnseenReward: Bool
 
     var body: some View {
-        Label("收集", systemImage: CollectionTabIdentity.systemImageName)
-            .accessibilityLabel(hasUnseenReward ? "收集，有未查看奖励" : "收集")
+        Label(AppTab.collection.title, systemImage: AppTab.collection.systemImageName)
+            .accessibilityLabel(
+                hasUnseenReward
+                    ? "\(AppTab.collection.title)，有未查看奖励"
+                    : AppTab.collection.title
+            )
     }
 }
 

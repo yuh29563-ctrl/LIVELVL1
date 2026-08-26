@@ -35,6 +35,7 @@ enum LivingOSTheme {
 
 enum LivingOSMetrics {
     static let pageHorizontalInset: CGFloat = 24
+    static let pageTitleSize: CGFloat = 56
     static let coreCornerRadius: CGFloat = 26
     static let archiveCardCornerRadius: CGFloat = 28
     static let coreWidthFraction: CGFloat = 0.34
