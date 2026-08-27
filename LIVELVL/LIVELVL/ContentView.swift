@@ -1,6 +1,5 @@
 import SwiftUI
 import SwiftData
-import PhotosUI
 #if DEBUG
 import Combine
 #endif
@@ -97,22 +96,17 @@ struct TodayView: View {
     @Query private var progressItems: [Progress]
     @Query private var collectionProgressItems: [CollectionProgress]
     @Query private var profiles: [DimensionProfile]
-    @StateObject private var companionMediaController = TodayCompanionMediaController()
     @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
     private var snapshots: [StateSnapshot]
     @State private var showAdd = false
-    @State private var showAssessment = false
     @State private var showConfirm = false
     @State private var showMessage = false
     @State private var message = ""
     @State private var pendingItemID: UUID?
-    @State private var radarPulse: RadarPulse?
     @State private var rewardFeedback: TaskRewardFeedback?
     @State private var feedbackSequenceID: UUID?
     @State private var levelUpFeedback: Int?
     @State private var rewardFlow = CompletionRewardFlowState()
-    @State private var showMediaPicker = false
-    @State private var selectedMediaItem: PhotosPickerItem?
 
     private var progress: Progress { progressItems.first ?? Progress() }
 
@@ -137,95 +131,96 @@ struct TodayView: View {
         )
     }
 
-    var body: some View {
+    private var lifeCorePresentation: LifeCoreWidgetPresentation {
         let companion = activeCompanion
+        let currentXP = GrowthEngine.xpInCurrentLevel(for: progress.totalXP)
+        let requiredXP = GrowthEngine.xpNeededForNextLevel(for: progress.totalXP)
+        return LifeCoreWidgetPresentation(
+            definition: companion.definition,
+            stage: companion.stage,
+            level: progress.level,
+            currentXP: currentXP,
+            requiredXP: requiredXP,
+            remainingXP: requiredXP - currentXP
+        )
+    }
 
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
+    var body: some View {
+        ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    LivingOSPageHeader(title: "Today")
+                    .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                    .padding(.top, 10)
+                    .offset(y: -28)
+
                     if let levelUpFeedback {
-                        Text("升级至 Lv.\(levelUpFeedback)")
-                            .font(.subheadline.bold().monospacedDigit())
-                            .foregroundStyle(TodayVisualTheme.reward)
+                        HStack(spacing: 7) {
+                            Circle()
+                                .fill(LivingOSTheme.signal)
+                                .frame(width: 7, height: 7)
+                                .accessibilityHidden(true)
+                            Text("SYSTEM LEVEL \(levelUpFeedback)")
+                        }
+                            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(LivingOSTheme.ink)
                             .fixedSize(horizontal: false, vertical: true)
-                            .scaleEffect(reduceMotion ? 1 : 0.96)
+                            .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                            .padding(.top, 8)
                             .accessibilityLabel("升级至等级 \(levelUpFeedback)")
                             .transition(.opacity.combined(with: .move(edge: .top)))
                     }
 
-                    TodayCompanionLevelCard(
-                        presentation: TodayCompanionLevelCardPresentation(
-                            definition: companion.definition,
-                            stage: companion.stage,
-                            level: progress.level,
-                            currentXP: GrowthEngine.xpInCurrentLevel(for: progress.totalXP),
-                            requiredXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP),
-                            remainingXP: GrowthEngine.xpNeededForNextLevel(for: progress.totalXP) - GrowthEngine.xpInCurrentLevel(for: progress.totalXP)
-                        ),
-                        progress: GrowthEngine.progressToNextLevel(for: progress.totalXP),
-                        media: companionMediaController.state.decoded,
-                        onChooseMedia: { showMediaPicker = true },
-                        onChooseAnimatedMedia: { showMediaPicker = true },
-                        onRemoveMedia: { try? companionMediaController.removeMedia() },
-                        isRewarding: rewardFeedback != nil,
-                        levelUpFeedback: levelUpFeedback
-                    )
-                }
-
-                if let currentSummary {
-                    LifeStateCard(
-                        summary: currentSummary,
-                        pulse: radarPulse,
-                        onAssessment: { showAssessment = true }
-                    )
-                }
-
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("今日任务")
-                        .font(.headline)
-                        .foregroundStyle(TodayVisualTheme.ink)
-                        .padding(.horizontal, 4)
-
-                    if items.isEmpty {
-                        ContentUnavailableView(
-                            "今天还没有任务",
-                            systemImage: "checkmark.circle",
-                            description: Text("创建一个值得完成的现实行动吧")
-                        )
-                        .foregroundStyle(TodayVisualTheme.ink)
-                        .frame(maxWidth: .infinity, minHeight: 150)
-                    }
-
-                    ForEach(items) { item in
-                        TaskRowView(
-                            item: item,
-                            completed: isCompleted(item),
-                            feedback: rewardFeedback,
-                            onToggle: { toggle(item) }
+                    if let currentSummary {
+                        TodayLifeFieldSection(
+                            summary: currentSummary,
+                            core: lifeCorePresentation,
+                            isRewarding: rewardFeedback != nil,
+                            levelUpFeedback: levelUpFeedback
                         )
                     }
+
+                    VStack(alignment: .leading, spacing: 0) {
+                        Rectangle()
+                            .fill(LivingOSTheme.mist)
+                            .frame(height: 0.5)
+
+                        if items.isEmpty {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("今天还没有任务")
+                                    .font(.system(size: 17, weight: .medium))
+                                Text("创建一个值得完成的现实行动。")
+                                    .font(.subheadline)
+                                    .foregroundStyle(LivingOSTheme.graphite)
+                                Button("创建任务") { showAdd = true }
+                                    .font(.subheadline.weight(.semibold))
+                                    .foregroundStyle(LivingOSTheme.ink)
+                            }
+                            .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
+                        }
+
+                        ForEach(items) { item in
+                            TaskRailView(
+                                presentation: TaskRailPresentation(
+                                    item: item,
+                                    completed: isCompleted(item),
+                                    rewardXP: rewardFeedback?.itemID == item.id
+                                        ? rewardFeedback?.xp
+                                        : nil
+                                ),
+                                onToggle: { toggle(item) }
+                            )
+                        }
+                    }
+                    .contextMenu {
+                        Button("新建任务", systemImage: "plus") { showAdd = true }
+                    }
+                    .accessibilityAction(named: "新建任务") { showAdd = true }
+                    .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                    .padding(.bottom, RootTabPageLayout.contentBottomPadding)
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, RootTabPageLayout.contentTopPadding)
-                .padding(.bottom, RootTabPageLayout.contentBottomPadding)
-            }
-            .background(TodayVisualTheme.pageBackground)
-            .navigationTitle("今天")
-            .navigationBarTitleDisplayMode(RootTabPageLayout.navigationTitleMode)
-            .toolbar {
-                Button { showAdd = true } label: {
-                    Image(systemName: "plus")
-                        .fontWeight(.semibold)
-                }
-                .tint(TodayVisualTheme.ink)
-            }
+        }
+            .background(LivingOSTheme.canvas)
             .sheet(isPresented: $showAdd) { AddTaskView() }
-            .sheet(isPresented: $showAssessment) { StateAssessmentView(mode: .weekly) }
-            .photosPicker(
-                isPresented: $showMediaPicker,
-                selection: $selectedMediaItem,
-                matching: .images
-            )
             .alert("确认完成任务？", isPresented: $showConfirm) {
                 Button("确认完成") { confirmCompletion() }
                 Button("先不完成", role: .cancel) { pendingItemID = nil }
@@ -244,20 +239,6 @@ struct TodayView: View {
             .onAppear {
                 ensureProgress()
                 reconcilePersistedRewards()
-                companionMediaController.configure(context: context)
-            }
-            .onChange(of: selectedMediaItem) { _, item in
-                guard let item else { return }
-                Task {
-                    if let data = try? await item.loadTransferable(type: Data.self) {
-                        await companionMediaController.importMedia(data: data)
-                    }
-                    selectedMediaItem = nil
-                }
-            }
-            .task {
-                companionMediaController.configure(context: context)
-                await companionMediaController.load()
             }
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .active else { return }
@@ -269,7 +250,6 @@ struct TodayView: View {
                 guard !Task.isCancelled else { return }
                 withAnimation(.easeOut(duration: 0.2)) {
                     rewardFeedback = nil
-                    radarPulse = nil
                 }
 
                 guard feedback.didLevelUp else {
@@ -287,7 +267,6 @@ struct TodayView: View {
                 }
                 feedbackSequenceID = nil
             }
-        }
     }
 
     private func isCompleted(_ item: Item) -> Bool {
@@ -307,7 +286,6 @@ struct TodayView: View {
                 showMessage = true
                 return
             }
-            radarPulse = nil
             rewardFeedback = nil
             feedbackSequenceID = nil
             levelUpFeedback = nil
@@ -350,7 +328,6 @@ struct TodayView: View {
         } catch {
             rewardFlow.rewardProcessingFailed()
             pendingItemID = nil
-            radarPulse = nil
             rewardFeedback = nil
             feedbackSequenceID = nil
             levelUpFeedback = nil
@@ -359,7 +336,6 @@ struct TodayView: View {
 
         guard rewardFlow.allowsSuccessFeedback else { return }
         pendingItemID = nil
-        radarPulse = RadarPulse(dimension: item.dimension)
         let feedback = TaskRewardFeedback(
             itemID: item.id,
             xp: item.xp,
@@ -406,118 +382,6 @@ struct TodayView: View {
             in: context
         )
         _ = try? CardRewardService.ensureProgress(in: context)
-    }
-}
-
-private struct TaskRowView: View {
-    let item: Item
-    let completed: Bool
-    let feedback: TaskRewardFeedback?
-    let onToggle: () -> Void
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var shakeOffset: CGFloat = 0
-    @State private var rewardOffset: CGFloat = 6
-    @State private var rewardOpacity = 0.0
-
-    private var isRewarding: Bool {
-        feedback?.itemID == item.id
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: dimensionSymbol)
-                .font(.headline)
-                .foregroundStyle(TodayVisualTheme.ink)
-                .frame(width: 42, height: 42)
-                .background(
-                    TodayVisualTheme.cloud,
-                    in: RoundedRectangle(cornerRadius: 12, style: .continuous)
-                )
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.title)
-                    .font(.body.weight(.medium))
-                    .foregroundStyle(TodayVisualTheme.ink)
-                    .strikethrough(completed)
-                Text("\(item.dimension.title) · \(item.xp) XP")
-                    .font(.caption)
-                    .foregroundStyle(TodayVisualTheme.graphite)
-            }
-
-            Spacer(minLength: 8)
-
-            if isRewarding, let feedback {
-                HStack(spacing: 5) {
-                    Text(feedback.label)
-                        .font(.caption.bold().monospacedDigit())
-                    PixelFeedbackParticles()
-                }
-                .foregroundStyle(TodayVisualTheme.reward)
-                .opacity(rewardOpacity)
-                .offset(y: rewardOffset)
-                .accessibilityHidden(true)
-            }
-
-            Button(action: onToggle) {
-                Image(systemName: completed ? "checkmark.circle.fill" : "circle")
-                    .foregroundStyle(
-                        isRewarding ? TodayVisualTheme.reward : TodayVisualTheme.ink
-                    )
-                    .font(.title2)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(completed ? "取消完成 \(item.title)" : "完成 \(item.title)")
-        }
-        .padding(14)
-        .background(
-            Color.white,
-            in: RoundedRectangle(cornerRadius: 18, style: .continuous)
-        )
-        .shadow(color: Color.black.opacity(0.045), radius: 10, y: 4)
-        .offset(x: shakeOffset)
-        .task(id: feedback?.id) {
-            shakeOffset = 0
-            rewardOffset = reduceMotion ? 0 : 6
-            rewardOpacity = 0
-            guard isRewarding else { return }
-
-            withAnimation(.easeOut(duration: 0.22)) {
-                if !reduceMotion {
-                    rewardOffset = -7
-                }
-                rewardOpacity = 1
-            }
-
-            guard !reduceMotion else { return }
-            withAnimation(.easeOut(duration: 0.07)) { shakeOffset = 2.5 }
-            try? await Task.sleep(for: .milliseconds(70))
-            guard !Task.isCancelled else { return }
-            withAnimation(.easeInOut(duration: 0.07)) { shakeOffset = -2.5 }
-            try? await Task.sleep(for: .milliseconds(70))
-            guard !Task.isCancelled else { return }
-            withAnimation(.easeIn(duration: 0.08)) { shakeOffset = 0 }
-        }
-    }
-
-    private var dimensionSymbol: String {
-        switch item.dimension {
-        case .health: "figure.walk"
-        case .learning: "book.closed"
-        case .career: "briefcase"
-        case .finance: "banknote"
-        case .relationships: "person.2"
-        case .interests: "paintpalette"
-        }
-    }
-}
-
-private struct PixelFeedbackParticles: View {
-    var body: some View {
-        HStack(alignment: .bottom, spacing: 3) {
-            Rectangle().frame(width: 3, height: 3)
-            Rectangle().frame(width: 4, height: 4).opacity(0.55)
-        }
     }
 }
 

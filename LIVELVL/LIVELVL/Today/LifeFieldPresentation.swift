@@ -57,13 +57,26 @@ struct LifeFieldNodePresentation: Identifiable, Equatable, Sendable {
         let future = LifeStateDisplayScale.percentage(from: projected)
         return Self(
             dimension: dimension,
-            title: dimension.title,
+            title: dimension.livingOSFieldTitle,
             displayValue: current,
             projectedDisplayValue: future,
             delta: future - current,
             sourceText: sourceTitle.map { "来自 \($0)" } ?? "暂无近期行动",
             assessmentText: assessmentText
         )
+    }
+}
+
+private extension LifeDimension {
+    var livingOSFieldTitle: String {
+        switch self {
+        case .health: "身体"
+        case .learning: "专注"
+        case .career: "成长"
+        case .finance: "秩序"
+        case .relationships: "连接"
+        case .interests: "恢复"
+        }
     }
 }
 

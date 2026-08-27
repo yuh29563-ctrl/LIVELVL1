@@ -1,5 +1,86 @@
 import SwiftUI
 
+enum LifeFieldLabelPlacement: Equatable, Sendable {
+    case above
+    case below
+}
+
+nonisolated enum LifeFieldLayout {
+    static func anchor(for dimension: LifeDimension) -> CGPoint {
+        switch dimension {
+        case .health: CGPoint(x: 0.50, y: 0.06)
+        case .learning: CGPoint(x: 0.86, y: 0.265)
+        case .finance: CGPoint(x: 0.86, y: 0.62)
+        case .relationships: CGPoint(x: 0.50, y: 0.84)
+        case .career: CGPoint(x: 0.14, y: 0.62)
+        case .interests: CGPoint(x: 0.14, y: 0.265)
+        }
+    }
+
+    static func labelPlacement(for dimension: LifeDimension) -> LifeFieldLabelPlacement {
+        switch dimension {
+        case .health, .learning, .interests: .above
+        case .career, .finance, .relationships: .below
+        }
+    }
+}
+
+nonisolated struct LifeFieldParticleLinkSample: Equatable, Sendable {
+    let dimension: LifeDimension
+    let position: CGPoint
+    let opacity: Double
+    let diameter: CGFloat
+}
+
+nonisolated enum LifeFieldParticleLinkGeometry {
+    static func samples(
+        countPerLink: Int,
+        phase: Double,
+        reduceMotion: Bool
+    ) -> [LifeFieldParticleLinkSample] {
+        guard countPerLink > 0 else { return [] }
+        let resolvedPhase = reduceMotion ? 0.19 : phase - floor(phase)
+        let center = CGPoint(x: 0.5, y: 0.5)
+        var result: [LifeFieldParticleLinkSample] = []
+        result.reserveCapacity(LifeDimension.allCases.count * countPerLink)
+
+        for (dimensionIndex, dimension) in LifeDimension.allCases.enumerated() {
+            let target = LifeFieldLayout.anchor(for: dimension)
+            let dx = target.x - center.x
+            let dy = target.y - center.y
+            let length = max(0.0001, hypot(dx, dy))
+            let perpendicular = CGPoint(x: -dy / length, y: dx / length)
+
+            for index in 0..<countPerLink {
+                let t = countPerLink == 1
+                    ? 1.0
+                    : Double(index) / Double(countPerLink - 1)
+                let seed = Double(((dimensionIndex + 1) * 131 + index * 43) % 101) / 101
+                let dance = sin((resolvedPhase + seed) * .pi * 2 + t * 13)
+                let taper = sin(t * .pi)
+                let lateral = dance * 0.010 * taper
+                let longitudinal = cos((resolvedPhase * 0.8 + seed) * .pi * 2)
+                    * 0.004 * taper
+                let resolvedT = min(1, max(0, t + longitudinal))
+
+                result.append(
+                    LifeFieldParticleLinkSample(
+                        dimension: dimension,
+                        position: CGPoint(
+                            x: center.x + dx * resolvedT + perpendicular.x * lateral,
+                            y: center.y + dy * resolvedT + perpendicular.y * lateral
+                        ),
+                        opacity: 0.16 + (0.44 * t) + seed * 0.12,
+                        diameter: 0.75 + seed * 1.25
+                    )
+                )
+            }
+        }
+
+        return result
+    }
+}
+
 struct LifeFieldView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var selection = LifeFieldSelectionState()
@@ -20,10 +101,10 @@ struct LifeFieldView: View {
                     .padding(.horizontal, 8)
                     .padding(.vertical, 14)
 
+                LifeFieldParticleLinks()
+
                 LifeFieldOutline()
                     .stroke(LivingOSTheme.graphite.opacity(0.15), lineWidth: 0.7)
-                    .padding(.horizontal, 42)
-                    .padding(.vertical, 52)
 
                 ForEach(Array(nodes.enumerated()), id: \.element.id) { index, node in
                     LifeFieldNode(
@@ -40,8 +121,8 @@ struct LifeFieldView: View {
                             }
                         }
                     )
-                    .frame(width: nodeWidth(for: index), alignment: nodeAlignment(for: index))
-                    .position(nodePosition(for: index, in: size))
+                    .frame(width: nodeWidth(for: node.dimension), alignment: .center)
+                    .position(nodePosition(for: node.dimension, in: size))
                     .zIndex(selection.selectedDimension == node.dimension ? 2 : 1)
                 }
             }
@@ -52,29 +133,13 @@ struct LifeFieldView: View {
         }
     }
 
-    private func nodePosition(for index: Int, in size: CGSize) -> CGPoint {
-        let normalized: CGPoint
-        switch index {
-        case 0: normalized = CGPoint(x: 0.50, y: 0.10)
-        case 1: normalized = CGPoint(x: 0.84, y: 0.30)
-        case 2: normalized = CGPoint(x: 0.84, y: 0.69)
-        case 3: normalized = CGPoint(x: 0.50, y: 0.90)
-        case 4: normalized = CGPoint(x: 0.16, y: 0.69)
-        default: normalized = CGPoint(x: 0.16, y: 0.30)
-        }
+    private func nodePosition(for dimension: LifeDimension, in size: CGSize) -> CGPoint {
+        let normalized = LifeFieldLayout.anchor(for: dimension)
         return CGPoint(x: normalized.x * size.width, y: normalized.y * size.height)
     }
 
-    private func nodeWidth(for index: Int) -> CGFloat {
-        index == 0 || index == 3 ? 180 : 132
-    }
-
-    private func nodeAlignment(for index: Int) -> Alignment {
-        switch index {
-        case 1, 2: .trailing
-        case 4, 5: .leading
-        default: .center
-        }
+    private func nodeWidth(for dimension: LifeDimension) -> CGFloat {
+        dimension == .health || dimension == .relationships ? 180 : 104
     }
 }
 
@@ -90,35 +155,11 @@ private struct LifeFieldNode: View {
 
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 5) {
-                VStack(spacing: 0) {
-                    Text(value.title)
-                        .font(.system(size: 14, weight: .semibold))
-                    Text(value.displayValue, format: .number)
-                        .font(.system(size: 15, weight: .regular, design: .monospaced))
-                        .foregroundStyle(LivingOSTheme.graphite)
-                }
+            ZStack {
+                nodeDot
 
-                ZStack {
-                    Circle()
-                        .stroke(
-                            LivingOSTheme.graphite.opacity(isSelected ? 0.36 : 0.14),
-                            lineWidth: 0.8
-                        )
-                        .frame(width: 38, height: 38)
-
-                    Circle()
-                        .fill(LivingOSTheme.ink)
-                        .frame(width: isSelected ? 20 : 17, height: isSelected ? 20 : 17)
-
-                    if isSelected {
-                        Circle()
-                            .fill(LivingOSTheme.signal)
-                            .frame(width: 5, height: 5)
-                            .offset(x: 16, y: -15)
-                            .accessibilityHidden(true)
-                    }
-                }
+                nodeLabel
+                    .offset(y: labelOffset)
 
                 if isSelected {
                     VStack(spacing: 2) {
@@ -131,6 +172,7 @@ private struct LifeFieldNode: View {
                     .foregroundStyle(LivingOSTheme.graphite)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
+                    .offset(y: detailOffset)
                     .transition(.opacity.combined(with: reduceMotion ? .identity : .scale(scale: 0.96)))
                 }
             }
@@ -145,17 +187,94 @@ private struct LifeFieldNode: View {
         )
         .accessibilityHint(isSelected ? "轻点收起状态" : "轻点查看具体状态")
     }
+
+    private var labelOffset: CGFloat {
+        LifeFieldLayout.labelPlacement(for: value.dimension) == .above ? -27 : 31
+    }
+
+    private var detailOffset: CGFloat {
+        LifeFieldLayout.labelPlacement(for: value.dimension) == .above ? 54 : -54
+    }
+
+    private var nodeLabel: some View {
+        VStack(spacing: 0) {
+            Text(value.title)
+                .font(.system(size: 13, weight: .medium))
+            Text(value.displayValue, format: .number)
+                .font(.system(size: 14, weight: .regular, design: .monospaced))
+                .foregroundStyle(LivingOSTheme.graphite)
+        }
+    }
+
+    private var nodeDot: some View {
+        ZStack {
+            Circle()
+                .stroke(
+                    LivingOSTheme.graphite.opacity(isSelected ? 0.34 : 0.14),
+                    lineWidth: 0.7
+                )
+                .frame(width: 32, height: 32)
+
+            Circle()
+                .fill(LivingOSTheme.ink)
+                .frame(width: isSelected ? 15 : 12, height: isSelected ? 15 : 12)
+
+            if isSelected {
+                Circle()
+                    .fill(LivingOSTheme.signal)
+                    .frame(width: 5, height: 5)
+                    .offset(x: 14, y: -13)
+                    .accessibilityHidden(true)
+            }
+        }
+        .frame(width: 44, height: 44)
+    }
+}
+
+private struct LifeFieldParticleLinks: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+            let phase = reduceMotion
+                ? 0.19
+                : timeline.date.timeIntervalSinceReferenceDate / 8.0
+            let samples = LifeFieldParticleLinkGeometry.samples(
+                countPerLink: 38,
+                phase: phase,
+                reduceMotion: reduceMotion
+            )
+
+            Canvas { context, size in
+                for sample in samples {
+                    let diameter = sample.diameter
+                    let rect = CGRect(
+                        x: sample.position.x * size.width - diameter / 2,
+                        y: sample.position.y * size.height - diameter / 2,
+                        width: diameter,
+                        height: diameter
+                    )
+                    context.fill(
+                        Path(ellipseIn: rect),
+                        with: .color(LivingOSTheme.ink.opacity(sample.opacity))
+                    )
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
 }
 
 private struct LifeFieldOutline: Shape {
     func path(in rect: CGRect) -> Path {
         let points = [
-            CGPoint(x: rect.midX, y: rect.minY),
-            CGPoint(x: rect.maxX, y: rect.minY + rect.height * 0.25),
-            CGPoint(x: rect.maxX, y: rect.minY + rect.height * 0.75),
-            CGPoint(x: rect.midX, y: rect.maxY),
-            CGPoint(x: rect.minX, y: rect.minY + rect.height * 0.75),
-            CGPoint(x: rect.minX, y: rect.minY + rect.height * 0.25)
+            LifeFieldLayout.anchor(for: .health).scaled(to: rect.size),
+            LifeFieldLayout.anchor(for: .learning).scaled(to: rect.size),
+            LifeFieldLayout.anchor(for: .finance).scaled(to: rect.size),
+            LifeFieldLayout.anchor(for: .relationships).scaled(to: rect.size),
+            LifeFieldLayout.anchor(for: .career).scaled(to: rect.size),
+            LifeFieldLayout.anchor(for: .interests).scaled(to: rect.size)
         ]
 
         return Path { path in
@@ -166,5 +285,11 @@ private struct LifeFieldOutline: Shape {
             }
             path.closeSubpath()
         }
+    }
+}
+
+private extension CGPoint {
+    func scaled(to size: CGSize) -> CGPoint {
+        CGPoint(x: x * size.width, y: y * size.height)
     }
 }

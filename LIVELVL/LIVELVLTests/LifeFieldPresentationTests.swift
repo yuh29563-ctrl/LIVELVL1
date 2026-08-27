@@ -23,11 +23,69 @@ struct LifeFieldPresentationTests {
         )
 
         #expect(nodes.map(\.dimension) == LifeDimension.allCases)
-        #expect(nodes.map(\.title) == ["健康", "学习", "事业", "财务", "关系", "兴趣"])
+        #expect(nodes.map(\.title) == ["身体", "专注", "成长", "秩序", "连接", "恢复"])
         #expect(nodes.map(\.displayValue) == [78, 86, 83, 64, 79, 80])
         #expect(nodes.first?.projectedDisplayValue == 80)
         #expect(nodes.first?.delta == 2)
         #expect(nodes[3].delta == -3)
+    }
+
+    @Test func approvedSixPointLayoutKeepsSemanticDomainsAtReferenceAnchors() {
+        #expect(LifeFieldLayout.anchor(for: .health) == CGPoint(x: 0.50, y: 0.06))
+        #expect(LifeFieldLayout.anchor(for: .learning) == CGPoint(x: 0.86, y: 0.265))
+        #expect(LifeFieldLayout.anchor(for: .finance) == CGPoint(x: 0.86, y: 0.62))
+        #expect(LifeFieldLayout.anchor(for: .relationships) == CGPoint(x: 0.50, y: 0.84))
+        #expect(LifeFieldLayout.anchor(for: .career) == CGPoint(x: 0.14, y: 0.62))
+        #expect(LifeFieldLayout.anchor(for: .interests) == CGPoint(x: 0.14, y: 0.265))
+        #expect(LifeFieldLayout.labelPlacement(for: .health) == .above)
+        #expect(LifeFieldLayout.labelPlacement(for: .relationships) == .below)
+        #expect(LifeFieldLayout.labelPlacement(for: .career) == .below)
+    }
+
+    @Test func sixParticleLinksTerminateAtTheExactHexagonNodes() {
+        let samples = LifeFieldParticleLinkGeometry.samples(
+            countPerLink: 24,
+            phase: 0.2,
+            reduceMotion: false
+        )
+
+        #expect(samples.count == LifeDimension.allCases.count * 24)
+        for dimension in LifeDimension.allCases {
+            let target = LifeFieldLayout.anchor(for: dimension)
+            let terminal = samples.last { $0.dimension == dimension }
+            #expect(terminal != nil)
+            #expect(abs((terminal?.position.x ?? 0) - target.x) < 0.02)
+            #expect(abs((terminal?.position.y ?? 0) - target.y) < 0.02)
+        }
+    }
+
+    @Test func linkParticlesDriftNormallyAndFreezeForReduceMotion() {
+        let movingA = LifeFieldParticleLinkGeometry.samples(
+            countPerLink: 18,
+            phase: 0,
+            reduceMotion: false
+        )
+        let movingB = LifeFieldParticleLinkGeometry.samples(
+            countPerLink: 18,
+            phase: 0.4,
+            reduceMotion: false
+        )
+        let frozenA = LifeFieldParticleLinkGeometry.samples(
+            countPerLink: 18,
+            phase: 0,
+            reduceMotion: true
+        )
+        let frozenB = LifeFieldParticleLinkGeometry.samples(
+            countPerLink: 18,
+            phase: 0.8,
+            reduceMotion: true
+        )
+
+        #expect(movingA != movingB)
+        #expect(frozenA == frozenB)
+        #expect(movingB.allSatisfy {
+            (0...1).contains($0.position.x) && (0...1).contains($0.position.y)
+        })
     }
 
     @Test func summaryNodesExposeRealSourceAndAssessmentTiming() throws {
