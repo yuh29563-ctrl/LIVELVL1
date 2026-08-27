@@ -14,14 +14,20 @@ enum CollectionCardFocusTarget: Hashable, Sendable {
 }
 
 struct CollectionSeenVisibilityState: Equatable, Sendable {
-    private var visibleTargets: Set<CollectionCardFocusTarget> = []
+    private var centeredAwardKey: String?
+
+    mutating func center(_ awardKey: String?) {
+        centeredAwardKey = awardKey
+    }
 
     mutating func appeared(_ target: CollectionCardFocusTarget) {
-        visibleTargets.insert(target)
+        centeredAwardKey = target.awardKey
     }
 
     mutating func disappeared(_ target: CollectionCardFocusTarget) {
-        visibleTargets.remove(target)
+        if centeredAwardKey == target.awardKey {
+            centeredAwardKey = nil
+        }
     }
 
     func awardKeysToMarkSeen(
@@ -29,8 +35,13 @@ struct CollectionSeenVisibilityState: Equatable, Sendable {
         isCollectionSelected: Bool,
         isObscured: Bool
     ) -> Set<String> {
-        guard isCollectionSelected, !isObscured else { return [] }
-        return Set(visibleTargets.map(\.awardKey)).intersection(unseenAwardKeys)
+        guard isCollectionSelected,
+              !isObscured,
+              let centeredAwardKey,
+              unseenAwardKeys.contains(centeredAwardKey) else {
+            return []
+        }
+        return [centeredAwardKey]
     }
 }
 
@@ -71,9 +82,7 @@ struct CollectionSeenRetryState: Equatable {
     private(set) var isAttempting = false
     private(set) var errorMessage: String?
 
-    var needsRetry: Bool {
-        errorMessage != nil
-    }
+    var needsRetry: Bool { errorMessage != nil }
 
     mutating func beginAttempt(hasUnseenCollectibles: Bool) -> Bool {
         guard hasUnseenCollectibles, !isAttempting else { return false }
@@ -102,14 +111,10 @@ struct CollectionSeenRetryState: Equatable {
     }
 }
 
-private struct SelectedCollectiblePresentation {
-    let collectible: OwnedCollectible
-    let definition: CollectibleDefinition
-}
-
 @MainActor
 struct CollectionView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: [
         SortDescriptor(\OwnedCollectible.acquiredAt, order: .reverse),
         SortDescriptor(\OwnedCollectible.awardKey)
@@ -117,20 +122,15 @@ struct CollectionView: View {
     private var ownedCollectibles: [OwnedCollectible]
     @Query private var collectionProgress: [CollectionProgress]
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var selection = CollectionSelectionState()
+    @State private var archiveState = ArchiveCarouselState()
     @State private var seenRetryState = CollectionSeenRetryState()
     @State private var seenVisibility = CollectionSeenVisibilityState()
     @AccessibilityFocusState private var focusedCard: CollectionCardFocusTarget?
+    @Namespace private var archiveNamespace
 
     private let isCollectionSelected: Bool
     private let isObscured: Bool
     private let onMarkedSeen: () -> Void
-
-    private let columns = [
-        GridItem(.flexible(), spacing: 14),
-        GridItem(.flexible(), spacing: 14)
-    ]
 
     init(
         isCollectionSelected: Bool = true,
@@ -142,26 +142,45 @@ struct CollectionView: View {
         self.onMarkedSeen = onMarkedSeen
     }
 
-    private var validatedSelection: SelectedCollectiblePresentation? {
-        guard let selectedAwardKey = selection.selectedAwardKey,
-              let collectible = ownedCollectibles.first(where: {
-                  $0.awardKey == selectedAwardKey
-              }),
-              let definition = CollectionCatalog.definition(id: collectible.collectibleID) else {
-            return nil
+    private var archiveItems: [ArchiveCollectiblePresentation] {
+        ownedCollectibles.compactMap { collectible in
+            guard let definition = CollectionCatalog.definition(id: collectible.collectibleID) else {
+                return nil
+            }
+            return ArchiveCollectiblePresentation(
+                collectible: collectible,
+                definition: definition
+            )
         }
-        return SelectedCollectiblePresentation(
-            collectible: collectible,
-            definition: definition
+    }
+
+    private var orderedAwardKeys: [String] {
+        archiveItems.map(\.id)
+    }
+
+    private var expandedItem: ArchiveCollectiblePresentation? {
+        guard let key = archiveState.expandedAwardKey else { return nil }
+        return archiveItems.first { $0.id == key }
+    }
+
+    private var centeredAwardKeyBinding: Binding<String?> {
+        Binding(
+            get: { archiveState.centeredAwardKey },
+            set: { key in
+                archiveState.updateScrollPosition(
+                    key,
+                    orderedAwardKeys: orderedAwardKeys
+                )
+                seenVisibility.center(archiveState.centeredAwardKey)
+            }
         )
     }
 
-    private var selectableAwardKeys: Set<String> {
-        Set(ownedCollectibles.compactMap { collectible in
-            CollectionCatalog.definition(id: collectible.collectibleID) == nil
-                ? nil
-                : collectible.awardKey
-        })
+    private var showingBackBinding: Binding<Bool> {
+        Binding(
+            get: { archiveState.isShowingBack },
+            set: { archiveState.setShowingBack($0) }
+        )
     }
 
     private var hasUnseenCollectibles: Bool {
@@ -170,13 +189,6 @@ struct CollectionView: View {
 
     private var unseenAwardKeys: Set<String> {
         Set(ownedCollectibles.lazy.filter(\.isUnseen).map(\.awardKey))
-    }
-
-    private var showingBackBinding: Binding<Bool> {
-        Binding(
-            get: { selection.isShowingBack },
-            set: { selection.setShowingBack($0) }
-        )
     }
 
     private var activeCompanion: (CollectibleDefinition, CompanionStage) {
@@ -188,97 +200,66 @@ struct CollectionView: View {
     }
 
     var body: some View {
-        let validatedSelection = validatedSelection
-
         ZStack {
             NavigationStack {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 22) {
-                        featuredContent
+                VStack(alignment: .leading, spacing: 0) {
+                    archiveHeader
 
-                        if let errorMessage = seenRetryState.errorMessage {
-                            CollectionSeenRetryView(
-                                message: errorMessage,
-                                isRetrying: seenRetryState.isAttempting,
-                                onRetry: { markUnseenCollectiblesSeen() }
-                            )
-                        }
-
-                        if !ownedCollectibles.isEmpty {
-                            Text("收藏卡片")
-                                .font(.headline)
-                                .foregroundStyle(TodayVisualTheme.ink)
-                                .accessibilityAddTraits(.isHeader)
-
-                            LazyVGrid(columns: columns, spacing: 14) {
-                                ForEach(ownedCollectibles, id: \.awardKey) { collectible in
-                                    if let definition = CollectionCatalog.definition(
-                                        id: collectible.collectibleID
-                                    ) {
-                                        let focusTarget = CollectionCardFocusTarget.grid(
-                                            awardKey: collectible.awardKey
-                                        )
-                                        Button {
-                                            select(focusTarget: focusTarget)
-                                        } label: {
-                                            CollectibleCardView(
-                                                collectible: collectible,
-                                                definition: definition
-                                            )
-                                        }
-                                        .buttonStyle(.plain)
-                                        .accessibilityFocused(
-                                            $focusedCard,
-                                            equals: focusTarget
-                                        )
-                                        .onAppear {
-                                            visibleCardAppeared(focusTarget)
-                                        }
-                                        .onDisappear {
-                                            visibleCardDisappeared(focusTarget)
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    if archiveItems.isEmpty {
+                        emptyArchive
+                    } else {
+                        ArchiveCarouselView(
+                            items: archiveItems,
+                            centeredAwardKey: centeredAwardKeyBinding,
+                            expandedAwardKey: archiveState.expandedAwardKey,
+                            namespace: archiveNamespace,
+                            onExpand: expand
+                        )
+                        .padding(.top, 26)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, RootTabPageLayout.contentTopPadding)
-                    .padding(.bottom, RootTabPageLayout.contentBottomPadding)
-                }
-                .background(TodayVisualTheme.pageBackground)
-                .navigationTitle("收集")
-                .navigationBarTitleDisplayMode(RootTabPageLayout.navigationTitleMode)
-                .toolbar {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        NavigationLink {
-                            CatalogView()
-                        } label: {
-                            Image(systemName: "books.vertical.fill")
-                        }
-                        .accessibilityLabel("打开图鉴")
+
+                    if let errorMessage = seenRetryState.errorMessage {
+                        CollectionSeenRetryView(
+                            message: errorMessage,
+                            isRetrying: seenRetryState.isAttempting,
+                            onRetry: { markUnseenCollectiblesSeen() }
+                        )
+                        .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
                     }
+
+                    Spacer(minLength: RootTabPageLayout.contentBottomPadding)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .background(LivingOSTheme.canvas)
+                .toolbar(.hidden, for: .navigationBar)
             }
-            .accessibilityHidden(validatedSelection != nil)
+            .accessibilityHidden(expandedItem != nil)
 
-            if let validatedSelection {
-                ExpandedCollectibleCardOverlay(
-                    collectible: validatedSelection.collectible,
-                    definition: validatedSelection.definition,
+            if let expandedItem {
+                ArchiveExpandedView(
+                    collectible: expandedItem.collectible,
+                    definition: expandedItem.definition,
                     isShowingBack: showingBackBinding,
-                    onClose: closeSelection
+                    namespace: archiveNamespace,
+                    onClose: closeExpanded
                 )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .transition(
                     reduceMotion
                         ? .opacity
-                        : .scale(scale: 0.94).combined(with: .opacity)
+                        : .scale(scale: 0.82).combined(with: .opacity)
                 )
                 .zIndex(1)
             }
         }
-        .onChange(of: selectableAwardKeys, initial: true) { _, validAwardKeys in
-            selection.reconcile(validAwardKeys: validAwardKeys)
+        .onChange(of: orderedAwardKeys, initial: true) { _, keys in
+            archiveState.reconcile(orderedAwardKeys: keys)
+            seenVisibility.center(archiveState.centeredAwardKey)
+            markVisibleCollectiblesSeen()
+        }
+        .onChange(of: archiveState.centeredAwardKey) { _, key in
+            seenVisibility.center(key)
+            markVisibleCollectiblesSeen()
         }
         .onChange(of: hasUnseenCollectibles, initial: true) { _, hasUnseen in
             seenRetryState.reconcile(hasUnseenCollectibles: hasUnseen)
@@ -294,65 +275,83 @@ struct CollectionView: View {
         }
     }
 
-    @ViewBuilder
-    private var featuredContent: some View {
-        if let collectible = ownedCollectibles.first,
-           let definition = CollectionCatalog.definition(id: collectible.collectibleID) {
-            let focusTarget = CollectionCardFocusTarget.featured(
-                awardKey: collectible.awardKey
-            )
-            Button {
-                select(focusTarget: focusTarget)
+    private var archiveHeader: some View {
+        HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 5) {
+                Text("Archive")
+                    .font(.system(size: 34, weight: .bold))
+                    .tracking(-1.3)
+                    .foregroundStyle(LivingOSTheme.ink)
+                Text("\(archiveItems.count) / \(CollectionCatalog.all.count)")
+                    .font(.system(size: 11, design: .monospaced))
+                    .foregroundStyle(LivingOSTheme.graphite)
+            }
+
+            Spacer()
+
+            NavigationLink {
+                CatalogView()
             } label: {
-                FeaturedCollectibleCardView(
-                    collectible: collectible,
-                    definition: definition
+                Image(systemName: "line.3.horizontal.decrease")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(LivingOSTheme.ink)
+                    .frame(width: 44, height: 44)
+                    .background(Color.white.opacity(0.64), in: Circle())
+            }
+            .accessibilityLabel("打开图鉴与筛选")
+        }
+        .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+        .padding(.top, 18)
+    }
+
+    private var emptyArchive: some View {
+        VStack(spacing: 18) {
+            ArchiveOrganismArtwork(identifier: activeCompanion.0.id)
+                .frame(width: 180, height: 260)
+                .padding(16)
+                .background(
+                    LinearGradient(
+                        colors: [Color.white.opacity(0.86), LivingOSTheme.mist.opacity(0.58)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ),
+                    in: RoundedRectangle(
+                        cornerRadius: LivingOSMetrics.archiveCardCornerRadius,
+                        style: .continuous
+                    )
                 )
-            }
-            .buttonStyle(.plain)
-            .accessibilityFocused($focusedCard, equals: focusTarget)
-            .onAppear {
-                visibleCardAppeared(focusTarget)
-            }
-            .onDisappear {
-                visibleCardDisappeared(focusTarget)
-            }
-        } else {
-            CompanionCardView(
-                definition: activeCompanion.0,
-                stage: activeCompanion.1
-            )
+                .shadow(color: Color.black.opacity(0.1), radius: 18, y: 10)
+
+            Text("第一张卡正在成长")
+                .font(.system(size: 14, weight: .medium, design: .monospaced))
+            Text("\(activeCompanion.0.name) · \(activeCompanion.1.todayTitle)")
+                .font(.footnote)
+                .foregroundStyle(LivingOSTheme.graphite)
         }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 34)
+        .accessibilityElement(children: .combine)
     }
 
-    private func select(focusTarget: CollectionCardFocusTarget) {
+    private func expand(_ awardKey: String) {
+        archiveState.center(awardKey)
         focusedCard = nil
-        withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(duration: 0.34)) {
-            selection.select(focusTarget: focusTarget)
+        withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .spring(response: 0.4, dampingFraction: 0.84)) {
+            archiveState.expandCentered()
         }
     }
 
-    private func closeSelection() {
-        let focusTarget = withAnimation(
-            reduceMotion ? .easeOut(duration: 0.2) : .easeInOut(duration: 0.22)
-        ) {
-            selection.close()
+    private func closeExpanded() {
+        let key = archiveState.expandedAwardKey
+        withAnimation(reduceMotion ? .easeOut(duration: 0.2) : .easeInOut(duration: 0.28)) {
+            archiveState.closeExpanded()
         }
-        guard let focusTarget else { return }
+        guard let key else { return }
         Task { @MainActor in
             await Task.yield()
             guard !Task.isCancelled else { return }
-            focusedCard = focusTarget
+            focusedCard = .grid(awardKey: key)
         }
-    }
-
-    private func visibleCardAppeared(_ focusTarget: CollectionCardFocusTarget) {
-        seenVisibility.appeared(focusTarget)
-        markVisibleCollectiblesSeen()
-    }
-
-    private func visibleCardDisappeared(_ focusTarget: CollectionCardFocusTarget) {
-        seenVisibility.disappeared(focusTarget)
     }
 
     private func markVisibleCollectiblesSeen() {
@@ -370,9 +369,7 @@ struct CollectionView: View {
             isCollectionSelected: isCollectionSelected,
             isObscured: isObscured
         )
-        guard seenRetryState.beginAttempt(
-            hasUnseenCollectibles: !awardKeys.isEmpty
-        ) else {
+        guard seenRetryState.beginAttempt(hasUnseenCollectibles: !awardKeys.isEmpty) else {
             return
         }
 
@@ -397,30 +394,26 @@ private struct CollectionSeenRetryView: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "exclamationmark.circle")
-                .foregroundStyle(TodayVisualTheme.graphite)
+            Circle()
+                .fill(LivingOSTheme.signal)
+                .frame(width: 6, height: 6)
                 .accessibilityHidden(true)
-
             Text(message)
                 .font(.footnote)
-                .foregroundStyle(TodayVisualTheme.graphite)
+                .foregroundStyle(LivingOSTheme.graphite)
                 .frame(maxWidth: .infinity, alignment: .leading)
-
             Button("重试", action: onRetry)
                 .font(.footnote.weight(.semibold))
-                .foregroundStyle(TodayVisualTheme.ink)
+                .foregroundStyle(LivingOSTheme.ink)
                 .disabled(isRetrying)
         }
         .padding(14)
-        .background(
-            TodayVisualTheme.cloud,
-            in: RoundedRectangle(cornerRadius: 14, style: .continuous)
-        )
+        .background(Color.white.opacity(0.66), in: RoundedRectangle(cornerRadius: 16))
         .accessibilityElement(children: .contain)
     }
 }
 
-#Preview("Empty Collection") {
+#Preview("Empty Archive") {
     CollectionView()
         .modelContainer(for: [CollectionProgress.self, OwnedCollectible.self], inMemory: true)
 }

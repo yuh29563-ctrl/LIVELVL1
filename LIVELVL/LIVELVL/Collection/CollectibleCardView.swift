@@ -354,7 +354,7 @@ private struct StageLabel: View {
     }
 }
 
-private extension OwnedCollectible {
+extension OwnedCollectible {
     var collectionKindTitle: String {
         kind == .ordinaryMature ? "普通物种" : "隐藏物种"
     }
