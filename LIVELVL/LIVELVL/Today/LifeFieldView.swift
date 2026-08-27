@@ -6,6 +6,8 @@ enum LifeFieldLabelPlacement: Equatable, Sendable {
 }
 
 nonisolated enum LifeFieldLayout {
+    static let visualCore = CGPoint(x: 0.50, y: 0.45)
+
     static func anchor(for dimension: LifeDimension) -> CGPoint {
         switch dimension {
         case .health: CGPoint(x: 0.50, y: 0.06)
@@ -15,6 +17,11 @@ nonisolated enum LifeFieldLayout {
         case .career: CGPoint(x: 0.14, y: 0.62)
         case .interests: CGPoint(x: 0.14, y: 0.265)
         }
+    }
+
+    static func point(for dimension: LifeDimension, in size: CGSize) -> CGPoint {
+        let normalized = anchor(for: dimension)
+        return CGPoint(x: normalized.x * size.width, y: normalized.y * size.height)
     }
 
     static func labelPlacement(for dimension: LifeDimension) -> LifeFieldLabelPlacement {
@@ -33,6 +40,17 @@ nonisolated struct LifeFieldParticleLinkSample: Equatable, Sendable {
 }
 
 nonisolated enum LifeFieldParticleLinkGeometry {
+    static func presentationSamples(
+        phase: Double,
+        reduceMotion: Bool
+    ) -> [LifeFieldParticleLinkSample] {
+        samples(
+            countPerLink: 72,
+            phase: phase,
+            reduceMotion: reduceMotion
+        )
+    }
+
     static func samples(
         countPerLink: Int,
         phase: Double,
@@ -40,7 +58,7 @@ nonisolated enum LifeFieldParticleLinkGeometry {
     ) -> [LifeFieldParticleLinkSample] {
         guard countPerLink > 0 else { return [] }
         let resolvedPhase = reduceMotion ? 0.19 : phase - floor(phase)
-        let center = CGPoint(x: 0.5, y: 0.5)
+        let center = LifeFieldLayout.visualCore
         var result: [LifeFieldParticleLinkSample] = []
         result.reserveCapacity(LifeDimension.allCases.count * countPerLink)
 
@@ -134,8 +152,7 @@ struct LifeFieldView: View {
     }
 
     private func nodePosition(for dimension: LifeDimension, in size: CGSize) -> CGPoint {
-        let normalized = LifeFieldLayout.anchor(for: dimension)
-        return CGPoint(x: normalized.x * size.width, y: normalized.y * size.height)
+        LifeFieldLayout.point(for: dimension, in: size)
     }
 
     private func nodeWidth(for dimension: LifeDimension) -> CGFloat {
@@ -239,8 +256,7 @@ private struct LifeFieldParticleLinks: View {
             let phase = reduceMotion
                 ? 0.19
                 : timeline.date.timeIntervalSinceReferenceDate / 8.0
-            let samples = LifeFieldParticleLinkGeometry.samples(
-                countPerLink: 38,
+            let samples = LifeFieldParticleLinkGeometry.presentationSamples(
                 phase: phase,
                 reduceMotion: reduceMotion
             )
@@ -269,12 +285,12 @@ private struct LifeFieldParticleLinks: View {
 private struct LifeFieldOutline: Shape {
     func path(in rect: CGRect) -> Path {
         let points = [
-            LifeFieldLayout.anchor(for: .health).scaled(to: rect.size),
-            LifeFieldLayout.anchor(for: .learning).scaled(to: rect.size),
-            LifeFieldLayout.anchor(for: .finance).scaled(to: rect.size),
-            LifeFieldLayout.anchor(for: .relationships).scaled(to: rect.size),
-            LifeFieldLayout.anchor(for: .career).scaled(to: rect.size),
-            LifeFieldLayout.anchor(for: .interests).scaled(to: rect.size)
+            LifeFieldLayout.point(for: .health, in: rect.size),
+            LifeFieldLayout.point(for: .learning, in: rect.size),
+            LifeFieldLayout.point(for: .finance, in: rect.size),
+            LifeFieldLayout.point(for: .relationships, in: rect.size),
+            LifeFieldLayout.point(for: .career, in: rect.size),
+            LifeFieldLayout.point(for: .interests, in: rect.size)
         ]
 
         return Path { path in
@@ -285,11 +301,5 @@ private struct LifeFieldOutline: Shape {
             }
             path.closeSubpath()
         }
-    }
-}
-
-private extension CGPoint {
-    func scaled(to size: CGSize) -> CGPoint {
-        CGPoint(x: x * size.width, y: y * size.height)
     }
 }

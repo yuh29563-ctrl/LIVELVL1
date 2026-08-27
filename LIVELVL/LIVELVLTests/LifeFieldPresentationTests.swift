@@ -42,7 +42,25 @@ struct LifeFieldPresentationTests {
         #expect(LifeFieldLayout.labelPlacement(for: .career) == .below)
     }
 
-    @Test func sixParticleLinksTerminateAtTheExactHexagonNodes() {
+    @Test func referenceHexagonVerticesMapToTheApprovedIPhoneField() {
+        let size = CGSize(width: 368, height: 492)
+        let expected: [LifeDimension: CGPoint] = [
+            .health: CGPoint(x: 184.00, y: 29.52),
+            .learning: CGPoint(x: 316.48, y: 130.38),
+            .finance: CGPoint(x: 316.48, y: 305.04),
+            .relationships: CGPoint(x: 184.00, y: 413.28),
+            .career: CGPoint(x: 51.52, y: 305.04),
+            .interests: CGPoint(x: 51.52, y: 130.38)
+        ]
+
+        for dimension in LifeDimension.allCases {
+            let point = LifeFieldLayout.point(for: dimension, in: size)
+            #expect(abs(point.x - (expected[dimension]?.x ?? -1)) < 0.01)
+            #expect(abs(point.y - (expected[dimension]?.y ?? -1)) < 0.01)
+        }
+    }
+
+    @Test func sixParticleLinksRunFromTheVisualCoreToTheExactHexagonNodes() {
         let samples = LifeFieldParticleLinkGeometry.samples(
             countPerLink: 24,
             phase: 0.2,
@@ -51,11 +69,27 @@ struct LifeFieldPresentationTests {
 
         #expect(samples.count == LifeDimension.allCases.count * 24)
         for dimension in LifeDimension.allCases {
+            let origin = samples.first { $0.dimension == dimension }
             let target = LifeFieldLayout.anchor(for: dimension)
             let terminal = samples.last { $0.dimension == dimension }
+            #expect(origin?.position == CGPoint(x: 0.50, y: 0.45))
             #expect(terminal != nil)
             #expect(abs((terminal?.position.x ?? 0) - target.x) < 0.02)
             #expect(abs((terminal?.position.y ?? 0) - target.y) < 0.02)
+        }
+    }
+
+    @Test func everyConnectorKeepsEnoughVisibleParticlesBetweenCoreAndNode() {
+        let samples = LifeFieldParticleLinkGeometry.presentationSamples(
+            phase: 0.2,
+            reduceMotion: false
+        )
+
+        for dimension in LifeDimension.allCases {
+            let visible = samples.filter {
+                $0.dimension == dimension && $0.opacity >= 0.34 && $0.diameter >= 1
+            }
+            #expect(visible.count >= 36)
         }
     }
 
