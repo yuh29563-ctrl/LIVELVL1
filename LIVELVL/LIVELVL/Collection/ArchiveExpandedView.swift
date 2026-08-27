@@ -5,7 +5,6 @@ struct ArchiveExpandedView: View {
     let collectible: OwnedCollectible
     let definition: CollectibleDefinition
     @Binding var isShowingBack: Bool
-    let namespace: Namespace.ID
     let onClose: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -13,6 +12,8 @@ struct ArchiveExpandedView: View {
 
     var body: some View {
         GeometryReader { geometry in
+            let cardFrame = ArchiveExpandedLayout.cardFrame(in: geometry.size)
+
             ZStack {
                 Color.clear
                     .ignoresSafeArea()
@@ -20,52 +21,52 @@ struct ArchiveExpandedView: View {
                     .onTapGesture(perform: onClose)
                     .accessibilityHidden(true)
 
-                cardFaces
-                    .frame(
-                        width: min(236, geometry.size.width - 80),
-                        height: min(470, geometry.size.height - 150)
-                    )
-                    .background {
-                        RoundedRectangle(
-                            cornerRadius: LivingOSMetrics.archiveCardCornerRadius,
-                            style: .continuous
+                VStack(spacing: 0) {
+                    cardFaces
+                        .frame(
+                            width: cardFrame.width,
+                            height: cardFrame.height
                         )
-                        .fill(
-                            LinearGradient(
-                                colors: [Color.white.opacity(0.9), LivingOSTheme.mist.opacity(0.64)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .overlay {
+                        .background {
                             RoundedRectangle(
                                 cornerRadius: LivingOSMetrics.archiveCardCornerRadius,
                                 style: .continuous
                             )
-                            .stroke(Color.white, lineWidth: 1)
+                            .fill(
+                                LinearGradient(
+                                    colors: [Color.white.opacity(0.9), LivingOSTheme.mist.opacity(0.64)],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .overlay {
+                                RoundedRectangle(
+                                    cornerRadius: LivingOSMetrics.archiveCardCornerRadius,
+                                    style: .continuous
+                                )
+                                .stroke(Color.white, lineWidth: 1)
+                            }
                         }
-                    }
-                    .clipShape(
-                        RoundedRectangle(
-                            cornerRadius: LivingOSMetrics.archiveCardCornerRadius,
-                            style: .continuous
+                        .clipShape(
+                            RoundedRectangle(
+                                cornerRadius: LivingOSMetrics.archiveCardCornerRadius,
+                                style: .continuous
+                            )
                         )
-                    )
-                    .shadow(color: Color.black.opacity(0.15), radius: 24, y: 12)
-                    .matchedGeometryEffect(id: collectible.awardKey, in: namespace, isSource: false)
-                    .position(
-                        x: geometry.size.width / 2,
-                        y: geometry.size.height / 2 + 30
-                    )
-                    .offset(y: 94)
-                    .contentShape(
-                        RoundedRectangle(
-                            cornerRadius: LivingOSMetrics.archiveCardCornerRadius,
-                            style: .continuous
+                        .shadow(color: Color.black.opacity(0.15), radius: 24, y: 12)
+                        .contentShape(
+                            RoundedRectangle(
+                                cornerRadius: LivingOSMetrics.archiveCardCornerRadius,
+                                style: .continuous
+                            )
                         )
-                    )
-                    .onTapGesture(perform: flip)
-                    .accessibilityFocused($isFocused)
+                        .onTapGesture(perform: flip)
+                        .accessibilityFocused($isFocused)
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.top, cardFrame.minY)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
 
                 VStack {
                     HStack {

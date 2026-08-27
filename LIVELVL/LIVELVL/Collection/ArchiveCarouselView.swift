@@ -14,7 +14,6 @@ struct ArchiveCarouselView: View {
     let items: [ArchiveCollectiblePresentation]
     @Binding var centeredAwardKey: String?
     let expandedAwardKey: String?
-    let namespace: Namespace.ID
     let onExpand: (String) -> Void
 
     private let spacing: CGFloat = 16
@@ -53,7 +52,6 @@ struct ArchiveCarouselView: View {
                                 )
                             }
                             .buttonStyle(.plain)
-                            .matchedGeometryEffect(id: item.id, in: namespace)
                             .scaleEffect(transform.scale)
                             .opacity(expandedAwardKey == item.id ? 0 : transform.opacity)
                             .rotation3DEffect(

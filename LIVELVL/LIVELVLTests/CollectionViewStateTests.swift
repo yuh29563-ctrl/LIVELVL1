@@ -1,3 +1,4 @@
+import CoreGraphics
 import Testing
 @testable import LIVELVL
 
@@ -196,6 +197,15 @@ struct CollectionViewStateTests {
         #expect(reduced.scale == 0.88)
     }
 
+    @Test func expandedArchiveCardClearsTheHeaderOnIPhone17Pro() {
+        let frame = ArchiveExpandedLayout.cardFrame(
+            in: CGSize(width: 368, height: 717)
+        )
+
+        #expect(frame == CGRect(x: 66, y: 132, width: 236, height: 470))
+        #expect(frame.minY > 112)
+    }
+
     @Test func archiveAccessibilityDescribesPositionAndNewState() {
         let value = ArchiveCardAccessibility.value(
             name: "小芽",
@@ -291,5 +301,77 @@ struct CollectionViewStateTests {
         #expect(normalA.flatMap(\.points).allSatisfy {
             (0...1).contains($0.x) && (0...1).contains($0.y)
         })
+    }
+
+    @Test func claimedCardLandsAtMostOncePerPresentationSession() {
+        var state = ArchiveArrivalPresentationState()
+        state.registerClaimed(awardKey: "ordinary.level.4")
+
+        #expect(
+            state.takeArrivalIfNeeded(validAwardKeys: ["ordinary.level.4"])
+                == "ordinary.level.4"
+        )
+        state.markCompleted(awardKey: "ordinary.level.4")
+        #expect(state.takeArrivalIfNeeded(validAwardKeys: ["ordinary.level.4"]) == nil)
+    }
+
+    @Test func arrivalWaitsForThePersistedOwnedRow() {
+        var state = ArchiveArrivalPresentationState()
+        state.registerClaimed(awardKey: "hidden.study")
+
+        #expect(state.takeArrivalIfNeeded(validAwardKeys: []) == nil)
+        #expect(
+            state.takeArrivalIfNeeded(validAwardKeys: ["hidden.study"])
+                == "hidden.study"
+        )
+    }
+
+    @Test func successiveClaimsKeepTheirArrivalOrderUntilEachCardSettles() {
+        var state = ArchiveArrivalPresentationState()
+        state.registerClaimed(awardKey: "ordinary.level.4")
+        state.registerClaimed(awardKey: "hidden.study")
+        let validAwardKeys: Set<String> = ["ordinary.level.4", "hidden.study"]
+
+        #expect(state.takeArrivalIfNeeded(validAwardKeys: validAwardKeys) == "ordinary.level.4")
+        state.markCompleted(awardKey: "ordinary.level.4")
+        #expect(state.takeArrivalIfNeeded(validAwardKeys: validAwardKeys) == "hidden.study")
+    }
+
+    @Test func archiveArrivalTraceFlowsFromTabToTheCenteredCard() throws {
+        let samples = ArchiveArrivalTraceGeometry.samples(
+            progress: 1,
+            phase: 0.2,
+            reduceMotion: false
+        )
+        let first = try #require(samples.first)
+        let last = try #require(samples.last)
+
+        #expect(samples.count == 48)
+        #expect(abs(first.position.x - 0.50) < 0.03)
+        #expect(first.position.y > 1)
+        #expect(abs(last.position.x - 0.50) < 0.03)
+        #expect(last.position.y < 0.72)
+        #expect(samples.allSatisfy { $0.opacity > 0 && $0.diameter > 0 })
+    }
+
+    @Test func archiveArrivalParticlesDanceNormallyAndDisappearForReduceMotion() {
+        let movingA = ArchiveArrivalTraceGeometry.samples(
+            progress: 0.7,
+            phase: 0,
+            reduceMotion: false
+        )
+        let movingB = ArchiveArrivalTraceGeometry.samples(
+            progress: 0.7,
+            phase: 0.4,
+            reduceMotion: false
+        )
+        let reduced = ArchiveArrivalTraceGeometry.samples(
+            progress: 1,
+            phase: 0.4,
+            reduceMotion: true
+        )
+
+        #expect(movingA != movingB)
+        #expect(reduced.isEmpty)
     }
 }

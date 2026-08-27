@@ -122,15 +122,15 @@ struct CardRewardPresentationState: Equatable, Sendable {
         return true
     }
 
-    mutating func finishSuccessfulClaim(feedbackToken: Int) -> Bool {
+    mutating func finishSuccessfulClaim(feedbackToken: Int) -> String? {
         guard awaitedFeedbackToken == feedbackToken,
-              locallyClaimingAwardKey != nil else {
-            return false
+              let locallyClaimingAwardKey else {
+            return nil
         }
-        locallyClaimingAwardKey = nil
+        self.locallyClaimingAwardKey = nil
         awaitedFeedbackToken = nil
         presentedReward = nil
-        return true
+        return locallyClaimingAwardKey
     }
 }
 
@@ -331,6 +331,7 @@ struct MainTabView: View {
     @State private var attention = CollectionAttentionState()
     @State private var presentation = CardRewardPresentationState()
     @State private var handoff = CardRewardHandoffState()
+    @State private var archiveArrival = ArchiveArrivalPresentationState()
     @State private var collectionTabFrameInWindow: CGRect?
 #if DEBUG
     let reportLocalDataResetFailure: (LocalDataResetFailure) -> Void
@@ -393,6 +394,7 @@ struct MainTabView: View {
                 CollectionView(
                     isCollectionSelected: selectedTab == .collection,
                     isObscured: presentation.presentedReward != nil,
+                    arrivalState: $archiveArrival,
                     onMarkedSeen: { attention.markSeen() }
                 )
                     .tag(AppTab.collection)
@@ -522,9 +524,12 @@ struct MainTabView: View {
     }
 
     private func completeClaimAfterCollectionFeedback(_ feedbackToken: Int) {
-        guard presentation.finishSuccessfulClaim(feedbackToken: feedbackToken) else {
+        guard let awardKey = presentation.finishSuccessfulClaim(
+            feedbackToken: feedbackToken
+        ) else {
             return
         }
+        archiveArrival.registerClaimed(awardKey: awardKey)
         handoff.recordDismissalCompletion(at: .now)
     }
 

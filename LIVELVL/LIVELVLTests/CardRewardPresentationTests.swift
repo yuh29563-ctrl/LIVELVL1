@@ -67,12 +67,13 @@ struct CardRewardPresentationTests {
             attentionToken: 7
         )
         #expect(didBeginWaiting)
-        let didFinishWrongFeedback = state.finishSuccessfulClaim(feedbackToken: 6)
-        #expect(!didFinishWrongFeedback)
+        let wrongFeedbackAwardKey = state.finishSuccessfulClaim(feedbackToken: 6)
+        #expect(wrongFeedbackAwardKey == nil)
         #expect(state.presentedReward == reward)
-        let didFinishMatchingFeedback = state.finishSuccessfulClaim(feedbackToken: 7)
-        #expect(didFinishMatchingFeedback)
+        let completedAwardKey = state.finishSuccessfulClaim(feedbackToken: 7)
+        #expect(completedAwardKey == reward.awardKey)
         #expect(state.presentedReward == nil)
+        #expect(state.finishSuccessfulClaim(feedbackToken: 7) == nil)
     }
 
     @Test func futureRewardNoOpDoesNotReportAClaimPostcondition() throws {
