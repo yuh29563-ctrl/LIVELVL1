@@ -7,15 +7,35 @@ enum LifeFieldLabelPlacement: Equatable, Sendable {
 
 nonisolated enum LifeFieldLayout {
     static let visualCore = CGPoint(x: 0.50, y: 0.45)
+    private static let horizontalRadius = 0.36
+    private static let verticalRadius = 0.39
 
     static func anchor(for dimension: LifeDimension) -> CGPoint {
         switch dimension {
-        case .health: CGPoint(x: 0.50, y: 0.06)
-        case .learning: CGPoint(x: 0.86, y: 0.265)
-        case .finance: CGPoint(x: 0.86, y: 0.62)
-        case .relationships: CGPoint(x: 0.50, y: 0.84)
-        case .career: CGPoint(x: 0.14, y: 0.62)
-        case .interests: CGPoint(x: 0.14, y: 0.265)
+        case .health:
+            CGPoint(x: visualCore.x, y: visualCore.y - verticalRadius)
+        case .learning:
+            CGPoint(
+                x: visualCore.x + horizontalRadius,
+                y: visualCore.y - verticalRadius / 2
+            )
+        case .finance:
+            CGPoint(
+                x: visualCore.x + horizontalRadius,
+                y: visualCore.y + verticalRadius / 2
+            )
+        case .relationships:
+            CGPoint(x: visualCore.x, y: visualCore.y + verticalRadius)
+        case .career:
+            CGPoint(
+                x: visualCore.x - horizontalRadius,
+                y: visualCore.y + verticalRadius / 2
+            )
+        case .interests:
+            CGPoint(
+                x: visualCore.x - horizontalRadius,
+                y: visualCore.y - verticalRadius / 2
+            )
         }
     }
 
@@ -45,7 +65,7 @@ nonisolated enum LifeFieldParticleLinkGeometry {
         reduceMotion: Bool
     ) -> [LifeFieldParticleLinkSample] {
         samples(
-            countPerLink: 72,
+            countPerLink: 88,
             phase: phase,
             reduceMotion: reduceMotion
         )
@@ -76,10 +96,11 @@ nonisolated enum LifeFieldParticleLinkGeometry {
                 let seed = Double(((dimensionIndex + 1) * 131 + index * 43) % 101) / 101
                 let dance = sin((resolvedPhase + seed) * .pi * 2 + t * 13)
                 let taper = sin(t * .pi)
-                let lateral = dance * 0.010 * taper
+                let lateral = dance * 0.012 * taper
                 let longitudinal = cos((resolvedPhase * 0.8 + seed) * .pi * 2)
-                    * 0.004 * taper
+                    * 0.003 * taper
                 let resolvedT = min(1, max(0, t + longitudinal))
+                let endpointEmphasis = pow(abs(t * 2 - 1), 1.4)
 
                 result.append(
                     LifeFieldParticleLinkSample(
@@ -88,8 +109,8 @@ nonisolated enum LifeFieldParticleLinkGeometry {
                             x: center.x + dx * resolvedT + perpendicular.x * lateral,
                             y: center.y + dy * resolvedT + perpendicular.y * lateral
                         ),
-                        opacity: 0.16 + (0.44 * t) + seed * 0.12,
-                        diameter: 0.75 + seed * 1.25
+                        opacity: 0.26 + endpointEmphasis * 0.22 + seed * 0.16,
+                        diameter: 1 + seed * 1.4
                     )
                 )
             }

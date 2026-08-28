@@ -31,26 +31,52 @@ struct LifeFieldPresentationTests {
     }
 
     @Test func approvedSixPointLayoutKeepsSemanticDomainsAtReferenceAnchors() {
-        #expect(LifeFieldLayout.anchor(for: .health) == CGPoint(x: 0.50, y: 0.06))
-        #expect(LifeFieldLayout.anchor(for: .learning) == CGPoint(x: 0.86, y: 0.265))
-        #expect(LifeFieldLayout.anchor(for: .finance) == CGPoint(x: 0.86, y: 0.62))
-        #expect(LifeFieldLayout.anchor(for: .relationships) == CGPoint(x: 0.50, y: 0.84))
-        #expect(LifeFieldLayout.anchor(for: .career) == CGPoint(x: 0.14, y: 0.62))
-        #expect(LifeFieldLayout.anchor(for: .interests) == CGPoint(x: 0.14, y: 0.265))
+        let expected: [LifeDimension: CGPoint] = [
+            .health: CGPoint(x: 0.50, y: 0.06),
+            .learning: CGPoint(x: 0.86, y: 0.255),
+            .finance: CGPoint(x: 0.86, y: 0.645),
+            .relationships: CGPoint(x: 0.50, y: 0.84),
+            .career: CGPoint(x: 0.14, y: 0.645),
+            .interests: CGPoint(x: 0.14, y: 0.255)
+        ]
+        for dimension in LifeDimension.allCases {
+            let anchor = LifeFieldLayout.anchor(for: dimension)
+            #expect(abs(anchor.x - (expected[dimension]?.x ?? -1)) < 0.000_001)
+            #expect(abs(anchor.y - (expected[dimension]?.y ?? -1)) < 0.000_001)
+        }
         #expect(LifeFieldLayout.labelPlacement(for: .health) == .above)
         #expect(LifeFieldLayout.labelPlacement(for: .relationships) == .below)
         #expect(LifeFieldLayout.labelPlacement(for: .career) == .below)
+    }
+
+    @Test func everyOpposingNodePairSharesTheExactVisualCore() {
+        let opposingPairs: [(LifeDimension, LifeDimension)] = [
+            (.health, .relationships),
+            (.learning, .career),
+            (.finance, .interests)
+        ]
+
+        for (first, second) in opposingPairs {
+            let firstPoint = LifeFieldLayout.anchor(for: first)
+            let secondPoint = LifeFieldLayout.anchor(for: second)
+            let midpoint = CGPoint(
+                x: (firstPoint.x + secondPoint.x) / 2,
+                y: (firstPoint.y + secondPoint.y) / 2
+            )
+            #expect(abs(midpoint.x - LifeFieldLayout.visualCore.x) < 0.000_001)
+            #expect(abs(midpoint.y - LifeFieldLayout.visualCore.y) < 0.000_001)
+        }
     }
 
     @Test func referenceHexagonVerticesMapToTheApprovedIPhoneField() {
         let size = CGSize(width: 368, height: 492)
         let expected: [LifeDimension: CGPoint] = [
             .health: CGPoint(x: 184.00, y: 29.52),
-            .learning: CGPoint(x: 316.48, y: 130.38),
-            .finance: CGPoint(x: 316.48, y: 305.04),
+            .learning: CGPoint(x: 316.48, y: 125.46),
+            .finance: CGPoint(x: 316.48, y: 317.34),
             .relationships: CGPoint(x: 184.00, y: 413.28),
-            .career: CGPoint(x: 51.52, y: 305.04),
-            .interests: CGPoint(x: 51.52, y: 130.38)
+            .career: CGPoint(x: 51.52, y: 317.34),
+            .interests: CGPoint(x: 51.52, y: 125.46)
         ]
 
         for dimension in LifeDimension.allCases {
@@ -85,11 +111,12 @@ struct LifeFieldPresentationTests {
             reduceMotion: false
         )
 
+        #expect(samples.count >= LifeDimension.allCases.count * 84)
         for dimension in LifeDimension.allCases {
             let visible = samples.filter {
-                $0.dimension == dimension && $0.opacity >= 0.34 && $0.diameter >= 1
+                $0.dimension == dimension && $0.opacity >= 0.24 && $0.diameter >= 1
             }
-            #expect(visible.count >= 36)
+            #expect(visible.count >= 72)
         }
     }
 
