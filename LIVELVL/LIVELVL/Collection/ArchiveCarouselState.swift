@@ -4,7 +4,9 @@ import Foundation
 nonisolated struct ArchiveCardTransform: Equatable, Sendable {
     let scale: CGFloat
     let opacity: Double
-    let rotationDegrees: Double
+    let yawDegrees: Double
+    let rollDegrees: Double
+    let verticalOffset: CGFloat
 
     static func make(
         normalizedDistance: CGFloat,
@@ -13,9 +15,66 @@ nonisolated struct ArchiveCardTransform: Equatable, Sendable {
         let signedDistance = max(-1, min(1, normalizedDistance))
         let distance = abs(signedDistance)
         return Self(
-            scale: 1 - 0.12 * distance,
-            opacity: 1 - 0.45 * Double(distance),
-            rotationDegrees: reduceMotion ? 0 : Double(signedDistance) * -3
+            scale: 1 - 0.16 * distance,
+            opacity: 1 - 0.26 * Double(distance),
+            yawDegrees: reduceMotion ? 0 : Double(signedDistance) * -24,
+            rollDegrees: reduceMotion ? 0 : Double(signedDistance) * -2.5,
+            verticalOffset: reduceMotion ? 0 : 18 * pow(distance, 1.35)
+        )
+    }
+}
+
+nonisolated struct ArchiveCarouselLayout: Equatable, Sendable {
+    let cardSize: CGSize
+    let cardSpacing: CGFloat
+    let captionHeight: CGFloat
+    let cardCaptionSpacing: CGFloat
+    let totalHeight: CGFloat
+
+    static func make(containerWidth: CGFloat) -> Self {
+        let width = min(196, max(192, containerWidth * 12 / 23))
+        let height = width * 1.75
+        let captionHeight: CGFloat = 150
+        let spacing: CGFloat = 16
+        return Self(
+            cardSize: CGSize(width: width, height: height),
+            cardSpacing: -8,
+            captionHeight: captionHeight,
+            cardCaptionSpacing: spacing,
+            totalHeight: height + spacing + captionHeight
+        )
+    }
+}
+
+nonisolated struct ArchiveCardCaptionPresentation: Equatable, Sendable {
+    let title: String
+    let kindTitle: String
+    let sourceTitle: String
+    let levelText: String
+    let acquiredText: String
+
+    init(
+        name: String,
+        kindTitle: String,
+        sourceTitle: String,
+        awardKey: String,
+        acquiredAt: Date,
+        calendar: Calendar
+    ) {
+        title = name.uppercased()
+        self.kindTitle = kindTitle
+        self.sourceTitle = sourceTitle
+        if awardKey.hasPrefix("ordinary.level."),
+           let level = Int(awardKey.split(separator: ".").last ?? "") {
+            levelText = "LV \(level)"
+        } else {
+            levelText = "DISCOVERY"
+        }
+        let components = calendar.dateComponents([.month, .day], from: acquiredAt)
+        acquiredText = String(
+            format: "获得于 %02d / %02d",
+            components.month ?? 0,
+            components.day ?? 0
         )
     }
 }

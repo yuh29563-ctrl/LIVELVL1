@@ -232,7 +232,7 @@ struct CollectionTabFeedbackAnimationPlan: Equatable, Sendable {
 
 enum CollectionTabIdentity {
     static let accessibilityIdentifier = "main-tab.collection"
-    static let systemImageName = "square.grid.2x2.fill"
+    static let systemImageName = "circle.grid.3x3.fill"
 }
 
 @MainActor

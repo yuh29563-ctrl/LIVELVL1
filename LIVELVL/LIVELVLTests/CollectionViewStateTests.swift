@@ -1,4 +1,5 @@
 import CoreGraphics
+import Foundation
 import Testing
 @testable import LIVELVL
 
@@ -180,21 +181,33 @@ struct CollectionViewStateTests {
         #expect(result == ["center"])
     }
 
-    @Test func archiveDepthIsRestrainedAndReducedMotionIsFlat() {
+    @Test func archiveCardsTravelOnARestrainedThreeDimensionalArc() {
         let normal = ArchiveCardTransform.make(
             normalizedDistance: 1,
             reduceMotion: false
         )
-        #expect(normal.scale == 0.88)
-        #expect(normal.opacity == 0.55)
-        #expect(abs(normal.rotationDegrees) <= 3)
+        #expect(normal.scale == 0.84)
+        #expect(normal.opacity == 0.74)
+        #expect(normal.yawDegrees == -24)
+        #expect(normal.rollDegrees == -2.5)
+        #expect(normal.verticalOffset == 18)
+
+        let halfway = ArchiveCardTransform.make(
+            normalizedDistance: 0.5,
+            reduceMotion: false
+        )
+        #expect(halfway.yawDegrees == -12)
+        #expect(halfway.verticalOffset > 0)
+        #expect(halfway.verticalOffset < normal.verticalOffset)
 
         let reduced = ArchiveCardTransform.make(
             normalizedDistance: -1,
             reduceMotion: true
         )
-        #expect(reduced.rotationDegrees == 0)
-        #expect(reduced.scale == 0.88)
+        #expect(reduced.yawDegrees == 0)
+        #expect(reduced.rollDegrees == 0)
+        #expect(reduced.verticalOffset == 0)
+        #expect(reduced.scale == 0.84)
     }
 
     @Test func expandedArchiveCardClearsTheHeaderOnIPhone17Pro() {
@@ -204,6 +217,38 @@ struct CollectionViewStateTests {
 
         #expect(frame == CGRect(x: 66, y: 132, width: 236, height: 470))
         #expect(frame.minY > 112)
+    }
+
+    @Test func archiveCarouselMatchesTheApprovedIPhone17ProCardAndCaptionScale() {
+        // iOS 26's tab container proposes 340 pt inside the 368 pt screen.
+        // The visual spec is screen-relative, so the card must not shrink with
+        // that system content margin.
+        let layout = ArchiveCarouselLayout.make(containerWidth: 340)
+
+        #expect(abs(layout.cardSize.width - 192) < 0.01)
+        #expect(abs(layout.cardSize.height - 336) < 0.01)
+        #expect(abs(layout.cardSpacing - -8) < 0.01)
+        #expect(abs(layout.captionHeight - 150) < 0.01)
+        #expect(abs(layout.totalHeight - 502) < 0.01)
+    }
+
+    @Test func archiveCaptionKeepsPersistedIdentityLevelAndAcquisitionDate() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let date = calendar.date(from: DateComponents(year: 2026, month: 8, day: 26))!
+        let caption = ArchiveCardCaptionPresentation(
+            name: "CORE-12",
+            kindTitle: "成熟卡",
+            sourceTitle: "陪伴成熟",
+            awardKey: "ordinary.level.12",
+            acquiredAt: date,
+            calendar: calendar
+        )
+
+        #expect(caption.title == "CORE-12")
+        #expect(caption.kindTitle == "成熟卡")
+        #expect(caption.levelText == "LV 12")
+        #expect(caption.acquiredText == "获得于 08 / 26")
     }
 
     @Test func archiveAccessibilityDescribesPositionAndNewState() {
