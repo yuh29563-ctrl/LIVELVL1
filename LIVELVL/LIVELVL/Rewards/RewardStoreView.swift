@@ -12,8 +12,7 @@ struct RewardStoreView: View {
     private var redemptions: [RewardRedemption]
     @Query private var progressItems: [Progress]
 
-    @State private var isShowingEditor = false
-    @State private var editingProduct: RewardProduct?
+    @State private var editorRoute: RewardProductEditorRoute?
     @State private var pendingProduct: RewardProduct?
     @State private var isShowingRedemptionConfirmation = false
     @State private var archivingProduct: RewardProduct?
@@ -21,6 +20,7 @@ struct RewardStoreView: View {
     @State private var isShowingHistory = false
     @State private var isShowingMessage = false
     @State private var message = ""
+    @State private var submissionState = RewardRedemptionSubmissionState()
 
     private var activeProducts: [RewardProduct] {
         products.filter { !$0.isArchived }
@@ -30,99 +30,72 @@ struct RewardStoreView: View {
         products.filter(\.isArchived)
     }
 
-    private var balance: Int {
-        (try? CoinLedgerService.balance(in: context)) ?? 0
+    private var balancePresentation: RewardBalancePresentation {
+        do {
+            return .available(try CoinLedgerService.balance(in: context))
+        } catch {
+            return .unavailable
+        }
+    }
+
+    private var pendingRedemptionCount: Int {
+        redemptions.lazy.filter { $0.status == .pending }.count
     }
 
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    balanceCard
+                ZStack(alignment: .top) {
+                    RewardPageParticleTrail()
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("我的现实奖励")
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(TodayVisualTheme.ink)
+                    VStack(alignment: .leading, spacing: 0) {
+                        RewardStoreHeader(
+                            onHistory: { isShowingHistory = true },
+                            onCreate: createProduct
+                        )
 
-                        if activeProducts.isEmpty {
-                            ContentUnavailableView(
-                                "还没有奖励",
-                                systemImage: "gift",
-                                description: Text("创建一个值得用金币兑换的现实奖励")
-                            )
-                            .frame(maxWidth: .infinity, minHeight: 180)
-                        } else {
-                            ForEach(activeProducts) { product in
-                                RewardProductCard(
-                                    product: product,
-                                    balance: balance,
-                                    onRedeem: {
-                                        pendingProduct = product
-                                        isShowingRedemptionConfirmation = true
-                                    },
-                                    onEdit: {
-                                        editingProduct = product
-                                        isShowingEditor = true
-                                    },
-                                    onArchive: {
-                                        archivingProduct = product
-                                        isShowingArchiveConfirmation = true
-                                    }
+                        RewardBalanceHero(
+                            balance: balancePresentation,
+                            pendingCount: pendingRedemptionCount
+                        )
+                        .padding(.top, 54)
+
+                        RewardProductList(
+                            products: activeProducts,
+                            balance: balancePresentation,
+                            isSubmitting: submissionState.isSubmitting,
+                            onRedeem: requestRedemption,
+                            onEdit: edit,
+                            onArchive: requestArchive
+                        )
+                        .padding(.top, 54)
+
+                        if !archivedProducts.isEmpty {
+                            DisclosureGroup("已归档  \(archivedProducts.count)") {
+                                RewardProductList(
+                                    products: archivedProducts,
+                                    balance: balancePresentation,
+                                    isSubmitting: submissionState.isSubmitting,
+                                    onRedeem: { _ in },
+                                    onEdit: edit,
+                                    onArchive: { _ in }
                                 )
+                                .opacity(0.5)
                             }
+                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .foregroundStyle(LivingOSTheme.graphite)
+                            .padding(.top, 28)
                         }
-                    }
-
-                    if !archivedProducts.isEmpty {
-                        DisclosureGroup("已归档（\(archivedProducts.count)）") {
-                            VStack(spacing: 12) {
-                                ForEach(archivedProducts) { product in
-                                    RewardProductCard(
-                                        product: product,
-                                        balance: balance,
-                                        onRedeem: {},
-                                        onEdit: {
-                                            editingProduct = product
-                                            isShowingEditor = true
-                                        },
-                                        onArchive: {}
-                                    )
-                                    .opacity(0.62)
-                                }
-                            }
-                            .padding(.top, 10)
-                        }
-                        .font(.headline)
-                        .foregroundStyle(TodayVisualTheme.ink)
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, RootTabPageLayout.contentTopPadding)
+                .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                .padding(.top, 18)
                 .padding(.bottom, RootTabPageLayout.contentBottomPadding)
             }
-            .background(TodayVisualTheme.pageBackground)
-            .navigationTitle("奖励")
-            .navigationBarTitleDisplayMode(RootTabPageLayout.navigationTitleMode)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("历史") { isShowingHistory = true }
-                        .accessibilityIdentifier("rewards.history")
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        editingProduct = nil
-                        isShowingEditor = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .fontWeight(.semibold)
-                    }
-                    .accessibilityLabel("创建现实奖励")
-                    .accessibilityIdentifier("rewards.create")
-                }
-            }
-            .sheet(isPresented: $isShowingEditor) {
-                RewardProductEditor(product: editingProduct)
+            .background(LivingOSTheme.canvas)
+            .toolbar(.hidden, for: .navigationBar)
+            .sheet(item: $editorRoute) { route in
+                RewardProductEditor(product: route.product)
             }
             .sheet(isPresented: $isShowingHistory) {
                 RewardRedemptionHistoryView(redemptions: redemptions)
@@ -133,11 +106,16 @@ struct RewardStoreView: View {
             ) {
                 if let pendingProduct {
                     Button("确认兑换") { redeem(pendingProduct) }
+                        .disabled(submissionState.isSubmitting)
                     Button("取消", role: .cancel) {}
                 }
             } message: {
                 if let pendingProduct {
-                    Text("将扣除 \(CoinDisplayFormatter.text(forCoinUnits: pendingProduct.priceCoinUnits)) 金币，并记录为待兑现。")
+                    let postBalance = max(
+                        0,
+                        (balancePresentation.coinUnits ?? 0) - pendingProduct.priceCoinUnits
+                    )
+                    Text("\(pendingProduct.name) · 扣除 \(CoinDisplayFormatter.text(forCoinUnits: pendingProduct.priceCoinUnits)) 金币 · 兑换后余额 \(CoinDisplayFormatter.text(forCoinUnits: postBalance))。兑换记录将保存为待兑现。")
                 }
             }
             .confirmationDialog(
@@ -160,25 +138,24 @@ struct RewardStoreView: View {
         }
     }
 
-    private var balanceCard: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Label("可用金币", systemImage: "circle.hexagongrid.fill")
-                .font(.subheadline.weight(.medium))
-                .foregroundStyle(.secondary)
-            Text(CoinDisplayFormatter.text(forCoinUnits: balance))
-                .font(.system(.largeTitle, design: .rounded).weight(.bold))
-                .monospacedDigit()
-                .foregroundStyle(TodayVisualTheme.ink)
-            Text("1 XP = 0.1 金币 · 完成任务自动获得")
-                .font(.footnote)
-                .foregroundStyle(.secondary)
-        }
-        .padding(18)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(TodayVisualTheme.cloud, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("可用金币 \(CoinDisplayFormatter.text(forCoinUnits: balance))")
-        .accessibilityIdentifier("rewards.balance")
+    private func createProduct() {
+        editorRoute = .create
+    }
+
+    private func edit(_ product: RewardProduct) {
+        editorRoute = .edit(product)
+    }
+
+    private func requestRedemption(_ product: RewardProduct) {
+        guard balancePresentation.allowsRedemption,
+              !submissionState.isSubmitting else { return }
+        pendingProduct = product
+        isShowingRedemptionConfirmation = true
+    }
+
+    private func requestArchive(_ product: RewardProduct) {
+        archivingProduct = product
+        isShowingArchiveConfirmation = true
     }
 
     private func importLegacyXP() {
@@ -187,7 +164,16 @@ struct RewardStoreView: View {
     }
 
     private func redeem(_ product: RewardProduct) {
-        let requestKey = UUID().uuidString
+        guard balancePresentation.allowsRedemption else {
+            message = "金币余额暂时无法读取，请稍后重试。"
+            isShowingMessage = true
+            pendingProduct = nil
+            return
+        }
+        guard let requestKey = submissionState.begin(productID: product.id) else {
+            return
+        }
+        defer { submissionState.finish() }
         do {
             _ = try RewardStoreService.redeem(
                 product,
@@ -218,66 +204,276 @@ struct RewardStoreView: View {
     }
 }
 
-private struct RewardProductCard: View {
+private struct RewardStoreHeader: View {
+    let onHistory: () -> Void
+    let onCreate: () -> Void
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 18) {
+            Text("Rewards")
+                .font(.system(size: 52, weight: .bold))
+                .tracking(-2.4)
+                .foregroundStyle(LivingOSTheme.ink)
+                .minimumScaleFactor(0.82)
+
+            Spacer(minLength: 8)
+
+            Button("历史", action: onHistory)
+                .font(.system(size: 15))
+                .foregroundStyle(LivingOSTheme.graphite)
+                .accessibilityIdentifier("rewards.history")
+
+            Rectangle()
+                .fill(LivingOSTheme.mist)
+                .frame(width: 0.5, height: 25)
+
+            Button(action: onCreate) {
+                Image(systemName: "plus")
+                    .font(.system(size: 22, weight: .light))
+                    .frame(width: 34, height: 44)
+            }
+            .foregroundStyle(LivingOSTheme.ink)
+            .accessibilityLabel("创建现实奖励")
+            .accessibilityIdentifier("rewards.create")
+        }
+    }
+}
+
+private struct RewardBalanceHero: View {
+    let balance: RewardBalancePresentation
+    let pendingCount: Int
+
+    private var displayText: String {
+        guard let coinUnits = balance.coinUnits else { return "—" }
+        return CoinDisplayFormatter.text(forCoinUnits: coinUnits)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
+            Text("可用金币")
+                .font(.system(size: 13, design: .monospaced))
+                .foregroundStyle(LivingOSTheme.graphite)
+
+            HStack(alignment: .bottom, spacing: 18) {
+                Text(displayText)
+                    .font(.system(size: 62, weight: .light, design: .rounded))
+                    .tracking(-2)
+                    .monospacedDigit()
+                    .foregroundStyle(LivingOSTheme.ink)
+                    .contentTransition(.numericText())
+
+                RewardLedgerStrip(balanceCoinUnits: balance.coinUnits ?? 0)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 58)
+                    .padding(.bottom, 8)
+            }
+
+            HStack(spacing: 9) {
+                Text("待兑现")
+                    .foregroundStyle(LivingOSTheme.graphite)
+                Text(pendingCount, format: .number)
+                    .foregroundStyle(LivingOSTheme.ink)
+                    .contentTransition(.numericText())
+                Spacer()
+                Text("1 XP = 0.1 金币")
+                    .font(.system(size: 10, design: .monospaced))
+                    .foregroundStyle(LivingOSTheme.graphite)
+            }
+            .font(.system(size: 14))
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("可用金币 \(displayText)，待兑现 \(pendingCount)")
+        .accessibilityIdentifier("rewards.balance")
+    }
+}
+
+private struct RewardLedgerStrip: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    let balanceCoinUnits: Int
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+            let samples = RewardLedgerGeometry.samples(
+                count: 48,
+                balanceCoinUnits: balanceCoinUnits,
+                phase: timeline.date.timeIntervalSinceReferenceDate / 9,
+                reduceMotion: reduceMotion
+            )
+            Canvas { context, size in
+                for sample in samples {
+                    let diameter = sample.diameter
+                    let rect = CGRect(
+                        x: sample.position.x * size.width - diameter / 2,
+                        y: sample.position.y * size.height - diameter / 2,
+                        width: diameter,
+                        height: diameter
+                    )
+                    context.fill(
+                        Path(ellipseIn: rect),
+                        with: .color(LivingOSTheme.ink.opacity(sample.opacity))
+                    )
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct RewardPageParticleTrail: View {
+    var body: some View {
+        LivingDotField(columns: 3, rows: 26)
+            .frame(width: 44, height: 390)
+            .rotationEffect(.degrees(-8))
+            .opacity(0.56)
+            .offset(x: 76, y: 255)
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+    }
+}
+
+private struct RewardProductList: View {
+    let products: [RewardProduct]
+    let balance: RewardBalancePresentation
+    let isSubmitting: Bool
+    let onRedeem: (RewardProduct) -> Void
+    let onEdit: (RewardProduct) -> Void
+    let onArchive: (RewardProduct) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Rectangle()
+                .fill(LivingOSTheme.mist)
+                .frame(height: 0.5)
+
+            if products.isEmpty {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("还没有现实奖励")
+                        .font(.system(size: 22, weight: .medium))
+                    Text("点击右上角 +，创建一个值得兑换的现实目标。")
+                        .font(.subheadline)
+                        .foregroundStyle(LivingOSTheme.graphite)
+                }
+                .frame(maxWidth: .infinity, minHeight: 150, alignment: .leading)
+            } else {
+                ForEach(products) { product in
+                    RewardProductRail(
+                        product: product,
+                        balance: balance,
+                        isSubmitting: isSubmitting,
+                        onRedeem: { onRedeem(product) },
+                        onEdit: { onEdit(product) },
+                        onArchive: { onArchive(product) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+private struct RewardProductRail: View {
     let product: RewardProduct
-    let balance: Int
+    let balance: RewardBalancePresentation
+    let isSubmitting: Bool
     let onRedeem: () -> Void
     let onEdit: () -> Void
     let onArchive: () -> Void
 
+    private var presentation: RewardProductRailPresentation {
+        RewardProductRailPresentation(
+            name: product.name,
+            priceCoinUnits: product.priceCoinUnits,
+            note: product.note,
+            imageReference: product.imageReference,
+            balanceCoinUnits: balance.coinUnits,
+            isArchived: product.isArchived
+        )
+    }
+
     private var canRedeem: Bool {
-        !product.isArchived && balance >= product.priceCoinUnits
+        balance.allowsRedemption && presentation.canRedeem && !isSubmitting
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
-                RewardProductImageView(reference: product.imageReference)
-                    .frame(width: 72, height: 72)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        HStack(alignment: .center, spacing: 16) {
+            if let imageReference = product.imageReference {
+                RewardProductImageView(reference: imageReference)
+                    .frame(width: 70, height: 88)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
 
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(product.name)
-                        .font(.headline)
-                        .foregroundStyle(TodayVisualTheme.ink)
-                        .fixedSize(horizontal: false, vertical: true)
-                    Text("需要 \(CoinDisplayFormatter.text(forCoinUnits: product.priceCoinUnits)) 金币")
-                        .font(.subheadline.weight(.semibold).monospacedDigit())
-                        .foregroundStyle(canRedeem ? TodayVisualTheme.reward : .secondary)
-                    if !product.note.isEmpty {
-                        Text(product.note)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 6) {
+                Text(presentation.name)
+                    .font(.system(size: 22, weight: .medium))
+                    .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Text(CoinDisplayFormatter.text(forCoinUnits: presentation.priceCoinUnits))
+                    .font(.system(size: 20, weight: .regular, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
+
+                Text(presentation.note.isEmpty ? presentation.statusText : presentation.note)
+                    .font(.system(size: 13))
+                    .foregroundStyle(LivingOSTheme.graphite)
+                    .lineLimit(2)
+
+                if !presentation.note.isEmpty, !presentation.canRedeem {
+                    Text(presentation.statusText)
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .foregroundStyle(LivingOSTheme.graphite)
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            if !product.isArchived {
+                Button(action: onRedeem) {
+                    HStack(spacing: 8) {
+                        Text(presentation.canRedeem ? "兑换" : "余额不足")
+                        if presentation.canRedeem {
+                            Circle()
+                                .fill(LivingOSTheme.signal)
+                                .frame(width: 6, height: 6)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(LivingOSTheme.ink)
+                    .padding(.horizontal, 16)
+                    .frame(height: 42)
+                    .overlay {
+                        Capsule()
+                            .stroke(LivingOSTheme.graphite.opacity(0.42), lineWidth: 0.8)
                     }
                 }
-
-                Spacer(minLength: 0)
+                .buttonStyle(.plain)
+                .disabled(!canRedeem)
+                .opacity(canRedeem ? 1 : 0.48)
+                .accessibilityIdentifier("rewards.redeem.\(product.id.uuidString)")
             }
-
-            HStack(spacing: 10) {
-                if !product.isArchived {
-                    Button("兑换", action: onRedeem)
-                        .buttonStyle(.borderedProminent)
-                        .tint(TodayVisualTheme.ink)
-                        .accessibilityIdentifier("rewards.redeem.\(product.id.uuidString)")
-                }
-                Button("编辑", action: onEdit)
-                    .buttonStyle(.bordered)
-                if !product.isArchived {
-                    Button("归档", role: .destructive, action: onArchive)
-                        .buttonStyle(.borderless)
-                }
-            }
-            .font(.subheadline.weight(.medium))
         }
-        .padding(14)
-        .background(.background, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(TodayVisualTheme.ink.opacity(0.08), lineWidth: 1)
+        .padding(.vertical, 22)
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2, perform: onEdit)
+        .contextMenu {
+            Button("编辑", action: onEdit)
+            if !product.isArchived {
+                Button("归档", role: .destructive, action: onArchive)
+            }
         }
         .accessibilityElement(children: .contain)
+        .accessibilityActions {
+            Button("编辑", action: onEdit)
+            if presentation.canArchive {
+                Button("归档", action: onArchive)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(LivingOSTheme.mist)
+                .frame(height: 0.5)
+        }
     }
 }
 
@@ -311,7 +507,7 @@ private struct RewardProductEditor: View {
 
                 Section("图片") {
                     PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                        Label(imageReference == nil ? "选择图片" : "替换图片", systemImage: "photo")
+                        Text(imageReference == nil ? "添加图片" : "替换图片")
                     }
                     if imageReference != nil {
                         Button("移除图片", role: .destructive) {
@@ -466,7 +662,7 @@ private struct RewardRedemptionHistoryView: View {
 }
 
 private struct RewardProductImageView: View {
-    let reference: String?
+    let reference: String
     @State private var image: UIImage?
 
     var body: some View {
@@ -476,19 +672,18 @@ private struct RewardProductImageView: View {
                     .resizable()
                     .scaledToFill()
             } else {
-                ZStack {
-                    Color.secondary.opacity(0.12)
-                    Image(systemName: "gift")
-                        .font(.title2)
-                        .foregroundStyle(.secondary)
-                }
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(Color.white.opacity(0.34))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .stroke(
+                                LivingOSTheme.graphite.opacity(0.28),
+                                style: StrokeStyle(lineWidth: 0.8, dash: [4, 4])
+                            )
+                    }
             }
         }
         .task(id: reference) {
-            guard let reference else {
-                image = nil
-                return
-            }
             image = try? loadImage(reference: reference)
         }
         .accessibilityHidden(true)
