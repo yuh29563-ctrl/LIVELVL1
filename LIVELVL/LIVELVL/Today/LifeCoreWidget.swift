@@ -202,7 +202,7 @@ struct TodayLifeFieldSection: View {
 
     let summary: LifeStateSummary
     let core: LifeCoreWidgetPresentation
-    let isRewarding: Bool
+    let growthPhase: TodayGrowthPhase
     let levelUpFeedback: Int?
 
     var body: some View {
@@ -210,11 +210,14 @@ struct TodayLifeFieldSection: View {
             let coreWidth = resolvedCoreWidth(containerWidth: proxy.size.width)
 
             ZStack {
-                LifeFieldView(summary: summary)
+                LifeFieldView(
+                    summary: summary,
+                    highlightedDimension: highlightedDimension
+                )
 
                 LifeCoreWidget(
                     presentation: core,
-                    isRewarding: isRewarding,
+                    isRewarding: growthPhase == .core,
                     levelUpFeedback: levelUpFeedback
                 )
                 .frame(width: coreWidth, height: coreWidth * 1.94)
@@ -222,6 +225,12 @@ struct TodayLifeFieldSection: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(height: dynamicTypeSize.isAccessibilitySize ? 590 : 492)
+        .todayGrowthAnchor(.field)
+    }
+
+    private var highlightedDimension: LifeDimension? {
+        guard case let .dimension(dimension) = growthPhase else { return nil }
+        return dimension
     }
 
     private func resolvedCoreWidth(containerWidth: CGFloat) -> CGFloat {

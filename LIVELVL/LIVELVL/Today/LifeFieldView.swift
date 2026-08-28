@@ -125,6 +125,7 @@ struct LifeFieldView: View {
     @State private var selection = LifeFieldSelectionState()
 
     let summary: LifeStateSummary
+    let highlightedDimension: LifeDimension?
 
     private var nodes: [LifeFieldNodePresentation] {
         LifeFieldNodePresentation.make(summary: summary)
@@ -149,6 +150,7 @@ struct LifeFieldView: View {
                     LifeFieldNode(
                         value: node,
                         isSelected: selection.selectedDimension == node.dimension,
+                        isRewardTarget: highlightedDimension == node.dimension,
                         reduceMotion: reduceMotion,
                         action: {
                             withAnimation(
@@ -184,6 +186,7 @@ struct LifeFieldView: View {
 private struct LifeFieldNode: View {
     let value: LifeFieldNodePresentation
     let isSelected: Bool
+    let isRewardTarget: Bool
     let reduceMotion: Bool
     let action: () -> Void
 
@@ -219,6 +222,7 @@ private struct LifeFieldNode: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .scaleEffect(isRewardTarget && !reduceMotion ? 1.08 : 1)
         .accessibilityLabel(value.title)
         .accessibilityValue(
             "当前 \(value.displayValue)，预测 \(value.projectedDisplayValue)，\(value.sourceText)，\(value.assessmentText)"
@@ -248,16 +252,19 @@ private struct LifeFieldNode: View {
         ZStack {
             Circle()
                 .stroke(
-                    LivingOSTheme.graphite.opacity(isSelected ? 0.34 : 0.14),
-                    lineWidth: 0.7
+                    LivingOSTheme.graphite.opacity(isSelected || isRewardTarget ? 0.42 : 0.14),
+                    lineWidth: isRewardTarget ? 1 : 0.7
                 )
                 .frame(width: 32, height: 32)
 
             Circle()
                 .fill(LivingOSTheme.ink)
-                .frame(width: isSelected ? 15 : 12, height: isSelected ? 15 : 12)
+                .frame(
+                    width: isSelected || isRewardTarget ? 15 : 12,
+                    height: isSelected || isRewardTarget ? 15 : 12
+                )
 
-            if isSelected {
+            if isSelected || isRewardTarget {
                 Circle()
                     .fill(LivingOSTheme.signal)
                     .frame(width: 5, height: 5)

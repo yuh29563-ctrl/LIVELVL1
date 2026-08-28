@@ -103,12 +103,13 @@ struct TodayView: View {
     @State private var showMessage = false
     @State private var message = ""
     @State private var pendingItemID: UUID?
-    @State private var rewardFeedback: TaskRewardFeedback?
+    @State private var growthPresentation = TodayGrowthPresentationState()
     @State private var feedbackSequenceID: UUID?
     @State private var levelUpFeedback: Int?
     @State private var rewardFlow = CompletionRewardFlowState()
 
     private var progress: Progress { progressItems.first ?? Progress() }
+    private var rewardFeedback: TaskRewardFeedback? { growthPresentation.feedback }
 
     private var activeCompanion: (definition: CollectibleDefinition, stage: CompanionStage) {
         guard let collectionProgress = collectionProgressItems.first else {
@@ -174,7 +175,7 @@ struct TodayView: View {
                         TodayLifeFieldSection(
                             summary: currentSummary,
                             core: lifeCorePresentation,
-                            isRewarding: rewardFeedback != nil,
+                            growthPhase: growthPresentation.phase,
                             levelUpFeedback: levelUpFeedback
                         )
                     }
@@ -209,6 +210,7 @@ struct TodayView: View {
                                 ),
                                 onToggle: { toggle(item) }
                             )
+                            .todayGrowthAnchor(.task(item.id))
                         }
                     }
                     .contextMenu {
@@ -219,6 +221,11 @@ struct TodayView: View {
                     .padding(.bottom, RootTabPageLayout.contentBottomPadding)
                 }
         }
+            .overlayPreferenceValue(TodayGrowthAnchorPreferenceKey.self) { anchors in
+                GeometryReader { proxy in
+                    growthOverlay(anchors: anchors, proxy: proxy)
+                }
+            }
             .background(LivingOSTheme.canvas)
             .sheet(isPresented: $showAdd) { AddTaskView() }
             .alert("确认完成任务？", isPresented: $showConfirm) {
@@ -241,15 +248,33 @@ struct TodayView: View {
                 reconcilePersistedRewards()
             }
             .onChange(of: scenePhase) { _, phase in
-                guard phase == .active else { return }
-                reconcilePersistedRewards()
+                if phase == .active {
+                    reconcilePersistedRewards()
+                } else {
+                    cancelGrowthPresentation()
+                }
             }
+            .onDisappear { cancelGrowthPresentation() }
             .task(id: feedbackSequenceID) {
-                guard let feedback = rewardFeedback, feedbackSequenceID == feedback.id else { return }
-                try? await Task.sleep(for: .milliseconds(800))
+                guard let feedback = growthPresentation.feedback,
+                      feedbackSequenceID == feedback.id else { return }
+
+                try? await Task.sleep(for: .milliseconds(reduceMotion ? 100 : 180))
                 guard !Task.isCancelled else { return }
-                withAnimation(.easeOut(duration: 0.2)) {
-                    rewardFeedback = nil
+                withAnimation(growthAnimation) {
+                    growthPresentation.advance()
+                }
+
+                try? await Task.sleep(for: .milliseconds(reduceMotion ? 140 : 420))
+                guard !Task.isCancelled else { return }
+                withAnimation(growthAnimation) {
+                    growthPresentation.advance()
+                }
+
+                try? await Task.sleep(for: .milliseconds(reduceMotion ? 140 : 460))
+                guard !Task.isCancelled else { return }
+                withAnimation(growthAnimation) {
+                    growthPresentation.advance()
                 }
 
                 guard feedback.didLevelUp else {
@@ -257,16 +282,51 @@ struct TodayView: View {
                     return
                 }
 
-                withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .spring(duration: 0.28)) {
-                    levelUpFeedback = feedback.levelAfter
-                }
+                withAnimation(growthAnimation) { levelUpFeedback = feedback.levelAfter }
                 try? await Task.sleep(for: .milliseconds(800))
                 guard !Task.isCancelled else { return }
                 withAnimation(.easeOut(duration: 0.2)) {
                     levelUpFeedback = nil
+                    growthPresentation.advance()
                 }
                 feedbackSequenceID = nil
             }
+    }
+
+    @ViewBuilder
+    private func growthOverlay(
+        anchors: [TodayGrowthAnchor: Anchor<CGRect>],
+        proxy: GeometryProxy
+    ) -> some View {
+        if let feedback = growthPresentation.feedback,
+           let taskAnchor = anchors[.task(feedback.itemID)],
+           let fieldAnchor = anchors[.field] {
+            let taskFrame = proxy[taskAnchor]
+            let fieldFrame = proxy[fieldAnchor]
+            let dimensionAnchor = LifeFieldLayout.anchor(for: feedback.dimension)
+            let start = CGPoint(x: taskFrame.maxX - 42, y: taskFrame.midY)
+            let dimension = CGPoint(
+                x: fieldFrame.minX + dimensionAnchor.x * fieldFrame.width,
+                y: fieldFrame.minY + dimensionAnchor.y * fieldFrame.height
+            )
+            let core = CGPoint(
+                x: fieldFrame.minX + LifeFieldLayout.visualCore.x * fieldFrame.width,
+                y: fieldFrame.minY + LifeFieldLayout.visualCore.y * fieldFrame.height
+            )
+
+            XPFlowOverlay(
+                phase: growthPresentation.phase,
+                start: start,
+                dimension: dimension,
+                core: core
+            )
+        }
+    }
+
+    private var growthAnimation: Animation {
+        reduceMotion
+            ? .easeInOut(duration: 0.16)
+            : .spring(response: 0.3, dampingFraction: 0.84)
     }
 
     private func isCompleted(_ item: Item) -> Bool {
@@ -286,9 +346,7 @@ struct TodayView: View {
                 showMessage = true
                 return
             }
-            rewardFeedback = nil
-            feedbackSequenceID = nil
-            levelUpFeedback = nil
+            cancelGrowthPresentation()
             message = "已取消完成，退回 \(completion.xp) XP"
             showMessage = true
         } else {
@@ -308,6 +366,7 @@ struct TodayView: View {
             )
         } catch {
             pendingItemID = nil
+            cancelGrowthPresentation()
             message = "任务保存失败，请重试"
             showMessage = true
             return
@@ -328,9 +387,7 @@ struct TodayView: View {
         } catch {
             rewardFlow.rewardProcessingFailed()
             pendingItemID = nil
-            rewardFeedback = nil
-            feedbackSequenceID = nil
-            levelUpFeedback = nil
+            cancelGrowthPresentation()
             return
         }
 
@@ -343,8 +400,14 @@ struct TodayView: View {
             levelBefore: levelBefore,
             levelAfter: levelAfter
         )
-        rewardFeedback = feedback
+        growthPresentation.begin(feedback)
         feedbackSequenceID = feedback.id
+    }
+
+    private func cancelGrowthPresentation() {
+        growthPresentation.cancel()
+        feedbackSequenceID = nil
+        levelUpFeedback = nil
     }
 
     private func retryRewardProcessing() {
