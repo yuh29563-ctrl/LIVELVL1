@@ -1,9 +1,17 @@
-import SwiftUI
-#if DEBUG
 import SwiftData
-#endif
+import SwiftUI
 
 struct ProfileView: View {
+    @Query private var items: [Item]
+    @Query private var completions: [Completion]
+    @Query private var progressItems: [Progress]
+    @Query private var profiles: [DimensionProfile]
+    @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
+    private var snapshots: [StateSnapshot]
+    @Environment(\.calendar) private var calendar
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .body) private var statusFieldHeight: CGFloat = 310
+
 #if DEBUG
     @Environment(\.modelContext) private var modelContext
     @State private var resetPresentation: ResetPresentation?
@@ -39,28 +47,101 @@ struct ProfileView: View {
 
     private var profileContent: some View {
         NavigationStack {
-            List {
-                Section("我的") {
-                    Text("本地数据与隐私")
-                    Text("现实奖励目标将在下一阶段加入")
-                }
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    YouIdentityHeader(level: level)
 
+                    YouPageTitle()
+                        .padding(.top, 26)
+
+                    Text("个人操作系统 · 诊断中")
+                        .font(.body)
+                        .foregroundStyle(LivingOSTheme.graphite)
+                        .padding(.top, 2)
+
+                    YouStateHeadline(score: overallDisplayScore)
+                        .padding(.top, 28)
+
+                    YouStateField(nodes: dimensionNodes)
+                        .frame(height: statusFieldHeight)
+                        .padding(.top, dynamicTypeSize.isAccessibilitySize ? 38 : 0)
+
+                    WeeklyStateTimelineView(
+                        days: weeklyDays,
+                        now: .now,
+                        calendar: timelineCalendar
+                    )
+                    .padding(.top, 10)
+
+                    Group {
 #if DEBUG
-                Section("开发者") {
-                    Button("重置所有本地数据", role: .destructive) {
-                        resetPresentation = .impact
-                    }
-                }
+                        YouSettingsRows(onReset: { resetPresentation = .impact })
+#else
+                        YouSettingsRows()
 #endif
+                    }
+                    .padding(.top, 26)
 
-                Section("产品") {
-                    Text("LIVELVL · 现实人生 RPG")
-                        .foregroundStyle(.secondary)
+                    Text("LIVELVL · LOCAL FIRST")
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .tracking(1.4)
+                        .foregroundStyle(LivingOSTheme.graphite.opacity(0.72))
+                        .padding(.top, 24)
                 }
+                .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                .padding(.top, 18)
+                .padding(.bottom, RootTabPageLayout.contentBottomPadding)
             }
-            .navigationTitle("我的")
-            .navigationBarTitleDisplayMode(RootTabPageLayout.navigationTitleMode)
+            .background(LivingOSTheme.canvas)
+            .toolbar(.hidden, for: .navigationBar)
         }
+    }
+
+    private var level: Int {
+        progressItems.first?.level ?? 0
+    }
+
+    private var currentSummary: LifeStateSummary? {
+        guard let snapshot = snapshots.first else { return nil }
+        let itemByID = items.reduce(into: [UUID: Item]()) { result, item in
+            result[item.id] = item
+        }
+        let activities = completions.compactMap {
+            $0.stateActivity(fallbackItem: itemByID[$0.itemID])
+        }
+        return LifeStateSummaryBuilder.build(
+            profiles: profiles,
+            snapshot: snapshot,
+            activities: activities,
+            now: .now,
+            calendar: calendar
+        )
+    }
+
+    private var overallDisplayScore: Int {
+        LifeStateDisplayScale.percentage(from: currentSummary?.overallScore ?? 5)
+    }
+
+    private var dimensionNodes: [LifeFieldNodePresentation] {
+        guard let currentSummary else {
+            return LifeFieldNodePresentation.make(
+                official: .neutral,
+                projected: .neutral
+            )
+        }
+        return LifeFieldNodePresentation.make(summary: currentSummary)
+    }
+
+    private var weeklyDays: [WeeklyStateDay] {
+        WeeklyStateTimelineBuilder.build(
+            completions: completions,
+            weekContaining: .now,
+            calendar: timelineCalendar
+        )
+    }
+
+    private var timelineCalendar: Calendar {
+        YouTimelineCalendar.resolved(from: calendar)
     }
 }
 
