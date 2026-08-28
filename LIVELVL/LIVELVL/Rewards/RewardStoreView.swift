@@ -58,7 +58,7 @@ struct RewardStoreView: View {
                             balance: balancePresentation,
                             pendingCount: pendingRedemptionCount
                         )
-                        .padding(.top, 54)
+                        .padding(.top, RewardStoreLayout.balanceTopSpacing)
 
                         RewardProductList(
                             products: activeProducts,
@@ -68,7 +68,7 @@ struct RewardStoreView: View {
                             onEdit: edit,
                             onArchive: requestArchive
                         )
-                        .padding(.top, 54)
+                        .padding(.top, RewardStoreLayout.productTopSpacing)
 
                         if !archivedProducts.isEmpty {
                             DisclosureGroup("已归档  \(archivedProducts.count)") {
@@ -89,7 +89,7 @@ struct RewardStoreView: View {
                     }
                 }
                 .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
-                .padding(.top, 18)
+                .padding(.top, RewardStoreLayout.pageTopPadding)
                 .padding(.bottom, RootTabPageLayout.contentBottomPadding)
             }
             .background(LivingOSTheme.canvas)
@@ -249,7 +249,7 @@ private struct RewardBalanceHero: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: RewardStoreLayout.balanceInternalSpacing) {
             Text("可用金币")
                 .font(.system(size: 13, design: .monospaced))
                 .foregroundStyle(LivingOSTheme.graphite)
@@ -264,8 +264,8 @@ private struct RewardBalanceHero: View {
 
                 RewardLedgerStrip(balanceCoinUnits: balance.coinUnits ?? 0)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 58)
-                    .padding(.bottom, 8)
+                    .frame(height: 62)
+                    .padding(.bottom, 4)
             }
 
             HStack(spacing: 9) {
@@ -280,6 +280,7 @@ private struct RewardBalanceHero: View {
                     .foregroundStyle(LivingOSTheme.graphite)
             }
             .font(.system(size: 14))
+            .padding(.top, 10)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("可用金币 \(displayText)，待兑现 \(pendingCount)")
@@ -294,7 +295,8 @@ private struct RewardLedgerStrip: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
             let samples = RewardLedgerGeometry.samples(
-                count: 48,
+                columns: 24,
+                rows: 6,
                 balanceCoinUnits: balanceCoinUnits,
                 phase: timeline.date.timeIntervalSinceReferenceDate / 9,
                 reduceMotion: reduceMotion
@@ -321,14 +323,44 @@ private struct RewardLedgerStrip: View {
 }
 
 private struct RewardPageParticleTrail: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
     var body: some View {
-        LivingDotField(columns: 3, rows: 26)
-            .frame(width: 44, height: 390)
-            .rotationEffect(.degrees(-8))
-            .opacity(0.56)
-            .offset(x: 76, y: 255)
-            .allowsHitTesting(false)
-            .accessibilityHidden(true)
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+            let samples = RewardPageTrailGeometry.samples(
+                count: 54,
+                phase: timeline.date.timeIntervalSinceReferenceDate / 7.5,
+                reduceMotion: reduceMotion
+            )
+
+            Canvas { context, size in
+                for sample in samples {
+                    let diameter = sample.diameter
+                    let rect = CGRect(
+                        x: sample.position.x * size.width - diameter / 2,
+                        y: sample.position.y * size.height - diameter / 2,
+                        width: diameter,
+                        height: diameter
+                    )
+                    let color = sample.usesLightInk ? Color.white : LivingOSTheme.graphite
+                    if sample.usesLightInk {
+                        context.fill(
+                            Path(ellipseIn: rect.insetBy(dx: -1.1, dy: -1.1)),
+                            with: .color(LivingOSTheme.graphite.opacity(0.08))
+                        )
+                    }
+                    context.fill(
+                        Path(ellipseIn: rect),
+                        with: .color(color.opacity(sample.opacity))
+                    )
+                }
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 500)
+        .offset(y: RewardStoreLayout.particleTrailTopOffset)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
@@ -396,12 +428,6 @@ private struct RewardProductRail: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
-            if let imageReference = product.imageReference {
-                RewardProductImageView(reference: imageReference)
-                    .frame(width: 70, height: 88)
-                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            }
-
             VStack(alignment: .leading, spacing: 6) {
                 Text(presentation.name)
                     .font(.system(size: 22, weight: .medium))
@@ -427,10 +453,30 @@ private struct RewardProductRail: View {
 
             Spacer(minLength: 8)
 
-            if !product.isArchived {
+            if let imageReference = product.imageReference {
+                Button(action: onRedeem) {
+                    RewardProductImageView(reference: imageReference)
+                        .frame(width: 70, height: 88)
+                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                        .overlay(alignment: .topTrailing) {
+                            if presentation.canRedeem {
+                                Circle()
+                                    .fill(LivingOSTheme.signal)
+                                    .frame(width: 6, height: 6)
+                                    .padding(8)
+                                    .accessibilityHidden(true)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .disabled(!canRedeem)
+                .opacity(canRedeem ? 1 : 0.58)
+                .accessibilityLabel("兑换 \(presentation.name)")
+                .accessibilityIdentifier("rewards.redeem.\(product.id.uuidString)")
+            } else if !product.isArchived {
                 Button(action: onRedeem) {
                     HStack(spacing: 8) {
-                        Text(presentation.canRedeem ? "兑换" : "余额不足")
+                        Text(presentation.canRedeem ? "兑换" : presentation.statusText)
                         if presentation.canRedeem {
                             Circle()
                                 .fill(LivingOSTheme.signal)
