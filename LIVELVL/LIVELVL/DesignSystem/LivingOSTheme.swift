@@ -37,6 +37,8 @@ nonisolated enum LivingOSTypography {
     static let rewardsHero: Font.TextStyle = .largeTitle
     static let archiveCaptionTitle: Font.TextStyle = .headline
     static let taskTitle: Font.TextStyle = .body
+    static let lifeCoreLevel: Font.TextStyle = .headline
+    static let lifeNodeTitle: Font.TextStyle = .caption
 }
 
 enum LivingOSMetrics {
@@ -47,9 +49,14 @@ enum LivingOSMetrics {
     static let coreWidthFraction: CGFloat = 0.34
     static let minimumCoreWidth: CGFloat = 124
     static let maximumCoreWidth: CGFloat = 180
+    static let maximumPageTitleSize: CGFloat = 72
 
     static func coreWidth(containerWidth: CGFloat) -> CGFloat {
         min(maximumCoreWidth, max(minimumCoreWidth, containerWidth * coreWidthFraction))
+    }
+
+    static func resolvedPageTitleSize(_ scaledSize: CGFloat) -> CGFloat {
+        min(maximumPageTitleSize, scaledSize)
     }
 }
 

@@ -7,6 +7,10 @@ struct LivingOSDesignSystemTests {
         #expect(LivingOSMetrics.coreWidth(containerWidth: 320) == 124)
         #expect(abs(LivingOSMetrics.coreWidth(containerWidth: 390) - 132.6) < 0.001)
         #expect(LivingOSMetrics.coreWidth(containerWidth: 1_024) == 180)
+        #expect(LivingOSMetrics.resolvedPageTitleSize(56) == 56)
+        #expect(LivingOSMetrics.resolvedPageTitleSize(120) == 72)
+        #expect(TodayLayout.headerOffset(isAccessibilitySize: false) == -28)
+        #expect(TodayLayout.headerOffset(isAccessibilitySize: true) == 0)
     }
 
     @Test func scoreDisplayClampsDomainScoreIntoHundredPointPresentation() {
@@ -56,5 +60,7 @@ struct LivingOSDesignSystemTests {
         #expect(LivingOSTypography.rewardsHero == .largeTitle)
         #expect(LivingOSTypography.archiveCaptionTitle == .headline)
         #expect(LivingOSTypography.taskTitle == .body)
+        #expect(LivingOSTypography.lifeCoreLevel == .headline)
+        #expect(LivingOSTypography.lifeNodeTitle == .caption)
     }
 }

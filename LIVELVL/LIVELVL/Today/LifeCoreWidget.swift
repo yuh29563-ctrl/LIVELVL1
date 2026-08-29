@@ -121,13 +121,15 @@ struct LifeCoreWidget: View {
 
             VStack(alignment: .leading, spacing: 7) {
                 Text(presentation.levelText)
-                    .font(.system(size: 18, weight: .medium))
+                    .font(.system(LivingOSTypography.lifeCoreLevel, weight: .medium))
                     .contentTransition(.numericText())
 
                 Text(presentation.xpText)
-                    .font(.system(size: 10, weight: .regular, design: .monospaced))
+                    .font(.system(.caption2, design: .monospaced, weight: .regular))
                     .foregroundStyle(LivingOSTheme.ink)
                     .contentTransition(.numericText())
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
 
                 GeometryReader { proxy in
                     Capsule()
@@ -141,7 +143,7 @@ struct LifeCoreWidget: View {
                 .frame(height: 5)
 
                 Text(presentation.remainingText)
-                    .font(.system(size: 9, weight: .regular, design: .monospaced))
+                    .font(.system(.caption2, design: .monospaced, weight: .regular))
                     .foregroundStyle(LivingOSTheme.graphite)
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
@@ -223,6 +225,7 @@ struct TodayLifeFieldSection: View {
                 .frame(width: coreWidth, height: coreWidth * 1.94)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .dynamicTypeSize(.large ... .accessibility2)
         }
         .frame(height: dynamicTypeSize.isAccessibilitySize ? 590 : 492)
         .todayGrowthAnchor(.field)

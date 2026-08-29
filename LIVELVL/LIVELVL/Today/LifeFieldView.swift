@@ -209,7 +209,7 @@ private struct LifeFieldNode: View {
                         Text(value.sourceText)
                         Text(value.assessmentText)
                     }
-                    .font(.system(size: 9, weight: .medium, design: .monospaced))
+                    .font(.system(.caption2, design: .monospaced, weight: .medium))
                     .foregroundStyle(LivingOSTheme.graphite)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -239,9 +239,9 @@ private struct LifeFieldNode: View {
     private var nodeLabel: some View {
         VStack(spacing: 0) {
             Text(value.title)
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(LivingOSTypography.lifeNodeTitle, weight: .medium))
             Text(value.displayValue, format: .number)
-                .font(.system(size: 14, weight: .regular, design: .monospaced))
+                .font(.system(.caption, design: .monospaced, weight: .regular))
                 .foregroundStyle(LivingOSTheme.graphite)
         }
     }

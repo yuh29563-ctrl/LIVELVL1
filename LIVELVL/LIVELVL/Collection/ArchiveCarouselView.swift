@@ -123,19 +123,24 @@ struct ArchiveCarouselView: View {
     }
 
     private func step(from index: Int, direction: AccessibilityAdjustmentDirection) {
-        let targetIndex: Int
+        let increment: Bool
         switch direction {
         case .increment:
-            targetIndex = min(items.count - 1, index + 1)
+            increment = true
         case .decrement:
-            targetIndex = max(0, index - 1)
+            increment = false
         @unknown default:
             return
         }
-        guard items.indices.contains(targetIndex) else { return }
+        guard let destination = ArchiveAccessibilityNavigation.destination(
+            awardKeys: items.map(\.id),
+            from: index,
+            increment: increment
+        ) else { return }
         withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.34)) {
-            centeredAwardKey = items[targetIndex].id
+            centeredAwardKey = destination.awardKey
         }
+        focusedCard = destination.focusTarget
     }
 }
 

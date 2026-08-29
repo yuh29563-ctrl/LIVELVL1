@@ -80,6 +80,7 @@ nonisolated enum RewardStoreLayout {
     static let balanceInternalSpacing: CGFloat = 0
     static let productTopSpacing: CGFloat = 69
     static let particleTrailTopOffset: CGFloat = 125
+    static let heroMinimumScale = 0.55
 
     static func usesVerticalBalanceLayout(isAccessibilitySize: Bool) -> Bool {
         isAccessibilitySize

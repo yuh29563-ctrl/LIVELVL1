@@ -1,7 +1,7 @@
 import SwiftData
 import SwiftUI
 
-enum CollectionCardFocusTarget: Hashable, Sendable {
+nonisolated enum CollectionCardFocusTarget: Hashable, Sendable {
     case featured(awardKey: String)
     case grid(awardKey: String)
 
@@ -128,6 +128,7 @@ struct CollectionSeenRetryState: Equatable {
 struct CollectionView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.scenePhase) private var scenePhase
     @Query(sort: [
         SortDescriptor(\OwnedCollectible.acquiredAt, order: .reverse),
@@ -223,34 +224,18 @@ struct CollectionView: View {
     var body: some View {
         ZStack {
             NavigationStack {
-                VStack(alignment: .leading, spacing: 0) {
-                    archiveHeader
-
-                    if archiveItems.isEmpty {
-                        emptyArchive
+                Group {
+                    if ArchiveCarouselLayout.usesVerticalPageScroll(
+                        isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+                    ) {
+                        ScrollView(.vertical) {
+                            archivePageContent
+                        }
+                        .scrollIndicators(.hidden)
                     } else {
-                        ArchiveCarouselView(
-                            items: archiveItems,
-                            centeredAwardKey: centeredAwardKeyBinding,
-                            expandedAwardKey: archiveState.expandedAwardKey,
-                            focusedCard: $focusedCard,
-                            onExpand: expand
-                        )
-                        .padding(.top, 26)
+                        archivePageContent
                     }
-
-                    if let errorMessage = seenRetryState.errorMessage {
-                        CollectionSeenRetryView(
-                            message: errorMessage,
-                            isRetrying: seenRetryState.isAttempting,
-                            onRetry: { markUnseenCollectiblesSeen() }
-                        )
-                        .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
-                    }
-
-                    Spacer(minLength: RootTabPageLayout.contentBottomPadding)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .background(LivingOSTheme.canvas)
                 .toolbar(.hidden, for: .navigationBar)
             }
@@ -347,15 +332,46 @@ struct CollectionView: View {
         }
     }
 
+    private var archivePageContent: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            archiveHeader
+
+            if archiveItems.isEmpty {
+                emptyArchive
+            } else {
+                ArchiveCarouselView(
+                    items: archiveItems,
+                    centeredAwardKey: centeredAwardKeyBinding,
+                    expandedAwardKey: archiveState.expandedAwardKey,
+                    focusedCard: $focusedCard,
+                    onExpand: expand
+                )
+                .padding(.top, 26)
+            }
+
+            if let errorMessage = seenRetryState.errorMessage {
+                CollectionSeenRetryView(
+                    message: errorMessage,
+                    isRetrying: seenRetryState.isAttempting,
+                    onRetry: { markUnseenCollectiblesSeen() }
+                )
+                .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+            }
+
+            Spacer(minLength: RootTabPageLayout.contentBottomPadding)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
     private var archiveHeader: some View {
         HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 5) {
                 Text("Archive")
-                    .font(.system(size: 34, weight: .bold))
+                    .font(.largeTitle.bold())
                     .tracking(-1.3)
                     .foregroundStyle(LivingOSTheme.ink)
                 Text("\(archiveItems.count) / \(CollectionCatalog.all.count)")
-                    .font(.system(size: 11, design: .monospaced))
+                    .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(LivingOSTheme.graphite)
             }
 
@@ -365,7 +381,7 @@ struct CollectionView: View {
                 CatalogView()
             } label: {
                 Image(systemName: "line.3.horizontal.decrease")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.body.weight(.medium))
                     .foregroundStyle(LivingOSTheme.ink)
                     .frame(width: 44, height: 44)
                     .background(Color.white.opacity(0.64), in: Circle())
@@ -395,7 +411,7 @@ struct CollectionView: View {
                 .shadow(color: Color.black.opacity(0.1), radius: 18, y: 10)
 
             Text("第一张卡正在成长")
-                .font(.system(size: 14, weight: .medium, design: .monospaced))
+                .font(.system(.subheadline, design: .monospaced, weight: .medium))
             Text("\(activeCompanion.0.name) · \(activeCompanion.1.todayTitle)")
                 .font(.footnote)
                 .foregroundStyle(LivingOSTheme.graphite)
@@ -443,9 +459,9 @@ struct CollectionView: View {
         arrivalTraceProgress = 0
         arrivalSequenceID = UUID()
         withAnimation(
-            reduceMotion
-                ? .easeOut(duration: 0.2)
-                : .spring(response: 0.46, dampingFraction: 0.86)
+            ArchiveArrivalMotion.allowsAnimatedCentering(reduceMotion: reduceMotion)
+                ? .spring(response: 0.46, dampingFraction: 0.86)
+                : nil
         ) {
             archiveState.center(awardKey)
         }

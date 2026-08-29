@@ -10,6 +10,12 @@ enum TodayVisualTheme {
     static let pageBackground = LivingOSTheme.canvas
 }
 
+nonisolated enum TodayLayout {
+    static func headerOffset(isAccessibilitySize: Bool) -> CGFloat {
+        isAccessibilitySize ? 0 : -28
+    }
+}
+
 struct TaskRewardFeedback: Identifiable, Equatable {
     let id = UUID()
     let itemID: UUID

@@ -95,6 +95,7 @@ private struct TodayGrowthTaskID: Hashable {
 struct TodayView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @Environment(\.scenePhase) private var scenePhase
     @Query private var items: [Item]
     @Query private var completions: [Completion]
@@ -157,7 +158,11 @@ struct TodayView: View {
                     LivingOSPageHeader(title: "Today")
                     .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
                     .padding(.top, 10)
-                    .offset(y: -28)
+                    .offset(
+                        y: TodayLayout.headerOffset(
+                            isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+                        )
+                    )
 
                     if let levelUpFeedback {
                         HStack(spacing: 7) {

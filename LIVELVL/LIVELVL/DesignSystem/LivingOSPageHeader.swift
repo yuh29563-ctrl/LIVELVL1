@@ -31,7 +31,12 @@ struct LivingOSPageHeader<Trailing: View>: View {
                 }
 
                 Text(title)
-                    .font(.system(size: scaledTitleSize, weight: .bold))
+                    .font(
+                        .system(
+                            size: LivingOSMetrics.resolvedPageTitleSize(scaledTitleSize),
+                            weight: .bold
+                        )
+                    )
                     .tracking(-2.2)
                     .foregroundStyle(LivingOSTheme.ink)
                     .lineLimit(1)

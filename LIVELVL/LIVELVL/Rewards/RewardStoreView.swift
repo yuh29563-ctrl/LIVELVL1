@@ -232,7 +232,9 @@ private struct RewardStoreHeader: View {
             .font(.system(size: titleSize, weight: .bold))
             .tracking(-2.4)
             .foregroundStyle(LivingOSTheme.ink)
-            .fixedSize(horizontal: true, vertical: false)
+            .lineLimit(1)
+            .minimumScaleFactor(RewardStoreLayout.heroMinimumScale)
+            .allowsTightening(true)
     }
 
     private var actions: some View {
@@ -290,16 +292,21 @@ private struct RewardBalanceHero: View {
                 }
             }
 
-            HStack(spacing: 9) {
-                Text("待兑现")
-                    .foregroundStyle(LivingOSTheme.graphite)
-                Text(pendingCount, format: .number)
-                    .foregroundStyle(LivingOSTheme.ink)
-                    .contentTransition(.numericText())
-                Spacer()
-                Text("1 XP = 0.1 金币")
-                    .font(.system(.caption2, design: .monospaced))
-                    .foregroundStyle(LivingOSTheme.graphite)
+            Group {
+                if RewardStoreLayout.usesVerticalBalanceLayout(
+                    isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+                ) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        pendingRedemptionCount
+                        conversionRate
+                    }
+                } else {
+                    HStack(spacing: 9) {
+                        pendingRedemptionCount
+                        Spacer()
+                        conversionRate
+                    }
+                }
             }
             .font(.subheadline)
             .padding(.top, 10)
@@ -317,7 +324,25 @@ private struct RewardBalanceHero: View {
             .foregroundStyle(LivingOSTheme.ink)
             .contentTransition(.numericText())
             .lineLimit(1)
-            .fixedSize(horizontal: true, vertical: false)
+            .minimumScaleFactor(RewardStoreLayout.heroMinimumScale)
+            .allowsTightening(true)
+            .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var pendingRedemptionCount: some View {
+        HStack(spacing: 9) {
+            Text("待兑现")
+                .foregroundStyle(LivingOSTheme.graphite)
+            Text(pendingCount, format: .number)
+                .foregroundStyle(LivingOSTheme.ink)
+                .contentTransition(.numericText())
+        }
+    }
+
+    private var conversionRate: some View {
+        Text("1 XP = 0.1 金币")
+            .font(.system(.caption2, design: .monospaced))
+            .foregroundStyle(LivingOSTheme.graphite)
     }
 
     private func ledgerStrip(height: CGFloat) -> some View {

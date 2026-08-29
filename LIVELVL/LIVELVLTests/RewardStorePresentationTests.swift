@@ -7,6 +7,7 @@ struct RewardStorePresentationTests {
     @Test func accessibilityBalanceMovesTheLedgerBelowTheNumber() {
         #expect(!RewardStoreLayout.usesVerticalBalanceLayout(isAccessibilitySize: false))
         #expect(RewardStoreLayout.usesVerticalBalanceLayout(isAccessibilitySize: true))
+        #expect(RewardStoreLayout.heroMinimumScale == 0.55)
     }
 
     @Test func unavailableBalanceNeverEnablesRedemption() {

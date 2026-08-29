@@ -48,6 +48,35 @@ nonisolated enum ArchiveArrivalPresentationActivity {
     }
 }
 
+nonisolated enum ArchiveArrivalMotion {
+    static func allowsAnimatedCentering(reduceMotion: Bool) -> Bool {
+        !reduceMotion
+    }
+}
+
+nonisolated struct ArchiveAccessibilityNavigationDestination: Equatable, Sendable {
+    let awardKey: String
+    let focusTarget: CollectionCardFocusTarget
+}
+
+nonisolated enum ArchiveAccessibilityNavigation {
+    static func destination(
+        awardKeys: [String],
+        from index: Int,
+        increment: Bool
+    ) -> ArchiveAccessibilityNavigationDestination? {
+        guard awardKeys.indices.contains(index), !awardKeys.isEmpty else { return nil }
+        let targetIndex = increment
+            ? min(awardKeys.count - 1, index + 1)
+            : max(0, index - 1)
+        let awardKey = awardKeys[targetIndex]
+        return ArchiveAccessibilityNavigationDestination(
+            awardKey: awardKey,
+            focusTarget: .grid(awardKey: awardKey)
+        )
+    }
+}
+
 nonisolated struct ArchiveCarouselLayout: Equatable, Sendable {
     let cardSize: CGSize
     let cardSpacing: CGFloat
@@ -57,6 +86,10 @@ nonisolated struct ArchiveCarouselLayout: Equatable, Sendable {
 
     static func resolvedCaptionHeight(isAccessibilitySize: Bool) -> CGFloat {
         isAccessibilitySize ? 194 : 150
+    }
+
+    static func usesVerticalPageScroll(isAccessibilitySize: Bool) -> Bool {
+        isAccessibilitySize
     }
 
     static func make(containerWidth: CGFloat) -> Self {

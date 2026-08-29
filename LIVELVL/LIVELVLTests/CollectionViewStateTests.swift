@@ -256,6 +256,33 @@ struct CollectionViewStateTests {
         )
     }
 
+    @Test func voiceOverAdjustmentMovesCenterAndFocusTogether() throws {
+        let first = try #require(
+            ArchiveAccessibilityNavigation.destination(
+                awardKeys: ["a", "b", "c"],
+                from: 0,
+                increment: true
+            )
+        )
+        #expect(first.awardKey == "b")
+        #expect(first.focusTarget == .grid(awardKey: "b"))
+
+        let second = try #require(
+            ArchiveAccessibilityNavigation.destination(
+                awardKeys: ["a", "b", "c"],
+                from: 1,
+                increment: true
+            )
+        )
+        #expect(second.awardKey == "c")
+        #expect(second.focusTarget == .grid(awardKey: "c"))
+    }
+
+    @Test func reducedMotionNeverAnimatesArchiveArrivalCentering() {
+        #expect(ArchiveArrivalMotion.allowsAnimatedCentering(reduceMotion: false))
+        #expect(!ArchiveArrivalMotion.allowsAnimatedCentering(reduceMotion: true))
+    }
+
     @Test func expandedArchiveCardClearsTheHeaderOnIPhone17Pro() {
         let frame = ArchiveExpandedLayout.cardFrame(
             in: CGSize(width: 368, height: 717)
@@ -281,6 +308,8 @@ struct CollectionViewStateTests {
     @Test func archiveCaptionExpandsAtAccessibilitySizesWithoutChangingTheCard() {
         #expect(ArchiveCarouselLayout.resolvedCaptionHeight(isAccessibilitySize: false) == 150)
         #expect(ArchiveCarouselLayout.resolvedCaptionHeight(isAccessibilitySize: true) == 194)
+        #expect(!ArchiveCarouselLayout.usesVerticalPageScroll(isAccessibilitySize: false))
+        #expect(ArchiveCarouselLayout.usesVerticalPageScroll(isAccessibilitySize: true))
     }
 
     @Test func archiveCaptionKeepsPersistedIdentityLevelAndAcquisitionDate() {
