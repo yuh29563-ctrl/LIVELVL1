@@ -10,16 +10,22 @@ struct ArchiveCollectiblePresentation: Identifiable {
 @MainActor
 struct ArchiveCarouselView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let items: [ArchiveCollectiblePresentation]
     @Binding var centeredAwardKey: String?
     let expandedAwardKey: String?
+    @AccessibilityFocusState.Binding var focusedCard: CollectionCardFocusTarget?
     let onExpand: (String) -> Void
 
     var body: some View {
         GeometryReader { container in
             let layout = ArchiveCarouselLayout.make(containerWidth: container.size.width)
             let cardWidth = layout.cardSize.width
+            let captionHeight = ArchiveCarouselLayout.resolvedCaptionHeight(
+                isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+            )
+            let totalHeight = layout.cardSize.height + layout.cardCaptionSpacing + captionHeight
 
             ScrollView(.horizontal) {
                 LazyHStack(spacing: layout.cardSpacing) {
@@ -37,6 +43,8 @@ struct ArchiveCarouselView: View {
                                 Button {
                                     if centeredAwardKey == item.id {
                                         onExpand(item.id)
+                                    } else if reduceMotion {
+                                        centeredAwardKey = item.id
                                     } else {
                                         withAnimation(.easeInOut(duration: 0.26)) {
                                             centeredAwardKey = item.id
@@ -61,6 +69,10 @@ struct ArchiveCarouselView: View {
                                 )
                                 .rotationEffect(.degrees(transform.rollDegrees))
                                 .offset(y: transform.verticalOffset)
+                                .accessibilityFocused(
+                                    $focusedCard,
+                                    equals: .grid(awardKey: item.id)
+                                )
                                 .accessibilityFocusedValue(centeredAwardKey == item.id)
                                 .accessibilityAdjustableAction { direction in
                                     step(from: index, direction: direction)
@@ -78,14 +90,14 @@ struct ArchiveCarouselView: View {
                                         calendar: .current
                                     )
                                 )
-                                .frame(height: layout.captionHeight, alignment: .top)
+                                .frame(height: captionHeight, alignment: .top)
                                 .opacity(max(0, 1 - abs(distance) * 2.4))
                                 .accessibilityHidden(abs(distance) >= 0.5)
                             }
-                            .frame(width: cardWidth, height: layout.totalHeight, alignment: .top)
+                            .frame(width: cardWidth, height: totalHeight, alignment: .top)
                             .zIndex(1 - abs(distance))
                         }
-                        .frame(width: cardWidth, height: layout.totalHeight)
+                        .frame(width: cardWidth, height: totalHeight)
                         .id(item.id)
                     }
                 }
@@ -101,7 +113,13 @@ struct ArchiveCarouselView: View {
             .scrollTargetBehavior(.viewAligned)
             .scrollPosition(id: $centeredAwardKey, anchor: .center)
         }
-        .frame(height: ArchiveCarouselLayout.make(containerWidth: 368).totalHeight)
+        .frame(
+            height: ArchiveCarouselLayout.make(containerWidth: 368).cardSize.height
+                + ArchiveCarouselLayout.make(containerWidth: 368).cardCaptionSpacing
+                + ArchiveCarouselLayout.resolvedCaptionHeight(
+                    isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+                )
+        )
     }
 
     private func step(from index: Int, direction: AccessibilityAdjustmentDirection) {
@@ -115,7 +133,7 @@ struct ArchiveCarouselView: View {
             return
         }
         guard items.indices.contains(targetIndex) else { return }
-        withAnimation(.easeInOut(duration: reduceMotion ? 0.2 : 0.34)) {
+        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.34)) {
             centeredAwardKey = items[targetIndex].id
         }
     }
@@ -127,15 +145,15 @@ private struct ArchiveCardCaption: View {
     var body: some View {
         VStack(spacing: 8) {
             Text(presentation.title)
-                .font(.system(size: 18, weight: .medium, design: .monospaced))
+                .font(.system(LivingOSTypography.archiveCaptionTitle, design: .monospaced, weight: .medium))
                 .foregroundStyle(LivingOSTheme.ink)
 
             Text(presentation.kindTitle)
-                .font(.system(size: 12, design: .monospaced))
+                .font(.system(.caption, design: .monospaced))
                 .foregroundStyle(LivingOSTheme.graphite)
 
             Text(presentation.levelText)
-                .font(.system(size: 13, weight: .medium, design: .monospaced))
+                .font(.system(.footnote, design: .monospaced, weight: .medium))
                 .foregroundStyle(LivingOSTheme.ink)
 
             Rectangle()
@@ -143,7 +161,7 @@ private struct ArchiveCardCaption: View {
                 .frame(width: 14, height: 0.5)
 
             Text(presentation.acquiredText)
-                .font(.system(size: 11, design: .monospaced))
+                .font(.system(.caption2, design: .monospaced))
                 .foregroundStyle(LivingOSTheme.graphite)
         }
         .multilineTextAlignment(.center)

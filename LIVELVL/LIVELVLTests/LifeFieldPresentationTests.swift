@@ -180,6 +180,10 @@ struct LifeFieldPresentationTests {
         #expect(learning.sourceText == "来自 阅读 20 分钟")
         #expect(learning.assessmentText == "距下次评估 3 天")
         #expect(learning.projectedDisplayValue == 74)
+        #expect(
+            learning.accessibilityValue
+                == "当前 70，预测 74，来自 阅读 20 分钟，距下次评估 3 天"
+        )
     }
 
     @Test func tappingTheSameNodeClosesDetail() {

@@ -13,6 +13,19 @@ enum CollectionCardFocusTarget: Hashable, Sendable {
     }
 }
 
+nonisolated enum ArchiveAccessibilityFocusRestoration {
+    static func target(awardKey: String) -> CollectionCardFocusTarget {
+        .grid(awardKey: awardKey)
+    }
+}
+
+private struct ArchiveArrivalTaskID: Hashable {
+    let sequenceID: UUID?
+    let isCollectionSelected: Bool
+    let isObscured: Bool
+    let isSceneActive: Bool
+}
+
 struct CollectionSeenVisibilityState: Equatable, Sendable {
     private var centeredAwardKey: String?
 
@@ -115,6 +128,7 @@ struct CollectionSeenRetryState: Equatable {
 struct CollectionView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @Query(sort: [
         SortDescriptor(\OwnedCollectible.acquiredAt, order: .reverse),
         SortDescriptor(\OwnedCollectible.awardKey)
@@ -219,6 +233,7 @@ struct CollectionView: View {
                             items: archiveItems,
                             centeredAwardKey: centeredAwardKeyBinding,
                             expandedAwardKey: archiveState.expandedAwardKey,
+                            focusedCard: $focusedCard,
                             onExpand: expand
                         )
                         .padding(.top, 26)
@@ -290,9 +305,23 @@ struct CollectionView: View {
         .onChange(of: arrivalState) { _, _ in
             presentPendingArrival()
         }
-        .task(id: arrivalSequenceID) {
+        .onChange(of: scenePhase) { _, _ in
+            presentPendingArrival()
+            markVisibleCollectiblesSeen()
+        }
+        .task(id: ArchiveArrivalTaskID(
+            sequenceID: arrivalSequenceID,
+            isCollectionSelected: isCollectionSelected,
+            isObscured: isObscured,
+            isSceneActive: scenePhase == .active
+        )) {
             guard arrivalSequenceID != nil,
-                  let awardKey = arrivingAwardKey else { return }
+                  let awardKey = arrivingAwardKey,
+                  ArchiveArrivalPresentationActivity.shouldAdvance(
+                    isCollectionSelected: isCollectionSelected,
+                    isObscured: isObscured,
+                    isSceneActive: scenePhase == .active
+                  ) else { return }
             do {
                 try await Task.sleep(
                     for: reduceMotion ? .milliseconds(240) : .milliseconds(820)
@@ -300,7 +329,13 @@ struct CollectionView: View {
             } catch {
                 return
             }
-            guard !Task.isCancelled, arrivingAwardKey == awardKey else { return }
+            guard !Task.isCancelled,
+                  arrivingAwardKey == awardKey,
+                  ArchiveArrivalPresentationActivity.shouldAdvance(
+                    isCollectionSelected: isCollectionSelected,
+                    isObscured: isObscured,
+                    isSceneActive: scenePhase == .active
+                  ) else { return }
             arrivalState.markCompleted(awardKey: awardKey)
             withAnimation(.easeOut(duration: 0.16)) {
                 arrivingAwardKey = nil
@@ -387,7 +422,7 @@ struct CollectionView: View {
         Task { @MainActor in
             await Task.yield()
             guard !Task.isCancelled else { return }
-            focusedCard = .grid(awardKey: key)
+            focusedCard = ArchiveAccessibilityFocusRestoration.target(awardKey: key)
             presentPendingArrival()
         }
     }
@@ -395,6 +430,7 @@ struct CollectionView: View {
     private func presentPendingArrival() {
         guard isCollectionSelected,
               !isObscured,
+              scenePhase == .active,
               expandedItem == nil,
               arrivingAwardKey == nil,
               let awardKey = arrivalState.takeArrivalIfNeeded(
@@ -456,11 +492,13 @@ struct CollectionView: View {
 
 private struct ArchiveArrivalTrace: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
 
     let progress: Double
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
             let phase = reduceMotion
                 ? 0
                 : timeline.date.timeIntervalSinceReferenceDate / 3.6
@@ -486,8 +524,18 @@ private struct ArchiveArrivalTrace: View {
                 }
             }
         }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
     }
 }
 

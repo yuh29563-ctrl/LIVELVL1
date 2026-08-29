@@ -259,6 +259,7 @@ struct YouHexagonOutline: Shape {
 
 struct WeeklyStateTimelineView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .caption) private var accessibilityDayWidth: CGFloat = 72
     let days: [WeeklyStateDay]
     let now: Date
     let calendar: Calendar
@@ -272,9 +273,12 @@ struct WeeklyStateTimelineView: View {
                 .fill(LivingOSTheme.mist)
                 .frame(height: 0.5)
 
-            if dynamicTypeSize.isAccessibilitySize {
+            if let fixedWidth = YouTimelineLayout.dayWidth(
+                isAccessibilitySize: dynamicTypeSize.isAccessibilitySize,
+                scaledMetricWidth: accessibilityDayWidth
+            ) {
                 ScrollView(.horizontal) {
-                    timelineDays(fixedWidth: 72)
+                    timelineDays(fixedWidth: fixedWidth)
                 }
                 .scrollIndicators(.hidden)
             } else {
@@ -336,8 +340,13 @@ struct WeeklyStateDayView: View {
         }
         .foregroundStyle(LivingOSTheme.ink)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(day.date.formatted(.dateTime.weekday(.wide).month().day()))
-        .accessibilityValue("完成 \(day.completedCount) 项，获得 \(day.xp) XP\(isToday ? "，今天" : "")")
+        .accessibilityLabel(
+            YouTimelineAccessibility.value(
+                day: day,
+                isToday: isToday,
+                calendar: .current
+            )
+        )
     }
 }
 

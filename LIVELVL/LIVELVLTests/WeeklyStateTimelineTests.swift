@@ -18,6 +18,21 @@ struct WeeklyStateTimelineTests {
         #expect(YouStateNodeLayout.connectorOffset == .zero)
     }
 
+    @Test func accessibilityTimelineUsesTheScaledColumnWidth() {
+        #expect(
+            YouTimelineLayout.dayWidth(
+                isAccessibilitySize: true,
+                scaledMetricWidth: 118
+            ) == 118
+        )
+        #expect(
+            YouTimelineLayout.dayWidth(
+                isAccessibilitySize: false,
+                scaledMetricWidth: 118
+            ) == nil
+        )
+    }
+
     @Test func timelineReturnsSevenOrderedDaysAndAggregatesXP() throws {
         var calendar = Calendar(identifier: .gregorian)
         calendar.firstWeekday = 2
@@ -49,5 +64,22 @@ struct WeeklyStateTimelineTests {
         #expect(days.dropFirst().first?.completedCount == 1)
         #expect(days.dropFirst().first?.xp == 30)
         #expect(days.reduce(0) { $0 + $1.completedCount } == 3)
+    }
+
+    @Test func timelineDayAccessibilityIncludesDateCountAndXP() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = try #require(TimeZone(secondsFromGMT: 0))
+        let date = try #require(
+            calendar.date(from: DateComponents(year: 2026, month: 8, day: 26))
+        )
+        let day = WeeklyStateDay(date: date, completedCount: 2, xp: 35)
+
+        #expect(
+            YouTimelineAccessibility.value(
+                day: day,
+                isToday: true,
+                calendar: calendar
+            ) == "8 月 26 日，完成 2 项，获得 35 XP，今天"
+        )
     }
 }

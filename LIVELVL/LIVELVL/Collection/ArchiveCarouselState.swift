@@ -12,15 +12,39 @@ nonisolated struct ArchiveCardTransform: Equatable, Sendable {
         normalizedDistance: CGFloat,
         reduceMotion: Bool
     ) -> Self {
+        guard !reduceMotion else {
+            return Self(
+                scale: 1,
+                opacity: 1,
+                yawDegrees: 0,
+                rollDegrees: 0,
+                verticalOffset: 0
+            )
+        }
         let signedDistance = max(-1, min(1, normalizedDistance))
         let distance = abs(signedDistance)
+        let direction: Double = signedDistance < 0 ? -1 : (signedDistance > 0 ? 1 : 0)
+        let depthProgress = pow(distance, 0.82)
+        let turnProgress = sin(distance * .pi / 2)
+        let travelHeight = 22 * pow(distance, 1.5)
+            - 6.5 * sin(distance * .pi)
         return Self(
-            scale: 1 - 0.16 * distance,
-            opacity: 1 - 0.26 * Double(distance),
-            yawDegrees: reduceMotion ? 0 : Double(signedDistance) * -24,
-            rollDegrees: reduceMotion ? 0 : Double(signedDistance) * -2.5,
-            verticalOffset: reduceMotion ? 0 : 18 * pow(distance, 1.35)
+            scale: 1 - 0.18 * depthProgress,
+            opacity: 1 - 0.3 * Double(depthProgress),
+            yawDegrees: direction * -28 * Double(turnProgress),
+            rollDegrees: direction * -3 * Double(turnProgress),
+            verticalOffset: travelHeight
         )
+    }
+}
+
+nonisolated enum ArchiveArrivalPresentationActivity {
+    static func shouldAdvance(
+        isCollectionSelected: Bool,
+        isObscured: Bool,
+        isSceneActive: Bool
+    ) -> Bool {
+        isCollectionSelected && !isObscured && isSceneActive
     }
 }
 
@@ -30,6 +54,10 @@ nonisolated struct ArchiveCarouselLayout: Equatable, Sendable {
     let captionHeight: CGFloat
     let cardCaptionSpacing: CGFloat
     let totalHeight: CGFloat
+
+    static func resolvedCaptionHeight(isAccessibilitySize: Bool) -> CGFloat {
+        isAccessibilitySize ? 194 : 150
+    }
 
     static func make(containerWidth: CGFloat) -> Self {
         let width = min(196, max(192, containerWidth * 12 / 23))

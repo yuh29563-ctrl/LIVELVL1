@@ -11,6 +11,10 @@ struct LifeFieldNodePresentation: Identifiable, Equatable, Sendable {
     let sourceText: String
     let assessmentText: String
 
+    var accessibilityValue: String {
+        "当前 \(displayValue)，预测 \(projectedDisplayValue)，\(sourceText)，\(assessmentText)"
+    }
+
     static func make(
         official: LifeStateValues,
         projected: LifeStateValues

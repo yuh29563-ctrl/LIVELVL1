@@ -1,3 +1,4 @@
+import SwiftUI
 import Testing
 @testable import LIVELVL
 
@@ -26,5 +27,34 @@ struct LivingOSDesignSystemTests {
         #expect(!reduced.allowsDepthTilt)
         #expect(reduced.stateFadeDuration > 0)
         #expect(reduced.snapDuration <= normal.snapDuration)
+    }
+
+    @Test func animationTimelinesPauseForReducedMotionOffscreenAndBackgroundStates() {
+        #expect(!LivingOSAnimationActivity.isPaused(
+            reduceMotion: false,
+            isVisible: true,
+            isSceneActive: true
+        ))
+        #expect(LivingOSAnimationActivity.isPaused(
+            reduceMotion: true,
+            isVisible: true,
+            isSceneActive: true
+        ))
+        #expect(LivingOSAnimationActivity.isPaused(
+            reduceMotion: false,
+            isVisible: false,
+            isSceneActive: true
+        ))
+        #expect(LivingOSAnimationActivity.isPaused(
+            reduceMotion: false,
+            isVisible: true,
+            isSceneActive: false
+        ))
+    }
+
+    @Test func primaryLivingOSTextUsesDynamicTypeRelativeStyles() {
+        #expect(LivingOSTypography.rewardsHero == .largeTitle)
+        #expect(LivingOSTypography.archiveCaptionTitle == .headline)
+        #expect(LivingOSTypography.taskTitle == .body)
     }
 }

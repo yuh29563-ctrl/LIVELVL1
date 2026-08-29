@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-enum CoinDisplayFormatter {
+nonisolated enum CoinDisplayFormatter {
     static func text(forCoinUnits units: Int) -> String {
         String(
             format: "%.1f",

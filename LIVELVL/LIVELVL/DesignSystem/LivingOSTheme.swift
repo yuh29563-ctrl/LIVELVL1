@@ -33,6 +33,12 @@ enum LivingOSTheme {
     )
 }
 
+nonisolated enum LivingOSTypography {
+    static let rewardsHero: Font.TextStyle = .largeTitle
+    static let archiveCaptionTitle: Font.TextStyle = .headline
+    static let taskTitle: Font.TextStyle = .body
+}
+
 enum LivingOSMetrics {
     static let pageHorizontalInset: CGFloat = 24
     static let pageTitleSize: CGFloat = 56

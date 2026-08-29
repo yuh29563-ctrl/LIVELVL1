@@ -41,13 +41,15 @@ nonisolated enum LivingDotFieldGeometry {
 
 struct LivingDotField: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
 
     let columns: Int
     let rows: Int
     var color = LivingOSTheme.ink
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
             let phase = reduceMotion
                 ? 0.18
                 : timeline.date.timeIntervalSinceReferenceDate / 12.0
@@ -76,7 +78,17 @@ struct LivingDotField: View {
                 }
             }
         }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
     }
 }

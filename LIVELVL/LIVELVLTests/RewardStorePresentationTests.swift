@@ -4,6 +4,11 @@ import Testing
 
 @MainActor
 struct RewardStorePresentationTests {
+    @Test func accessibilityBalanceMovesTheLedgerBelowTheNumber() {
+        #expect(!RewardStoreLayout.usesVerticalBalanceLayout(isAccessibilitySize: false))
+        #expect(RewardStoreLayout.usesVerticalBalanceLayout(isAccessibilitySize: true))
+    }
+
     @Test func unavailableBalanceNeverEnablesRedemption() {
         let balance = RewardBalancePresentation.unavailable
 
@@ -26,6 +31,7 @@ struct RewardStorePresentationTests {
         #expect(row.statusText == "可兑换")
         #expect(row.fallbackSystemImageName == nil)
         #expect(row.trailingAccessory == .redeem)
+        #expect(row.accessibilityLabel == "看一场电影，18.0 金币，周末，可兑换")
     }
 
     @Test func productImageOccupiesTheReferenceTrailingMediaSlot() {
@@ -54,6 +60,7 @@ struct RewardStorePresentationTests {
         #expect(!row.canRedeem)
         #expect(row.statusText == "余额不足")
         #expect(row.trailingAccessory == .insufficient)
+        #expect(row.accessibilityLabel == "周末旅行，120.0 金币，余额不足")
     }
 
     @Test func unavailableBalanceUsesAnUnavailableStateInsteadOfInsufficient() {

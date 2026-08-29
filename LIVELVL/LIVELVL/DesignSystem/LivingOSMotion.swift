@@ -24,3 +24,13 @@ struct LivingOSMotionProfile: Equatable, Sendable {
         )
     }
 }
+
+nonisolated enum LivingOSAnimationActivity {
+    static func isPaused(
+        reduceMotion: Bool,
+        isVisible: Bool,
+        isSceneActive: Bool
+    ) -> Bool {
+        reduceMotion || !isVisible || !isSceneActive
+    }
+}

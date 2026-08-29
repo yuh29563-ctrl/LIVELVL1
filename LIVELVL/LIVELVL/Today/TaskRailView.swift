@@ -48,14 +48,14 @@ struct TaskRailView: View {
                             .fill(LivingOSTheme.ink)
                             .frame(width: 17, height: 17)
                         Image(systemName: "checkmark")
-                            .font(.system(size: 8, weight: .bold))
+                            .font(.caption2.bold())
                             .foregroundStyle(LivingOSTheme.surface)
                     }
                 }
                 .frame(width: 24, height: 44)
 
                 Text(presentation.title)
-                    .font(.system(size: 17, weight: .regular))
+                    .font(.system(LivingOSTypography.taskTitle, weight: .regular))
                     .foregroundStyle(LivingOSTheme.ink)
                     .lineLimit(2)
 
@@ -64,7 +64,7 @@ struct TaskRailView: View {
                 HStack(spacing: 7) {
                     if let xpText = presentation.xpText {
                         Text(xpText)
-                            .font(.system(size: 14, weight: .medium))
+                            .font(.subheadline.weight(.medium))
                             .foregroundStyle(LivingOSTheme.ink)
                             .contentTransition(.numericText())
 
@@ -77,7 +77,7 @@ struct TaskRailView: View {
                     }
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 11, weight: .regular))
+                        .font(.caption.weight(.regular))
                         .foregroundStyle(LivingOSTheme.graphite.opacity(0.52))
                         .accessibilityHidden(true)
                 }

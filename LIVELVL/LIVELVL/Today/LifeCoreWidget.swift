@@ -243,9 +243,11 @@ struct TodayLifeFieldSection: View {
 
 private struct LifeCoreArtwork: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
             let phase = reduceMotion
                 ? 0.17
                 : timeline.date.timeIntervalSinceReferenceDate / 7.5
@@ -297,7 +299,17 @@ private struct LifeCoreArtwork: View {
                 )
             }
         }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
     }
 }

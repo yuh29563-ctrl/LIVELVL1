@@ -224,9 +224,7 @@ private struct LifeFieldNode: View {
         .buttonStyle(.plain)
         .scaleEffect(isRewardTarget && !reduceMotion ? 1.08 : 1)
         .accessibilityLabel(value.title)
-        .accessibilityValue(
-            "当前 \(value.displayValue)，预测 \(value.projectedDisplayValue)，\(value.sourceText)，\(value.assessmentText)"
-        )
+        .accessibilityValue(value.accessibilityValue)
         .accessibilityHint(isSelected ? "轻点收起状态" : "轻点查看具体状态")
     }
 
@@ -278,9 +276,11 @@ private struct LifeFieldNode: View {
 
 private struct LifeFieldParticleLinks: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
             let phase = reduceMotion
                 ? 0.19
                 : timeline.date.timeIntervalSinceReferenceDate / 8.0
@@ -305,8 +305,18 @@ private struct LifeFieldParticleLinks: View {
                 }
             }
         }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
     }
 }
 

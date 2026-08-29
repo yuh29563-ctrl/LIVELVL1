@@ -87,6 +87,11 @@ extension ContentView {
 }
 #endif
 
+private struct TodayGrowthTaskID: Hashable {
+    let sequenceID: UUID?
+    let isSceneActive: Bool
+}
+
 struct TodayView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -250,29 +255,33 @@ struct TodayView: View {
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
                     reconcilePersistedRewards()
-                } else {
-                    cancelGrowthPresentation()
                 }
             }
-            .onDisappear { cancelGrowthPresentation() }
-            .task(id: feedbackSequenceID) {
+            .task(id: TodayGrowthTaskID(
+                sequenceID: feedbackSequenceID,
+                isSceneActive: scenePhase == .active
+            )) {
                 guard let feedback = growthPresentation.feedback,
-                      feedbackSequenceID == feedback.id else { return }
+                      feedbackSequenceID == feedback.id,
+                      TodayGrowthPresentationActivity.shouldAdvance(
+                        hasFeedback: true,
+                        isSceneActive: scenePhase == .active
+                      ) else { return }
 
                 try? await Task.sleep(for: .milliseconds(reduceMotion ? 100 : 180))
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, scenePhase == .active else { return }
                 withAnimation(growthAnimation) {
                     growthPresentation.advance()
                 }
 
                 try? await Task.sleep(for: .milliseconds(reduceMotion ? 140 : 420))
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, scenePhase == .active else { return }
                 withAnimation(growthAnimation) {
                     growthPresentation.advance()
                 }
 
                 try? await Task.sleep(for: .milliseconds(reduceMotion ? 140 : 460))
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, scenePhase == .active else { return }
                 withAnimation(growthAnimation) {
                     growthPresentation.advance()
                 }
@@ -284,7 +293,7 @@ struct TodayView: View {
 
                 withAnimation(growthAnimation) { levelUpFeedback = feedback.levelAfter }
                 try? await Task.sleep(for: .milliseconds(800))
-                guard !Task.isCancelled else { return }
+                guard !Task.isCancelled, scenePhase == .active else { return }
                 withAnimation(.easeOut(duration: 0.2)) {
                     levelUpFeedback = nil
                     growthPresentation.advance()

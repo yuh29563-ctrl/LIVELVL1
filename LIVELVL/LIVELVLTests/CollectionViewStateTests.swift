@@ -182,23 +182,38 @@ struct CollectionViewStateTests {
     }
 
     @Test func archiveCardsTravelOnARestrainedThreeDimensionalArc() {
-        let normal = ArchiveCardTransform.make(
+        let side = ArchiveCardTransform.make(
             normalizedDistance: 1,
             reduceMotion: false
         )
-        #expect(normal.scale == 0.84)
-        #expect(normal.opacity == 0.74)
-        #expect(normal.yawDegrees == -24)
-        #expect(normal.rollDegrees == -2.5)
-        #expect(normal.verticalOffset == 18)
+        #expect(abs(side.scale - 0.82) < 0.001)
+        #expect(abs(side.opacity - 0.7) < 0.001)
+        #expect(abs(side.yawDegrees + 28) < 0.001)
+        #expect(abs(side.rollDegrees + 3) < 0.001)
+        #expect(abs(side.verticalOffset - 22) < 0.001)
 
         let halfway = ArchiveCardTransform.make(
             normalizedDistance: 0.5,
             reduceMotion: false
         )
-        #expect(halfway.yawDegrees == -12)
-        #expect(halfway.verticalOffset > 0)
-        #expect(halfway.verticalOffset < normal.verticalOffset)
+        #expect(halfway.scale > 0.89 && halfway.scale < 0.9)
+        #expect(halfway.opacity > 0.82 && halfway.opacity < 0.84)
+        #expect(halfway.yawDegrees > -20 && halfway.yawDegrees < -19)
+        #expect(halfway.verticalOffset > 1.2 && halfway.verticalOffset < 1.4)
+
+        let nearCenter = ArchiveCardTransform.make(
+            normalizedDistance: 0.25,
+            reduceMotion: false
+        )
+        #expect(nearCenter.verticalOffset > -1.9 && nearCenter.verticalOffset < -1.8)
+
+        let mirrored = ArchiveCardTransform.make(
+            normalizedDistance: -0.5,
+            reduceMotion: false
+        )
+        #expect(mirrored.yawDegrees == -halfway.yawDegrees)
+        #expect(mirrored.rollDegrees == -halfway.rollDegrees)
+        #expect(mirrored.verticalOffset == halfway.verticalOffset)
 
         let reduced = ArchiveCardTransform.make(
             normalizedDistance: -1,
@@ -207,7 +222,38 @@ struct CollectionViewStateTests {
         #expect(reduced.yawDegrees == 0)
         #expect(reduced.rollDegrees == 0)
         #expect(reduced.verticalOffset == 0)
-        #expect(reduced.scale == 0.84)
+        #expect(reduced.scale == 1)
+        #expect(reduced.opacity == 1)
+    }
+
+    @Test func archiveArrivalOnlyCompletesWhileItIsActuallyVisible() {
+        #expect(ArchiveArrivalPresentationActivity.shouldAdvance(
+            isCollectionSelected: true,
+            isObscured: false,
+            isSceneActive: true
+        ))
+        #expect(!ArchiveArrivalPresentationActivity.shouldAdvance(
+            isCollectionSelected: false,
+            isObscured: false,
+            isSceneActive: true
+        ))
+        #expect(!ArchiveArrivalPresentationActivity.shouldAdvance(
+            isCollectionSelected: true,
+            isObscured: true,
+            isSceneActive: true
+        ))
+        #expect(!ArchiveArrivalPresentationActivity.shouldAdvance(
+            isCollectionSelected: true,
+            isObscured: false,
+            isSceneActive: false
+        ))
+    }
+
+    @Test func closingExpandedArchiveRestoresFocusToItsCarouselCard() {
+        #expect(
+            ArchiveAccessibilityFocusRestoration.target(awardKey: "core-12")
+                == .grid(awardKey: "core-12")
+        )
     }
 
     @Test func expandedArchiveCardClearsTheHeaderOnIPhone17Pro() {
@@ -230,6 +276,11 @@ struct CollectionViewStateTests {
         #expect(abs(layout.cardSpacing - -8) < 0.01)
         #expect(abs(layout.captionHeight - 150) < 0.01)
         #expect(abs(layout.totalHeight - 502) < 0.01)
+    }
+
+    @Test func archiveCaptionExpandsAtAccessibilitySizesWithoutChangingTheCard() {
+        #expect(ArchiveCarouselLayout.resolvedCaptionHeight(isAccessibilitySize: false) == 150)
+        #expect(ArchiveCarouselLayout.resolvedCaptionHeight(isAccessibilitySize: true) == 194)
     }
 
     @Test func archiveCaptionKeepsPersistedIdentityLevelAndAcquisitionDate() {
@@ -256,9 +307,10 @@ struct CollectionViewStateTests {
             name: "小芽",
             index: 1,
             count: 3,
-            isUnseen: true
+            isUnseen: true,
+            sourceTitle: "陪伴成熟"
         )
-        #expect(value == "小芽，第 1 张，共 3 张，新收藏")
+        #expect(value == "小芽，第 1 张，共 3 张，新收藏，获得来源 陪伴成熟")
     }
 
     @Test func archiveMetadataUsesPersistedKinds() {

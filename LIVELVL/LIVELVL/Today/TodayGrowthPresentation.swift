@@ -51,6 +51,12 @@ struct TodayGrowthPresentationState: Equatable, Sendable {
     }
 }
 
+nonisolated enum TodayGrowthPresentationActivity {
+    static func shouldAdvance(hasFeedback: Bool, isSceneActive: Bool) -> Bool {
+        hasFeedback && isSceneActive
+    }
+}
+
 nonisolated struct XPFlowSample: Equatable, Sendable {
     let position: CGPoint
     let opacity: Double
@@ -206,7 +212,9 @@ extension View {
 
 struct XPFlowOverlay: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @State private var routeProgress = 0.0
+    @State private var isVisible = false
 
     let phase: TodayGrowthPhase
     let start: CGPoint
@@ -214,7 +222,7 @@ struct XPFlowOverlay: View {
     let core: CGPoint
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 30.0, paused: pausesTimeline)) { timeline in
             let motionPhase = reduceMotion
                 ? 0.2
                 : timeline.date.timeIntervalSinceReferenceDate / 2.4
@@ -243,6 +251,8 @@ struct XPFlowOverlay: View {
                 }
             }
         }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
         .task(id: phase) {
@@ -255,6 +265,14 @@ struct XPFlowOverlay: View {
                 routeProgress = target
             }
         }
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
     }
 
     private var targetProgress: Double {

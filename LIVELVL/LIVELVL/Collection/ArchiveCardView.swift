@@ -5,10 +5,11 @@ enum ArchiveCardAccessibility {
         name: String,
         index: Int,
         count: Int,
-        isUnseen: Bool
+        isUnseen: Bool,
+        sourceTitle: String
     ) -> String {
         let newState = isUnseen ? "，新收藏" : ""
-        return "\(name)，第 \(index) 张，共 \(count) 张\(newState)"
+        return "\(name)，第 \(index) 张，共 \(count) 张\(newState)，获得来源 \(sourceTitle)"
     }
 }
 
@@ -196,7 +197,8 @@ struct ArchiveCardView: View {
                 name: definition.name,
                 index: index,
                 count: count,
-                isUnseen: collectible.isUnseen
+                isUnseen: collectible.isUnseen,
+                sourceTitle: collectible.collectionSourceTitle
             )
         )
         .accessibilityHint("双击展开卡片，上下滑动切换卡片")
@@ -205,10 +207,12 @@ struct ArchiveCardView: View {
 
 struct ArchiveOrganismArtwork: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
     let identifier: String
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
             let phase = reduceMotion
                 ? 0.23
                 : timeline.date.timeIntervalSinceReferenceDate / 8.5
@@ -292,7 +296,17 @@ struct ArchiveOrganismArtwork: View {
                 }
             }
         }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
     }
 }

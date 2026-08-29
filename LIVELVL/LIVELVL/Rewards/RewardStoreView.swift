@@ -82,7 +82,7 @@ struct RewardStoreView: View {
                                 )
                                 .opacity(0.5)
                             }
-                            .font(.system(size: 13, weight: .medium, design: .monospaced))
+                            .font(.system(.footnote, design: .monospaced, weight: .medium))
                             .foregroundStyle(LivingOSTheme.graphite)
                             .padding(.top, 28)
                         }
@@ -205,21 +205,40 @@ struct RewardStoreView: View {
 }
 
 private struct RewardStoreHeader: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: LivingOSTypography.rewardsHero) private var titleSize: CGFloat = 52
     let onHistory: () -> Void
     let onCreate: () -> Void
 
     var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 18) {
-            Text("Rewards")
-                .font(.system(size: 52, weight: .bold))
-                .tracking(-2.4)
-                .foregroundStyle(LivingOSTheme.ink)
-                .minimumScaleFactor(0.82)
+        Group {
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(alignment: .leading, spacing: 8) {
+                    title
+                    actions
+                }
+            } else {
+                HStack(alignment: .firstTextBaseline, spacing: 18) {
+                    title
+                    Spacer(minLength: 8)
+                    actions
+                }
+            }
+        }
+    }
 
-            Spacer(minLength: 8)
+    private var title: some View {
+        Text("Rewards")
+            .font(.system(size: titleSize, weight: .bold))
+            .tracking(-2.4)
+            .foregroundStyle(LivingOSTheme.ink)
+            .fixedSize(horizontal: true, vertical: false)
+    }
 
+    private var actions: some View {
+        HStack(alignment: .center, spacing: 18) {
             Button("历史", action: onHistory)
-                .font(.system(size: 15))
+                .font(.body)
                 .foregroundStyle(LivingOSTheme.graphite)
                 .accessibilityIdentifier("rewards.history")
 
@@ -229,7 +248,7 @@ private struct RewardStoreHeader: View {
 
             Button(action: onCreate) {
                 Image(systemName: "plus")
-                    .font(.system(size: 22, weight: .light))
+                    .font(.title2.weight(.light))
                     .frame(width: 34, height: 44)
             }
             .foregroundStyle(LivingOSTheme.ink)
@@ -240,6 +259,8 @@ private struct RewardStoreHeader: View {
 }
 
 private struct RewardBalanceHero: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: LivingOSTypography.rewardsHero) private var balanceSize: CGFloat = 62
     let balance: RewardBalancePresentation
     let pendingCount: Int
 
@@ -251,21 +272,22 @@ private struct RewardBalanceHero: View {
     var body: some View {
         VStack(alignment: .leading, spacing: RewardStoreLayout.balanceInternalSpacing) {
             Text("可用金币")
-                .font(.system(size: 13, design: .monospaced))
+                .font(.system(.footnote, design: .monospaced))
                 .foregroundStyle(LivingOSTheme.graphite)
 
-            HStack(alignment: .bottom, spacing: 18) {
-                Text(displayText)
-                    .font(.system(size: 62, weight: .light, design: .rounded))
-                    .tracking(-2)
-                    .monospacedDigit()
-                    .foregroundStyle(LivingOSTheme.ink)
-                    .contentTransition(.numericText())
-
-                RewardLedgerStrip(balanceCoinUnits: balance.coinUnits ?? 0)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 62)
-                    .padding(.bottom, 4)
+            if RewardStoreLayout.usesVerticalBalanceLayout(
+                isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+            ) {
+                VStack(alignment: .leading, spacing: 8) {
+                    balanceNumber
+                    ledgerStrip(height: 42)
+                }
+            } else {
+                HStack(alignment: .bottom, spacing: 18) {
+                    balanceNumber
+                    ledgerStrip(height: 62)
+                        .padding(.bottom, 4)
+                }
             }
 
             HStack(spacing: 9) {
@@ -276,24 +298,43 @@ private struct RewardBalanceHero: View {
                     .contentTransition(.numericText())
                 Spacer()
                 Text("1 XP = 0.1 金币")
-                    .font(.system(size: 10, design: .monospaced))
+                    .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(LivingOSTheme.graphite)
             }
-            .font(.system(size: 14))
+            .font(.subheadline)
             .padding(.top, 10)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("可用金币 \(displayText)，待兑现 \(pendingCount)")
         .accessibilityIdentifier("rewards.balance")
     }
+
+    private var balanceNumber: some View {
+        Text(displayText)
+            .font(.system(size: balanceSize, weight: .light, design: .rounded))
+            .tracking(-2)
+            .monospacedDigit()
+            .foregroundStyle(LivingOSTheme.ink)
+            .contentTransition(.numericText())
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+    }
+
+    private func ledgerStrip(height: CGFloat) -> some View {
+        RewardLedgerStrip(balanceCoinUnits: balance.coinUnits ?? 0)
+            .frame(maxWidth: .infinity)
+            .frame(height: height)
+    }
 }
 
 private struct RewardLedgerStrip: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
     let balanceCoinUnits: Int
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
             let samples = RewardLedgerGeometry.samples(
                 columns: 24,
                 rows: 6,
@@ -317,16 +358,28 @@ private struct RewardLedgerStrip: View {
                 }
             }
         }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
     }
 }
 
 private struct RewardPageParticleTrail: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: reduceMotion)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
             let samples = RewardPageTrailGeometry.samples(
                 count: 54,
                 phase: timeline.date.timeIntervalSinceReferenceDate / 7.5,
@@ -359,8 +412,18 @@ private struct RewardPageParticleTrail: View {
         .frame(maxWidth: .infinity)
         .frame(height: 500)
         .offset(y: RewardStoreLayout.particleTrailTopOffset)
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
     }
 }
 
@@ -381,7 +444,7 @@ private struct RewardProductList: View {
             if products.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("还没有现实奖励")
-                        .font(.system(size: 22, weight: .medium))
+                        .font(.title2.weight(.medium))
                     Text("点击右上角 +，创建一个值得兑换的现实目标。")
                         .font(.subheadline)
                         .foregroundStyle(LivingOSTheme.graphite)
@@ -430,23 +493,23 @@ private struct RewardProductRail: View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(presentation.name)
-                    .font(.system(size: 22, weight: .medium))
+                    .font(.title2.weight(.medium))
                     .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(CoinDisplayFormatter.text(forCoinUnits: presentation.priceCoinUnits))
-                    .font(.system(size: 20, weight: .regular, design: .rounded))
+                    .font(.system(.title3, design: .rounded, weight: .regular))
                     .monospacedDigit()
                     .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
 
                 Text(presentation.note.isEmpty ? presentation.statusText : presentation.note)
-                    .font(.system(size: 13))
+                    .font(.footnote)
                     .foregroundStyle(LivingOSTheme.graphite)
                     .lineLimit(2)
 
                 if !presentation.note.isEmpty, !presentation.canRedeem {
                     Text(presentation.statusText)
-                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .font(.system(.caption2, design: .monospaced, weight: .medium))
                         .foregroundStyle(LivingOSTheme.graphite)
                 }
             }
@@ -484,7 +547,7 @@ private struct RewardProductRail: View {
                                 .accessibilityHidden(true)
                         }
                     }
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.subheadline.weight(.medium))
                     .foregroundStyle(LivingOSTheme.ink)
                     .padding(.horizontal, 16)
                     .frame(height: 42)
@@ -509,6 +572,7 @@ private struct RewardProductRail: View {
             }
         }
         .accessibilityElement(children: .contain)
+        .accessibilityLabel(presentation.accessibilityLabel)
         .accessibilityActions {
             Button("编辑", action: onEdit)
             if presentation.canArchive {

@@ -9,6 +9,15 @@ nonisolated enum YouTimelineCalendar {
     }
 }
 
+nonisolated enum YouTimelineLayout {
+    static func dayWidth(
+        isAccessibilitySize: Bool,
+        scaledMetricWidth: CGFloat
+    ) -> CGFloat? {
+        isAccessibilitySize ? max(72, scaledMetricWidth) : nil
+    }
+}
+
 nonisolated enum YouStateNodeLayout {
     static let connectorOffset = CGPoint.zero
 
@@ -26,6 +35,18 @@ struct WeeklyStateDay: Identifiable, Equatable, Sendable {
     let date: Date
     let completedCount: Int
     let xp: Int
+}
+
+nonisolated enum YouTimelineAccessibility {
+    static func value(
+        day: WeeklyStateDay,
+        isToday: Bool,
+        calendar: Calendar
+    ) -> String {
+        let components = calendar.dateComponents([.month, .day], from: day.date)
+        let todayText = isToday ? "，今天" : ""
+        return "\(components.month ?? 0) 月 \(components.day ?? 0) 日，完成 \(day.completedCount) 项，获得 \(day.xp) XP\(todayText)"
+    }
 }
 
 enum WeeklyStateTimelineBuilder {

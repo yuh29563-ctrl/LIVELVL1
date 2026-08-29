@@ -105,6 +105,21 @@ struct TaskRewardFeedbackTests {
         #expect(state.feedback == nil)
     }
 
+    @Test func growthFeedbackOnlyAdvancesWhileTheSceneIsVisible() {
+        #expect(TodayGrowthPresentationActivity.shouldAdvance(
+            hasFeedback: true,
+            isSceneActive: true
+        ))
+        #expect(!TodayGrowthPresentationActivity.shouldAdvance(
+            hasFeedback: true,
+            isSceneActive: false
+        ))
+        #expect(!TodayGrowthPresentationActivity.shouldAdvance(
+            hasFeedback: false,
+            isSceneActive: true
+        ))
+    }
+
     @Test func xpFlowUsesAtMostEighteenParticlesAndPassesThroughTheDimension() throws {
         let start = CGPoint(x: 340, y: 680)
         let dimension = CGPoint(x: 310, y: 220)

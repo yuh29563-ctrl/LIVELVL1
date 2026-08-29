@@ -32,6 +32,11 @@ nonisolated struct RewardProductRailPresentation: Equatable, Sendable {
         return canRedeem ? "可兑换" : "余额不足"
     }
     var fallbackSystemImageName: String? { nil }
+    var accessibilityLabel: String {
+        let price = CoinDisplayFormatter.text(forCoinUnits: priceCoinUnits)
+        let noteText = note.isEmpty ? "" : "，\(note)"
+        return "\(name)，\(price) 金币\(noteText)，\(statusText)"
+    }
 }
 
 nonisolated enum RewardBalancePresentation: Equatable, Sendable {
@@ -75,6 +80,10 @@ nonisolated enum RewardStoreLayout {
     static let balanceInternalSpacing: CGFloat = 0
     static let productTopSpacing: CGFloat = 69
     static let particleTrailTopOffset: CGFloat = 125
+
+    static func usesVerticalBalanceLayout(isAccessibilitySize: Bool) -> Bool {
+        isAccessibilitySize
+    }
 }
 
 nonisolated struct RewardLedgerSample: Equatable, Sendable {
