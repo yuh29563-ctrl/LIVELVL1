@@ -51,6 +51,107 @@ struct LifeFieldPresentationTests {
         #expect(LifeFieldLayout.labelPlacement(for: .career) == .below)
     }
 
+    @Test func fieldEdgesFollowTheVisualClockwiseOrderAndCloseTheHexagon() {
+        let edges = LifeFieldEdge.ordered
+
+        #expect(edges == [
+            LifeFieldEdge(start: .health, end: .learning),
+            LifeFieldEdge(start: .learning, end: .finance),
+            LifeFieldEdge(start: .finance, end: .relationships),
+            LifeFieldEdge(start: .relationships, end: .career),
+            LifeFieldEdge(start: .career, end: .interests),
+            LifeFieldEdge(start: .interests, end: .health),
+        ])
+    }
+
+    @Test func edgeSegmentsFollowDynamicOfficialPointsInsteadOfTheVisualCore() {
+        let targets: [LifeDimension: CGPoint] = [
+            .health: CGPoint(x: 0.50, y: 0.255),
+            .learning: CGPoint(x: 0.68, y: 0.3525),
+            .finance: CGPoint(x: 0.86, y: 0.645),
+            .relationships: CGPoint(x: 0.50, y: 0.645),
+            .career: CGPoint(x: 0.23, y: 0.59625),
+            .interests: CGPoint(x: 0.32, y: 0.3525),
+        ]
+
+        let segments = LifeFieldEdgeParticleGeometry.segments(targets: targets)
+
+        #expect(segments.count == 6)
+        #expect(segments.first?.start == targets[.health])
+        #expect(segments.first?.end == targets[.learning])
+        #expect(segments.last?.start == targets[.interests])
+        #expect(segments.last?.end == targets[.health])
+        #expect(segments.allSatisfy {
+            $0.start != LifeFieldLayout.visualCore
+                && $0.end != LifeFieldLayout.visualCore
+        })
+    }
+
+    @Test func edgeParticlesFlowNormallyAndFreezeForReduceMotion() {
+        let targets = Dictionary(
+            uniqueKeysWithValues: LifeDimension.allCases.map {
+                ($0, LifeFieldLayout.anchor(for: $0, score: 50))
+            }
+        )
+        let movingA = LifeFieldEdgeParticleGeometry.samples(
+            countPerEdge: 18,
+            phase: 0,
+            reduceMotion: false,
+            targets: targets
+        )
+        let movingB = LifeFieldEdgeParticleGeometry.samples(
+            countPerEdge: 18,
+            phase: 0.4,
+            reduceMotion: false,
+            targets: targets
+        )
+        let frozenA = LifeFieldEdgeParticleGeometry.samples(
+            countPerEdge: 18,
+            phase: 0,
+            reduceMotion: true,
+            targets: targets
+        )
+        let frozenB = LifeFieldEdgeParticleGeometry.samples(
+            countPerEdge: 18,
+            phase: 0.8,
+            reduceMotion: true,
+            targets: targets
+        )
+
+        #expect(movingA.count == 108)
+        #expect(movingA != movingB)
+        #expect(frozenA == frozenB)
+        #expect(Set(movingA.map(\.edge)).count == 6)
+    }
+
+    @Test func edgeParticlesRemainContinuousAcrossPhaseCycleBoundaries() {
+        let targets = Dictionary(
+            uniqueKeysWithValues: LifeDimension.allCases.map {
+                ($0, LifeFieldLayout.anchor(for: $0, score: 50))
+            }
+        )
+        let beforeBoundary = LifeFieldEdgeParticleGeometry.samples(
+            countPerEdge: 18,
+            phase: 0.999,
+            reduceMotion: false,
+            targets: targets
+        )
+        let afterBoundary = LifeFieldEdgeParticleGeometry.samples(
+            countPerEdge: 18,
+            phase: 1.001,
+            reduceMotion: false,
+            targets: targets
+        )
+        let maximumTravel = zip(beforeBoundary, afterBoundary)
+            .map { hypot(
+                $0.position.x - $1.position.x,
+                $0.position.y - $1.position.y
+            ) }
+            .max() ?? .infinity
+
+        #expect(maximumTravel < 0.01)
+    }
+
     @Test func scoreAnchorsMapZeroFiftyAndHundredToDistinctRadii() {
         let zero = LifeFieldLayout.anchor(for: .health, score: 0)
         let fifty = LifeFieldLayout.anchor(for: .health, score: 50)
@@ -80,6 +181,7 @@ struct LifeFieldPresentationTests {
     @Test func interactiveNodesRenderAboveTheCoreWhileFieldGeometryStaysBehindIt() {
         #expect(LifeFieldLayerOrder.backdrop < LifeFieldLayerOrder.core)
         #expect(LifeFieldLayerOrder.core < LifeFieldLayerOrder.controls)
+        #expect(LifeFieldLayerOrder.controls < LifeFieldLayerOrder.coreControl)
     }
 
     @Test func accessibilitySizesPresentDimensionDetailsOutsideTheCrowdedField() {

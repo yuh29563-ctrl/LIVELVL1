@@ -14,6 +14,7 @@ nonisolated enum LifeFieldLayerOrder {
     static let backdrop = 0.0
     static let core = 1.0
     static let controls = 2.0
+    static let coreControl = 3.0
 }
 
 nonisolated enum LifeFieldLayout {
@@ -80,6 +81,105 @@ nonisolated enum LifeFieldLayout {
         case .health, .learning, .interests: .above
         case .career, .finance, .relationships: .below
         }
+    }
+}
+
+nonisolated struct LifeFieldEdge: Equatable, Hashable, Sendable {
+    let start: LifeDimension
+    let end: LifeDimension
+
+    static let ordered: [LifeFieldEdge] = [
+        LifeFieldEdge(start: .health, end: .learning),
+        LifeFieldEdge(start: .learning, end: .finance),
+        LifeFieldEdge(start: .finance, end: .relationships),
+        LifeFieldEdge(start: .relationships, end: .career),
+        LifeFieldEdge(start: .career, end: .interests),
+        LifeFieldEdge(start: .interests, end: .health),
+    ]
+}
+
+nonisolated struct LifeFieldEdgeSegment: Equatable, Sendable {
+    let edge: LifeFieldEdge
+    let start: CGPoint
+    let end: CGPoint
+}
+
+nonisolated struct LifeFieldEdgeParticleSample: Equatable, Sendable {
+    let edge: LifeFieldEdge
+    let position: CGPoint
+    let opacity: Double
+    let diameter: CGFloat
+}
+
+nonisolated enum LifeFieldEdgeParticleGeometry {
+    static func segments(
+        targets: [LifeDimension: CGPoint]
+    ) -> [LifeFieldEdgeSegment] {
+        LifeFieldEdge.ordered.map { edge in
+            LifeFieldEdgeSegment(
+                edge: edge,
+                start: targets[edge.start] ?? LifeFieldLayout.anchor(for: edge.start),
+                end: targets[edge.end] ?? LifeFieldLayout.anchor(for: edge.end)
+            )
+        }
+    }
+
+    static func presentationSamples(
+        phase: Double,
+        reduceMotion: Bool,
+        targets: [LifeDimension: CGPoint]
+    ) -> [LifeFieldEdgeParticleSample] {
+        samples(
+            countPerEdge: 22,
+            phase: phase,
+            reduceMotion: reduceMotion,
+            targets: targets
+        )
+    }
+
+    static func samples(
+        countPerEdge: Int,
+        phase: Double,
+        reduceMotion: Bool,
+        targets: [LifeDimension: CGPoint]
+    ) -> [LifeFieldEdgeParticleSample] {
+        guard countPerEdge > 0 else { return [] }
+        let resolvedPhase = reduceMotion ? 0.19 : phase
+        let edgeSegments = segments(targets: targets)
+        var result: [LifeFieldEdgeParticleSample] = []
+        result.reserveCapacity(edgeSegments.count * countPerEdge)
+
+        for (edgeIndex, segment) in edgeSegments.enumerated() {
+            let dx = segment.end.x - segment.start.x
+            let dy = segment.end.y - segment.start.y
+            let length = max(0.0001, hypot(dx, dy))
+            let perpendicular = CGPoint(x: -dy / length, y: dx / length)
+
+            for index in 0..<countPerEdge {
+                let base = Double(index) / Double(countPerEdge)
+                let seed = Double(((edgeIndex + 1) * 97 + index * 41) % 101) / 101
+                let progress = (base + resolvedPhase * 0.18 + seed * 0.025)
+                    .truncatingRemainder(dividingBy: 1)
+                let dance = sin((resolvedPhase + seed) * .pi * 2 + progress * 11)
+                let lateral = dance * 0.0035
+                let x = segment.start.x + dx * progress + perpendicular.x * lateral
+                let y = segment.start.y + dy * progress + perpendicular.y * lateral
+
+                result.append(
+                    LifeFieldEdgeParticleSample(
+                        edge: segment.edge,
+                        position: CGPoint(
+                            x: min(1, max(0, x)),
+                            y: min(1, max(0, y))
+                        ),
+                        opacity: 0.22 + seed * 0.32,
+                        diameter: 0.9 + seed * 1.1
+                    )
+                )
+            }
+        }
+
+        return result
     }
 }
 
@@ -271,18 +371,18 @@ struct LifeFieldBackdrop: View {
                 .padding(.horizontal, 8)
                 .padding(.vertical, 14)
 
-            LifeFieldParticleLinks(targets: officialTargets)
+            LifeFieldEdgeParticles(targets: officialTargets)
 
             LifeFieldPolygon(
-                normalizedPoints: LifeDimension.allCases.map {
-                    LifeFieldLayout.anchor(for: $0)
+                normalizedPoints: LifeFieldEdge.ordered.map {
+                    LifeFieldLayout.anchor(for: $0.start)
                 }
             )
             .stroke(LivingOSTheme.graphite.opacity(0.10), lineWidth: 0.6)
 
             LifeFieldPolygon(
-                normalizedPoints: LifeDimension.allCases.compactMap {
-                    officialTargets[$0]
+                normalizedPoints: LifeFieldEdge.ordered.compactMap {
+                    officialTargets[$0.start]
                 }
             )
             .stroke(LivingOSTheme.ink.opacity(0.46), lineWidth: 0.85)
@@ -478,7 +578,7 @@ private struct LifeFieldProjectedMarker: View {
     }
 }
 
-private struct LifeFieldParticleLinks: View {
+private struct LifeFieldEdgeParticles: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var isVisible = false
@@ -490,7 +590,7 @@ private struct LifeFieldParticleLinks: View {
             let phase = reduceMotion
                 ? 0.19
                 : timeline.date.timeIntervalSinceReferenceDate / 8.0
-            let samples = LifeFieldParticleLinkGeometry.presentationSamples(
+            let samples = LifeFieldEdgeParticleGeometry.presentationSamples(
                 phase: phase,
                 reduceMotion: reduceMotion,
                 targets: targets

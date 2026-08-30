@@ -1,8 +1,50 @@
+import Foundation
 import Testing
 @testable import LIVELVL
 
 @MainActor
 struct TodayCompanionLevelCardTests {
+    @Test func lifeCoreDisplayModeDefaultsExpandedAndTogglesBothWays() {
+        var mode = LifeCoreDisplayMode.initial
+
+        #expect(mode == .expanded)
+        mode.toggle()
+        #expect(mode == .compact)
+        mode.toggle()
+        #expect(mode == .expanded)
+    }
+
+    @Test func compactLifeCoreKeepsTheApprovedSizeAndAccessibleTapTarget() {
+        #expect(
+            LifeCoreCollapseLayout.compactSize(isAccessibilitySize: false)
+                == CGSize(width: 176, height: 56)
+        )
+        #expect(
+            LifeCoreCollapseLayout.compactSize(isAccessibilitySize: true)
+                == CGSize(width: 184, height: 72)
+        )
+        #expect(LifeCoreCollapseLayout.minimumTapDimension >= 44)
+    }
+
+    @Test func compactLifeCoreAnnouncesItsStateAndExpandAction() {
+        let presentation = LifeCoreWidgetPresentation(
+            definition: CollectionCatalog.ordinary[1],
+            stage: .stageTwo,
+            level: 2,
+            currentXP: 80,
+            requiredXP: 2_000,
+            remainingXP: 1_920
+        )
+
+        #expect(
+            presentation.compactAccessibilityLabel
+                == "成长卡已折叠，正在陪伴，月兔，成长中，等级 2"
+        )
+        #expect(presentation.compactAccessibilityHint == "轻点展开成长卡")
+        #expect(presentation.compactAccessibilityIdentifier == "today-life-core-expand")
+        #expect(presentation.compactTitleText == "月兔 · LV 2")
+    }
+
     @Test func lifeCoreDescribesTheActiveCompanionInsteadOfAFixedMascot() {
         let presentation = LifeCoreWidgetPresentation(
             definition: CollectionCatalog.ordinary[1],

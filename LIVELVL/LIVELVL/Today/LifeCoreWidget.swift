@@ -9,6 +9,27 @@ enum TodaySurfaceContract {
     static let showsTaskSectionTitle = false
 }
 
+enum LifeCoreDisplayMode: Equatable, Sendable {
+    case expanded
+    case compact
+
+    static let initial = LifeCoreDisplayMode.expanded
+
+    mutating func toggle() {
+        self = self == .expanded ? .compact : .expanded
+    }
+}
+
+nonisolated enum LifeCoreCollapseLayout {
+    static let minimumTapDimension: CGFloat = 44
+
+    static func compactSize(isAccessibilitySize: Bool) -> CGSize {
+        isAccessibilitySize
+            ? CGSize(width: 184, height: 72)
+            : CGSize(width: 176, height: 56)
+    }
+}
+
 struct LifeCoreWidgetPresentation: Equatable, Sendable {
     static let showsMediaControlsOnMainSurface = false
     static let allowsOpeningLegacyDetail = false
@@ -37,6 +58,12 @@ struct LifeCoreWidgetPresentation: Equatable, Sendable {
     var accessibilityValue: String {
         "当前 \(max(0, currentXP))，共需 \(max(0, requiredXP))，还差 \(max(0, remainingXP)) XP"
     }
+    var compactAccessibilityLabel: String {
+        "成长卡已折叠，\(accessibilityLabel)"
+    }
+    var compactAccessibilityHint: String { "轻点展开成长卡" }
+    var compactAccessibilityIdentifier: String { "today-life-core-expand" }
+    var compactTitleText: String { "\(companionName) · \(levelText)" }
 }
 
 nonisolated enum LifeCoreParticleGeometry {
@@ -200,7 +227,9 @@ struct LifeCoreWidget: View {
 }
 
 struct TodayLifeFieldSection: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var coreDisplayMode = LifeCoreDisplayMode.initial
 
     let summary: LifeStateSummary
     let core: LifeCoreWidgetPresentation
@@ -210,18 +239,46 @@ struct TodayLifeFieldSection: View {
     var body: some View {
         GeometryReader { proxy in
             let coreWidth = resolvedCoreWidth(containerWidth: proxy.size.width)
+            let coreHeight = coreWidth * 1.94
+            let compactSize = LifeCoreCollapseLayout.compactSize(
+                isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+            )
 
             ZStack {
                 LifeFieldBackdrop(summary: summary)
                     .zIndex(LifeFieldLayerOrder.backdrop)
 
-                LifeCoreWidget(
-                    presentation: core,
-                    isRewarding: growthPhase == .core,
-                    levelUpFeedback: levelUpFeedback
-                )
-                .frame(width: coreWidth, height: coreWidth * 1.94)
-                .zIndex(LifeFieldLayerOrder.core)
+                if coreDisplayMode == .expanded {
+                    LifeCoreWidget(
+                        presentation: core,
+                        isRewarding: growthPhase == .core,
+                        levelUpFeedback: levelUpFeedback
+                    )
+                    .frame(width: coreWidth, height: coreHeight)
+                    .transition(coreTransition)
+                    .zIndex(LifeFieldLayerOrder.core)
+
+                    LifeCoreCollapseButton(action: toggleCoreDisplayMode)
+                        .offset(
+                            x: coreWidth / 2 - LifeCoreCollapseLayout.minimumTapDimension / 2,
+                            y: -coreHeight / 2 + LifeCoreCollapseLayout.minimumTapDimension / 2
+                        )
+                        .transition(.opacity)
+                        .zIndex(LifeFieldLayerOrder.coreControl)
+                } else {
+                    LifeCoreCompactWidget(
+                        presentation: core,
+                        isRewarding: growthPhase == .core,
+                        isAccessibilitySize: dynamicTypeSize.isAccessibilitySize,
+                        action: toggleCoreDisplayMode
+                    )
+                    .frame(
+                        width: compactSize.width,
+                        height: compactSize.height
+                    )
+                    .transition(coreTransition)
+                    .zIndex(LifeFieldLayerOrder.coreControl)
+                }
 
                 LifeFieldView(
                     summary: summary,
@@ -241,11 +298,127 @@ struct TodayLifeFieldSection: View {
         return dimension
     }
 
+    private var coreTransition: AnyTransition {
+        reduceMotion
+            ? .opacity
+            : .opacity.combined(with: .scale(scale: 0.88))
+    }
+
+    private func toggleCoreDisplayMode() {
+        withAnimation(
+            reduceMotion
+                ? .easeOut(duration: 0.16)
+                : .spring(response: 0.34, dampingFraction: 0.84)
+        ) {
+            coreDisplayMode.toggle()
+        }
+    }
+
     private func resolvedCoreWidth(containerWidth: CGFloat) -> CGFloat {
         guard dynamicTypeSize.isAccessibilitySize else {
             return LivingOSMetrics.coreWidth(containerWidth: containerWidth)
         }
         return min(184, max(156, containerWidth * 0.44))
+    }
+}
+
+private struct LifeCoreCollapseButton: View {
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "chevron.down")
+                .font(.system(size: 13, weight: .semibold))
+                .frame(
+                    width: LifeCoreCollapseLayout.minimumTapDimension,
+                    height: LifeCoreCollapseLayout.minimumTapDimension
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(LivingOSTheme.graphite)
+        .accessibilityLabel("折叠成长卡")
+        .accessibilityHint("轻点显示迷你成长状态")
+        .accessibilityIdentifier("today-life-core-collapse")
+    }
+}
+
+private struct LifeCoreCompactWidget: View {
+    let presentation: LifeCoreWidgetPresentation
+    let isRewarding: Bool
+    let isAccessibilitySize: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                VStack(alignment: .leading, spacing: isAccessibilitySize ? 4 : 3) {
+                    Text(presentation.compactTitleText)
+                        .font(
+                            isAccessibilitySize
+                                ? .subheadline.monospaced().weight(.semibold)
+                                : .caption.monospaced().weight(.semibold)
+                        )
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.78)
+
+                    HStack(spacing: 6) {
+                        GeometryReader { proxy in
+                            Capsule()
+                                .fill(LivingOSTheme.mist)
+                                .overlay(alignment: .leading) {
+                                    Capsule()
+                                        .fill(LivingOSTheme.ink)
+                                        .frame(width: proxy.size.width * presentation.progress)
+                                }
+                        }
+                        .frame(height: 4)
+
+                        xpLabel
+                    }
+                }
+
+                if isRewarding {
+                    Circle()
+                        .fill(LivingOSTheme.signal)
+                        .frame(width: 6, height: 6)
+                        .accessibilityHidden(true)
+                }
+
+                Image(systemName: "chevron.up")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(LivingOSTheme.graphite)
+                    .accessibilityHidden(true)
+            }
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .contentShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(LivingOSTheme.ink)
+        .background {
+            RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .fill(Color.white.opacity(0.88))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .stroke(Color.white.opacity(0.96), lineWidth: 1)
+                }
+                .shadow(color: Color.black.opacity(0.10), radius: 12, y: 6)
+        }
+        .accessibilityLabel(presentation.compactAccessibilityLabel)
+        .accessibilityValue(presentation.accessibilityValue)
+        .accessibilityHint(presentation.compactAccessibilityHint)
+        .accessibilityIdentifier(presentation.compactAccessibilityIdentifier)
+        .dynamicTypeSize(.large ... .accessibility1)
+    }
+
+    private var xpLabel: some View {
+        Text(presentation.xpText)
+            .font(.caption2.monospaced())
+            .foregroundStyle(LivingOSTheme.graphite)
+            .lineLimit(1)
+            .minimumScaleFactor(0.72)
+            .fixedSize(horizontal: true, vertical: false)
     }
 }
 
