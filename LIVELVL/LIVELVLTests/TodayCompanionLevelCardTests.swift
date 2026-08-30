@@ -14,16 +14,44 @@ struct TodayCompanionLevelCardTests {
         #expect(mode == .expanded)
     }
 
-    @Test func compactLifeCoreKeepsTheApprovedSizeAndAccessibleTapTarget() {
-        #expect(
-            LifeCoreCollapseLayout.compactSize(isAccessibilitySize: false)
-                == CGSize(width: 176, height: 56)
+    @Test func compactLifeCoreReservesAnIndependentDockAboveTheField() {
+        let regular = LifeCoreDockLayout.metrics(
+            displayMode: .compact,
+            isAccessibilitySize: false
         )
-        #expect(
-            LifeCoreCollapseLayout.compactSize(isAccessibilitySize: true)
-                == CGSize(width: 184, height: 72)
+        let accessibility = LifeCoreDockLayout.metrics(
+            displayMode: .compact,
+            isAccessibilitySize: true
         )
+
+        #expect(regular.dockHeight == 44)
+        #expect(regular.spacing == 28)
+        #expect(regular.fieldHeight == 492)
+        #expect(regular.fieldOriginY == 72)
+        #expect(regular.sectionHeight == 564)
+        #expect(accessibility.dockHeight == 64)
+        #expect(accessibility.spacing == 36)
+        #expect(accessibility.fieldHeight == 590)
+        #expect(accessibility.fieldOriginY == 100)
+        #expect(accessibility.sectionHeight == 690)
         #expect(LifeCoreCollapseLayout.minimumTapDimension >= 44)
+    }
+
+    @Test func compactDockNeverOverlapsOrCompressesTheLifeField() {
+        let expanded = LifeCoreDockLayout.metrics(
+            displayMode: .expanded,
+            isAccessibilitySize: false
+        )
+        let compact = LifeCoreDockLayout.metrics(
+            displayMode: .compact,
+            isAccessibilitySize: false
+        )
+
+        #expect(expanded.dockHeight == 0)
+        #expect(expanded.fieldOriginY == 0)
+        #expect(expanded.fieldHeight == compact.fieldHeight)
+        #expect(expanded.sectionHeight == expanded.fieldHeight)
+        #expect(compact.dockRange.upperBound <= compact.fieldRange.lowerBound)
     }
 
     @Test func compactLifeCoreAnnouncesItsStateAndExpandAction() {

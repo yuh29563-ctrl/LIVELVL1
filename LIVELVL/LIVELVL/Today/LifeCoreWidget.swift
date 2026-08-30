@@ -9,7 +9,7 @@ enum TodaySurfaceContract {
     static let showsTaskSectionTitle = false
 }
 
-enum LifeCoreDisplayMode: Equatable, Sendable {
+nonisolated enum LifeCoreDisplayMode: Equatable, Sendable {
     case expanded
     case compact
 
@@ -22,11 +22,49 @@ enum LifeCoreDisplayMode: Equatable, Sendable {
 
 nonisolated enum LifeCoreCollapseLayout {
     static let minimumTapDimension: CGFloat = 44
+}
 
-    static func compactSize(isAccessibilitySize: Bool) -> CGSize {
-        isAccessibilitySize
-            ? CGSize(width: 184, height: 72)
-            : CGSize(width: 176, height: 56)
+nonisolated struct LifeCoreDockMetrics: Equatable, Sendable {
+    let dockHeight: CGFloat
+    let spacing: CGFloat
+    let fieldOriginY: CGFloat
+    let fieldHeight: CGFloat
+    let sectionHeight: CGFloat
+
+    var dockRange: Range<CGFloat> { 0..<dockHeight }
+    var fieldRange: Range<CGFloat> { fieldOriginY..<(fieldOriginY + fieldHeight) }
+}
+
+nonisolated enum LifeCoreDockLayout {
+    private static let regularFieldHeight: CGFloat = 492
+    private static let accessibilityFieldHeight: CGFloat = 590
+    private static let regularDockHeight: CGFloat = 44
+    private static let accessibilityDockHeight: CGFloat = 64
+    private static let regularDockSpacing: CGFloat = 28
+    private static let accessibilityDockSpacing: CGFloat = 36
+
+    static func metrics(
+        displayMode: LifeCoreDisplayMode,
+        isAccessibilitySize: Bool
+    ) -> LifeCoreDockMetrics {
+        let fieldHeight = isAccessibilitySize
+            ? accessibilityFieldHeight
+            : regularFieldHeight
+        let dockHeight = displayMode == .compact
+            ? (isAccessibilitySize ? accessibilityDockHeight : regularDockHeight)
+            : 0
+        let spacing = displayMode == .compact
+            ? (isAccessibilitySize ? accessibilityDockSpacing : regularDockSpacing)
+            : 0
+        let fieldOriginY = dockHeight + spacing
+
+        return LifeCoreDockMetrics(
+            dockHeight: dockHeight,
+            spacing: spacing,
+            fieldOriginY: fieldOriginY,
+            fieldHeight: fieldHeight,
+            sectionHeight: fieldOriginY + fieldHeight
+        )
     }
 }
 
@@ -237,59 +275,66 @@ struct TodayLifeFieldSection: View {
     let levelUpFeedback: Int?
 
     var body: some View {
+        let layout = LifeCoreDockLayout.metrics(
+            displayMode: coreDisplayMode,
+            isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+        )
+
         GeometryReader { proxy in
             let coreWidth = resolvedCoreWidth(containerWidth: proxy.size.width)
             let coreHeight = coreWidth * 1.94
-            let compactSize = LifeCoreCollapseLayout.compactSize(
-                isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
-            )
 
-            ZStack {
-                LifeFieldBackdrop(summary: summary)
-                    .zIndex(LifeFieldLayerOrder.backdrop)
-
-                if coreDisplayMode == .expanded {
-                    LifeCoreWidget(
-                        presentation: core,
-                        isRewarding: growthPhase == .core,
-                        levelUpFeedback: levelUpFeedback
-                    )
-                    .frame(width: coreWidth, height: coreHeight)
-                    .transition(coreTransition)
-                    .zIndex(LifeFieldLayerOrder.core)
-
-                    LifeCoreCollapseButton(action: toggleCoreDisplayMode)
-                        .offset(
-                            x: coreWidth / 2 - LifeCoreCollapseLayout.minimumTapDimension / 2,
-                            y: -coreHeight / 2 + LifeCoreCollapseLayout.minimumTapDimension / 2
-                        )
-                        .transition(.opacity)
-                        .zIndex(LifeFieldLayerOrder.coreControl)
-                } else {
+            VStack(spacing: layout.spacing) {
+                if coreDisplayMode == .compact {
                     LifeCoreCompactWidget(
                         presentation: core,
                         isRewarding: growthPhase == .core,
                         isAccessibilitySize: dynamicTypeSize.isAccessibilitySize,
                         action: toggleCoreDisplayMode
                     )
-                    .frame(
-                        width: compactSize.width,
-                        height: compactSize.height
-                    )
-                    .transition(coreTransition)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: layout.dockHeight)
+                    .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                    .transition(dockTransition)
                     .zIndex(LifeFieldLayerOrder.coreControl)
                 }
 
-                LifeFieldView(
-                    summary: summary,
-                    highlightedDimension: highlightedDimension
-                )
-                .zIndex(LifeFieldLayerOrder.controls)
+                ZStack {
+                    LifeFieldBackdrop(summary: summary)
+                        .zIndex(LifeFieldLayerOrder.backdrop)
+
+                    if coreDisplayMode == .expanded {
+                        LifeCoreWidget(
+                            presentation: core,
+                            isRewarding: growthPhase == .core,
+                            levelUpFeedback: levelUpFeedback
+                        )
+                        .frame(width: coreWidth, height: coreHeight)
+                        .transition(coreTransition)
+                        .zIndex(LifeFieldLayerOrder.core)
+
+                        LifeCoreCollapseButton(action: toggleCoreDisplayMode)
+                            .offset(
+                                x: coreWidth / 2 - LifeCoreCollapseLayout.minimumTapDimension / 2,
+                                y: -coreHeight / 2 + LifeCoreCollapseLayout.minimumTapDimension / 2
+                            )
+                            .transition(.opacity)
+                            .zIndex(LifeFieldLayerOrder.coreControl)
+                    }
+
+                    LifeFieldView(
+                        summary: summary,
+                        highlightedDimension: highlightedDimension
+                    )
+                    .zIndex(LifeFieldLayerOrder.controls)
+                }
+                .frame(height: layout.fieldHeight)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .animation(sectionAnimation, value: coreDisplayMode)
             .dynamicTypeSize(.large ... .accessibility2)
         }
-        .frame(height: dynamicTypeSize.isAccessibilitySize ? 590 : 492)
+        .frame(height: layout.sectionHeight, alignment: .top)
         .todayGrowthAnchor(.field)
     }
 
@@ -304,12 +349,22 @@ struct TodayLifeFieldSection: View {
             : .opacity.combined(with: .scale(scale: 0.88))
     }
 
+    private var dockTransition: AnyTransition {
+        reduceMotion
+            ? .opacity
+            : .opacity
+                .combined(with: .move(edge: .top))
+                .combined(with: .scale(scale: 0.96, anchor: .top))
+    }
+
+    private var sectionAnimation: Animation {
+        reduceMotion
+            ? .easeOut(duration: 0.16)
+            : .spring(response: 0.34, dampingFraction: 0.84)
+    }
+
     private func toggleCoreDisplayMode() {
-        withAnimation(
-            reduceMotion
-                ? .easeOut(duration: 0.16)
-                : .spring(response: 0.34, dampingFraction: 0.84)
-        ) {
+        withAnimation(sectionAnimation) {
             coreDisplayMode.toggle()
         }
     }
