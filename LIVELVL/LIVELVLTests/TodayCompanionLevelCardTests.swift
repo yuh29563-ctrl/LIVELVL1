@@ -94,6 +94,54 @@ struct TodayCompanionLevelCardTests {
         #expect(presentation.accessibilityValue == "当前 80，共需 2000，还差 1920 XP")
     }
 
+    @Test func lifeCoreRequestsTheCurrentAndNextStageForTheSameCompanion() {
+        let definition = CollectionCatalog.ordinary[0]
+        let juvenile = makePresentation(definition: definition, stage: .juvenile)
+        let stageTwo = makePresentation(definition: definition, stage: .stageTwo)
+        let stageThree = makePresentation(definition: definition, stage: .stageThree)
+        let mature = makePresentation(definition: definition, stage: .mature)
+
+        #expect(
+            juvenile.artworkRequest.current
+                == .init(collectibleID: "ordinary.sprout", stage: .juvenile)
+        )
+        #expect(
+            juvenile.artworkRequest.next
+                == .init(collectibleID: "ordinary.sprout", stage: .stageTwo)
+        )
+        #expect(
+            stageTwo.artworkRequest.next
+                == .init(collectibleID: "ordinary.sprout", stage: .stageThree)
+        )
+        #expect(
+            stageThree.artworkRequest.next
+                == .init(collectibleID: "ordinary.sprout", stage: .mature)
+        )
+        #expect(mature.artworkRequest.next == nil)
+    }
+
+    @Test func lifeCoreArtworkIdentityChangesWithoutChangingLevelOrXP() {
+        let sprout = makePresentation(
+            definition: CollectionCatalog.ordinary[0],
+            stage: .stageTwo
+        )
+        let hare = makePresentation(
+            definition: CollectionCatalog.ordinary[1],
+            stage: .stageTwo
+        )
+
+        #expect(sprout.artworkRequest.current != hare.artworkRequest.current)
+        #expect(
+            hare.artworkRequest.current
+                == .init(collectibleID: "ordinary.hare", stage: .stageTwo)
+        )
+        #expect(sprout.level == hare.level)
+        #expect(sprout.currentXP == hare.currentXP)
+        #expect(sprout.requiredXP == hare.requiredXP)
+        #expect(sprout.remainingXP == hare.remainingXP)
+        #expect(sprout.progress == hare.progress)
+    }
+
     @Test func lifeCoreUsesApprovedWidgetMetricsAndStableProgress() {
         let presentation = LifeCoreWidgetPresentation(
             definition: CollectionCatalog.ordinary[1],
@@ -259,5 +307,19 @@ struct TodayCompanionLevelCardTests {
 
         #expect(presentation.accessibilityLabel == "整理房间，兴趣，10 XP，已完成")
         #expect(presentation.accessibilityActionLabel == "取消完成 整理房间")
+    }
+
+    private func makePresentation(
+        definition: CollectibleDefinition,
+        stage: CompanionStage
+    ) -> LifeCoreWidgetPresentation {
+        LifeCoreWidgetPresentation(
+            definition: definition,
+            stage: stage,
+            level: 2,
+            currentXP: 80,
+            requiredXP: 2_000,
+            remainingXP: 1_920
+        )
     }
 }

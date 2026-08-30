@@ -31,6 +31,17 @@ nonisolated enum LifeCoreCollapseLayout {
     static let minimumTapDimension: CGFloat = 44
 }
 
+extension CompanionStage {
+    nonisolated var nextArtworkStage: CompanionStage? {
+        switch self {
+        case .juvenile: .stageTwo
+        case .stageTwo: .stageThree
+        case .stageThree: .mature
+        case .mature: nil
+        }
+    }
+}
+
 nonisolated struct LifeCoreDockMetrics: Equatable, Sendable {
     let dockHeight: CGFloat
     let spacing: CGFloat
@@ -93,6 +104,14 @@ struct LifeCoreWidgetPresentation: Equatable, Sendable {
     var progress: Double {
         guard requiredXP > 0 else { return 0 }
         return min(1, max(0, Double(currentXP) / Double(requiredXP)))
+    }
+    var artworkRequest: CompanionPointCloudRequest {
+        CompanionPointCloudRequest(
+            current: CompanionArtworkID(collectibleID: definition.id, stage: stage),
+            next: stage.nextArtworkStage.map {
+                CompanionArtworkID(collectibleID: definition.id, stage: $0)
+            }
+        )
     }
     var levelText: String { "LV \(level)" }
     var xpText: String { "\(max(0, currentXP)) / \(max(0, requiredXP)) XP" }
@@ -182,12 +201,24 @@ struct LifeCoreWidget: View {
     @State private var pulseScale = 1.0
 
     let presentation: LifeCoreWidgetPresentation
+    let artworkState: CompanionPointCloudLoader.State
     let isRewarding: Bool
     let levelUpFeedback: Int?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            LifeCoreArtwork()
+            Group {
+                if artworkState == .fallback {
+                    LifeCoreArtwork()
+                } else {
+                    CompanionPointCloudView(
+                        loadState: artworkState,
+                        mode: .expanded,
+                        progress: presentation.progress,
+                        rewardToken: levelUpFeedback
+                    )
+                }
+            }
                 .frame(maxWidth: .infinity)
                 .frame(height: 146)
 
@@ -275,6 +306,7 @@ struct TodayLifeFieldSection: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var coreDisplayMode = LifeCoreDisplayMode.initial
+    @StateObject private var pointCloudLoader = makeCompanionPointCloudLoader()
 
     let summary: LifeStateSummary
     let core: LifeCoreWidgetPresentation
@@ -313,6 +345,7 @@ struct TodayLifeFieldSection: View {
                     if coreDisplayMode == .expanded {
                         LifeCoreWidget(
                             presentation: core,
+                            artworkState: pointCloudLoader.state,
                             isRewarding: growthPhase == .core,
                             levelUpFeedback: levelUpFeedback
                         )
@@ -343,6 +376,9 @@ struct TodayLifeFieldSection: View {
         }
         .frame(height: layout.sectionHeight, alignment: .top)
         .todayGrowthAnchor(.field)
+        .task(id: core.artworkRequest) {
+            pointCloudLoader.load(core.artworkRequest)
+        }
     }
 
     private var highlightedDimension: LifeDimension? {
@@ -381,6 +417,25 @@ struct TodayLifeFieldSection: View {
             return LivingOSMetrics.coreWidth(containerWidth: containerWidth)
         }
         return min(184, max(156, containerWidth * 0.44))
+    }
+}
+
+@MainActor
+private func makeCompanionPointCloudLoader() -> CompanionPointCloudLoader {
+    let provider: any CompanionArtworkDataProviding
+    do {
+        provider = try BundledCompanionArtworkProvider()
+    } catch {
+        provider = UnavailableCompanionArtworkProvider()
+    }
+    return CompanionPointCloudLoader(
+        repository: CompanionPointCloudRepository(provider: provider)
+    )
+}
+
+private nonisolated struct UnavailableCompanionArtworkProvider: CompanionArtworkDataProviding {
+    func payload(for id: CompanionArtworkID) async throws -> CompanionArtworkPayload? {
+        nil
     }
 }
 
