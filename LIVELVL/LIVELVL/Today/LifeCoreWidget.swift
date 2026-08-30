@@ -15,6 +15,13 @@ nonisolated enum LifeCoreDisplayMode: Equatable, Sendable {
 
     static let initial = LifeCoreDisplayMode.expanded
 
+    var toggleSymbolName: String {
+        switch self {
+        case .expanded: "chevron.up"
+        case .compact: "chevron.down"
+        }
+    }
+
     mutating func toggle() {
         self = self == .expanded ? .compact : .expanded
     }
@@ -382,7 +389,7 @@ private struct LifeCoreCollapseButton: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: "chevron.down")
+            Image(systemName: LifeCoreDisplayMode.expanded.toggleSymbolName)
                 .font(.system(size: 13, weight: .semibold))
                 .frame(
                     width: LifeCoreCollapseLayout.minimumTapDimension,
@@ -440,7 +447,7 @@ private struct LifeCoreCompactWidget: View {
                         .accessibilityHidden(true)
                 }
 
-                Image(systemName: "chevron.up")
+                Image(systemName: LifeCoreDisplayMode.compact.toggleSymbolName)
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(LivingOSTheme.graphite)
                     .accessibilityHidden(true)

@@ -14,6 +14,11 @@ struct TodayCompanionLevelCardTests {
         #expect(mode == .expanded)
     }
 
+    @Test func lifeCoreToggleArrowMatchesTheActionItWillPerform() {
+        #expect(LifeCoreDisplayMode.expanded.toggleSymbolName == "chevron.up")
+        #expect(LifeCoreDisplayMode.compact.toggleSymbolName == "chevron.down")
+    }
+
     @Test func compactLifeCoreReservesAnIndependentDockAboveTheField() {
         let regular = LifeCoreDockLayout.metrics(
             displayMode: .compact,
