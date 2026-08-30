@@ -212,10 +212,8 @@ struct TodayLifeFieldSection: View {
             let coreWidth = resolvedCoreWidth(containerWidth: proxy.size.width)
 
             ZStack {
-                LifeFieldView(
-                    summary: summary,
-                    highlightedDimension: highlightedDimension
-                )
+                LifeFieldBackdrop(summary: summary)
+                    .zIndex(LifeFieldLayerOrder.backdrop)
 
                 LifeCoreWidget(
                     presentation: core,
@@ -223,6 +221,13 @@ struct TodayLifeFieldSection: View {
                     levelUpFeedback: levelUpFeedback
                 )
                 .frame(width: coreWidth, height: coreWidth * 1.94)
+                .zIndex(LifeFieldLayerOrder.core)
+
+                LifeFieldView(
+                    summary: summary,
+                    highlightedDimension: highlightedDimension
+                )
+                .zIndex(LifeFieldLayerOrder.controls)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .dynamicTypeSize(.large ... .accessibility2)

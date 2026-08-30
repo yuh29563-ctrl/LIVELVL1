@@ -1,5 +1,52 @@
 import SwiftUI
 
+nonisolated struct TodayHeaderPresentation: Equatable, Sendable {
+    let itemCount: Int
+
+    init(itemCount: Int) {
+        self.itemCount = max(0, itemCount)
+    }
+
+    var showsAddTaskAction: Bool { true }
+    var minimumTapDimension: CGFloat { 44 }
+    var accessibilityIdentifier: String { "today-add-task-button" }
+
+    func actionTopPadding(isAccessibilitySize: Bool) -> CGFloat {
+        isAccessibilitySize ? 20 : 11
+    }
+}
+
+struct TodayHeaderAddTaskButton: View {
+    let presentation: TodayHeaderPresentation
+    let isAccessibilitySize: Bool
+    let action: () -> Void
+
+    func activate() {
+        action()
+    }
+
+    var body: some View {
+        Button(action: activate) {
+            Image(systemName: "plus")
+                .font(.system(size: 23, weight: .light))
+                .frame(
+                    minWidth: presentation.minimumTapDimension,
+                    minHeight: presentation.minimumTapDimension
+                )
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(LivingOSTheme.ink)
+        .accessibilityLabel("新建任务")
+        .accessibilityHint("打开任务创建页面")
+        .accessibilityIdentifier(presentation.accessibilityIdentifier)
+        .padding(
+            .top,
+            presentation.actionTopPadding(isAccessibilitySize: isAccessibilitySize)
+        )
+    }
+}
+
 enum TodayGrowthPhase: Equatable, Sendable {
     case idle
     case task(UUID)

@@ -1,5 +1,16 @@
 import Foundation
 
+enum LifeFieldDetailPresentationStyle: Equatable, Sendable {
+    case inline
+    case sheet
+}
+
+nonisolated enum LifeFieldDetailPresentation {
+    static func style(isAccessibilitySize: Bool) -> LifeFieldDetailPresentationStyle {
+        isAccessibilitySize ? .sheet : .inline
+    }
+}
+
 struct LifeFieldNodePresentation: Identifiable, Equatable, Sendable {
     var id: LifeDimension { dimension }
 

@@ -116,6 +116,9 @@ struct TodayView: View {
 
     private var progress: Progress { progressItems.first ?? Progress() }
     private var rewardFeedback: TaskRewardFeedback? { growthPresentation.feedback }
+    private var headerPresentation: TodayHeaderPresentation {
+        TodayHeaderPresentation(itemCount: items.count)
+    }
 
     private var activeCompanion: (definition: CollectibleDefinition, stage: CompanionStage) {
         guard let collectionProgress = collectionProgressItems.first else {
@@ -155,7 +158,16 @@ struct TodayView: View {
     var body: some View {
         ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    LivingOSPageHeader(title: "Today")
+                    LivingOSPageHeader(title: "Today") {
+                        if headerPresentation.showsAddTaskAction {
+                            TodayHeaderAddTaskButton(
+                                presentation: headerPresentation,
+                                isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+                            ) {
+                                showAdd = true
+                            }
+                        }
+                    }
                     .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
                     .padding(.top, 10)
                     .offset(
@@ -317,7 +329,11 @@ struct TodayView: View {
            let fieldAnchor = anchors[.field] {
             let taskFrame = proxy[taskAnchor]
             let fieldFrame = proxy[fieldAnchor]
-            let dimensionAnchor = LifeFieldLayout.anchor(for: feedback.dimension)
+            let dimensionAnchor = currentSummary.flatMap { summary in
+                LifeFieldNodePresentation.make(summary: summary)
+                    .first { $0.dimension == feedback.dimension }
+                    .map { LifeFieldLayout.anchors(for: $0).projected }
+            } ?? LifeFieldLayout.anchor(for: feedback.dimension)
             let start = CGPoint(x: taskFrame.maxX - 42, y: taskFrame.midY)
             let dimension = CGPoint(
                 x: fieldFrame.minX + dimensionAnchor.x * fieldFrame.width,

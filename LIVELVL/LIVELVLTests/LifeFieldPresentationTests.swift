@@ -1,5 +1,7 @@
 import Foundation
+import SwiftUI
 import Testing
+import UIKit
 @testable import LIVELVL
 
 @MainActor
@@ -47,6 +49,102 @@ struct LifeFieldPresentationTests {
         #expect(LifeFieldLayout.labelPlacement(for: .health) == .above)
         #expect(LifeFieldLayout.labelPlacement(for: .relationships) == .below)
         #expect(LifeFieldLayout.labelPlacement(for: .career) == .below)
+    }
+
+    @Test func scoreAnchorsMapZeroFiftyAndHundredToDistinctRadii() {
+        let zero = LifeFieldLayout.anchor(for: .health, score: 0)
+        let fifty = LifeFieldLayout.anchor(for: .health, score: 50)
+        let hundred = LifeFieldLayout.anchor(for: .health, score: 100)
+
+        #expect(zero == CGPoint(x: 0.50, y: 0.45))
+        #expect(fifty == CGPoint(x: 0.50, y: 0.255))
+        #expect(hundred == CGPoint(x: 0.50, y: 0.06))
+        #expect(hypot(fifty.x - 0.50, fifty.y - 0.45) > 0)
+        #expect(
+            hypot(hundred.x - 0.50, hundred.y - 0.45)
+                > hypot(fifty.x - 0.50, fifty.y - 0.45)
+        )
+    }
+
+    @Test func scoreAnchorsClampValuesOutsideTheDisplayRange() {
+        #expect(
+            LifeFieldLayout.anchor(for: .learning, score: -25)
+                == CGPoint(x: 0.50, y: 0.45)
+        )
+        #expect(
+            LifeFieldLayout.anchor(for: .learning, score: 125)
+                == CGPoint(x: 0.86, y: 0.255)
+        )
+    }
+
+    @Test func interactiveNodesRenderAboveTheCoreWhileFieldGeometryStaysBehindIt() {
+        #expect(LifeFieldLayerOrder.backdrop < LifeFieldLayerOrder.core)
+        #expect(LifeFieldLayerOrder.core < LifeFieldLayerOrder.controls)
+    }
+
+    @Test func accessibilitySizesPresentDimensionDetailsOutsideTheCrowdedField() {
+        #expect(
+            LifeFieldDetailPresentation.style(isAccessibilitySize: false) == .inline
+        )
+        #expect(
+            LifeFieldDetailPresentation.style(isAccessibilitySize: true) == .sheet
+        )
+    }
+
+    @Test func accessibilityDetailProvidesAScrollContainerForLongSources() async {
+        let value = LifeFieldNodePresentation(
+            dimension: .learning,
+            title: "专注",
+            displayValue: 50,
+            projectedDisplayValue: 62,
+            delta: 12,
+            sourceText: "来自 \(String(repeating: "非常长的任务名称", count: 24))",
+            assessmentText: "距下次评估 7 天"
+        )
+        let host = UIHostingController(
+            rootView: LifeFieldDimensionDetailSheet(value: value)
+                .dynamicTypeSize(.accessibility2)
+        )
+        let window = UIWindow(frame: UIScreen.main.bounds)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer {
+            window.isHidden = true
+            window.rootViewController = nil
+        }
+
+        try? await Task.sleep(for: .milliseconds(100))
+        host.view.layoutIfNeeded()
+
+        #expect(
+            containsAccessibilityIdentifier(
+                "life-field-detail-scroll",
+                in: host.view
+            )
+        )
+    }
+
+    @Test func officialAndProjectedNodeAnchorsRemainIndependent() throws {
+        let official = LifeStateValues(
+            health: 2,
+            learning: 5,
+            career: 5,
+            finance: 5,
+            relationships: 5,
+            interests: 5
+        )
+        var projected = official
+        projected.health = 8
+        let node = try #require(
+            LifeFieldNodePresentation.make(official: official, projected: projected).first
+        )
+        let anchors = LifeFieldLayout.anchors(for: node)
+
+        #expect(abs(anchors.official.x - 0.50) < 0.000_001)
+        #expect(abs(anchors.official.y - 0.372) < 0.000_001)
+        #expect(abs(anchors.projected.x - 0.50) < 0.000_001)
+        #expect(abs(anchors.projected.y - 0.138) < 0.000_001)
+        #expect(anchors.official != anchors.projected)
     }
 
     @Test func everyOpposingNodePairSharesTheExactVisualCore() {
@@ -102,6 +200,26 @@ struct LifeFieldPresentationTests {
             #expect(terminal != nil)
             #expect(abs((terminal?.position.x ?? 0) - target.x) < 0.02)
             #expect(abs((terminal?.position.y ?? 0) - target.y) < 0.02)
+        }
+    }
+
+    @Test func particleLinksTerminateAtDynamicOfficialNodePositions() {
+        let targets = Dictionary(
+            uniqueKeysWithValues: LifeDimension.allCases.map {
+                ($0, LifeFieldLayout.anchor(for: $0, score: 50))
+            }
+        )
+        let samples = LifeFieldParticleLinkGeometry.samples(
+            countPerLink: 24,
+            phase: 0.2,
+            reduceMotion: false,
+            targets: targets
+        )
+
+        for dimension in LifeDimension.allCases {
+            let terminal = samples.last { $0.dimension == dimension }
+            #expect(terminal?.position == targets[dimension])
+            #expect(terminal?.position != LifeFieldLayout.anchor(for: dimension))
         }
     }
 
@@ -198,5 +316,18 @@ struct LifeFieldPresentationTests {
         var state = LifeFieldSelectionState(selectedDimension: .finance)
         state.reconcile(available: [.health, .learning])
         #expect(state.selectedDimension == nil)
+    }
+
+    private func containsAccessibilityIdentifier(_ identifier: String, in view: UIView) -> Bool {
+        if view.accessibilityIdentifier == identifier { return true }
+        if let elements = view.accessibilityElements,
+           elements.contains(where: { element in
+               (element as? UIAccessibilityElement)?.accessibilityIdentifier == identifier
+           }) {
+            return true
+        }
+        return view.subviews.contains {
+            containsAccessibilityIdentifier(identifier, in: $0)
+        }
     }
 }

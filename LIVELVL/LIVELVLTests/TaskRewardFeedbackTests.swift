@@ -4,6 +4,34 @@ import Testing
 
 @MainActor
 struct TaskRewardFeedbackTests {
+    @Test(arguments: [0, 1, 12])
+    func todayHeaderAlwaysPresentsTheAddTaskAction(itemCount: Int) {
+        let presentation = TodayHeaderPresentation(itemCount: itemCount)
+
+        #expect(presentation.showsAddTaskAction)
+        #expect(presentation.minimumTapDimension >= 44)
+        #expect(presentation.accessibilityIdentifier == "today-add-task-button")
+        #expect(presentation.actionTopPadding(isAccessibilitySize: false) == 11)
+        #expect(presentation.actionTopPadding(isAccessibilitySize: true) == 20)
+    }
+
+    @Test(arguments: [0, 1])
+    func headerComponentKeepsItsSemanticAddActionWithAndWithoutTasks(itemCount: Int) {
+        var didActivate = false
+        let presentation = TodayHeaderPresentation(itemCount: itemCount)
+        let button = TodayHeaderAddTaskButton(
+            presentation: presentation,
+            isAccessibilitySize: false
+        ) {
+            didActivate = true
+        }
+
+        #expect(button.presentation.minimumTapDimension >= 44)
+        #expect(button.presentation.accessibilityIdentifier == "today-add-task-button")
+        button.activate()
+        #expect(didActivate)
+    }
+
     @Test func completionFeedbackKeepsRewardAndDimensionTogether() {
         let itemID = UUID()
 
@@ -176,4 +204,5 @@ struct TaskRewardFeedbackTests {
 
         #expect(samples.isEmpty)
     }
+
 }
