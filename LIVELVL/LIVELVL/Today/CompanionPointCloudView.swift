@@ -122,6 +122,20 @@ nonisolated enum CompanionPointCloudMotion {
     }
 }
 
+nonisolated struct CompanionPointCloudTimelinePolicy: Equatable, Sendable {
+    let reduceMotion: Bool
+    let isVisible: Bool
+    let isSceneActive: Bool
+
+    var isPaused: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: isSceneActive
+        )
+    }
+}
+
 struct CompanionPointCloudView<RewardToken: Equatable>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -135,7 +149,7 @@ struct CompanionPointCloudView<RewardToken: Equatable>: View {
     let rewardToken: RewardToken
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: timelinePolicy.isPaused)) { timeline in
             if case let .loaded(pair) = loadState {
                 let phase = reduceMotion
                     ? 0.19
@@ -241,8 +255,8 @@ struct CompanionPointCloudView<RewardToken: Equatable>: View {
         return date.timeIntervalSince(rewardPulseStartedAt)
     }
 
-    private var pausesTimeline: Bool {
-        LivingOSAnimationActivity.isPaused(
+    private var timelinePolicy: CompanionPointCloudTimelinePolicy {
+        CompanionPointCloudTimelinePolicy(
             reduceMotion: reduceMotion,
             isVisible: isVisible,
             isSceneActive: scenePhase == .active

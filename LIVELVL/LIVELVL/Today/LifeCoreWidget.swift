@@ -32,9 +32,31 @@ nonisolated enum LifeCoreCenterArtwork: Equatable, Sendable {
     case transparentParticleFallback
 }
 
-nonisolated enum LifeCoreAccessibilityContract {
-    static let compactExpansionActionCount = 1
-    static let centerCoreIsAccessibilityHidden = true
+struct LifeCoreDockAccessibility: Equatable, Sendable {
+    let label: String
+    let value: String
+    let hint: String
+    let identifier: String
+}
+
+struct LifeCoreAccessibilityComposition: Equatable, Sendable {
+    let dock: LifeCoreDockAccessibility?
+    let centerTargetIsAccessibilityHidden: Bool
+
+    init(displayMode: LifeCoreDisplayMode, presentation: LifeCoreWidgetPresentation) {
+        if displayMode == .compact {
+            dock = LifeCoreDockAccessibility(
+                label: presentation.compactAccessibilityLabel,
+                value: presentation.accessibilityValue,
+                hint: presentation.compactAccessibilityHint,
+                identifier: presentation.compactAccessibilityIdentifier
+            )
+        } else {
+            dock = nil
+        }
+        centerTargetIsAccessibilityHidden = true
+    }
+
 }
 
 nonisolated struct LifeCoreDisplayComposition: Equatable, Sendable {
@@ -383,15 +405,20 @@ struct TodayLifeFieldSection: View {
             displayMode: coreDisplayMode,
             artworkState: pointCloudLoader.state
         )
+        let accessibility = LifeCoreAccessibilityComposition(
+            displayMode: coreDisplayMode,
+            presentation: core
+        )
 
         GeometryReader { proxy in
             let coreWidth = resolvedCoreWidth(containerWidth: proxy.size.width)
             let coreHeight = coreWidth * 1.94
 
             VStack(spacing: layout.spacing) {
-                if composition.showsCompactDock {
+                if composition.showsCompactDock, let dockAccessibility = accessibility.dock {
                     LifeCoreCompactWidget(
                         presentation: core,
+                        accessibility: dockAccessibility,
                         isRewarding: growthPhase == .core,
                         isAccessibilitySize: dynamicTypeSize.isAccessibilitySize,
                         action: toggleCoreDisplayMode
@@ -421,6 +448,7 @@ struct TodayLifeFieldSection: View {
                         GeometryReader { fieldProxy in
                             LifeCoreCenterTapTarget(
                                 isAccessibilitySize: dynamicTypeSize.isAccessibilitySize,
+                                isAccessibilityHidden: accessibility.centerTargetIsAccessibilityHidden,
                                 action: toggleCoreDisplayMode
                             )
                             .position(
@@ -586,7 +614,7 @@ private struct LifeCoreCollapsedFallbackArtwork: View {
     @State private var isVisible = false
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: timelinePolicy.isPaused)) { timeline in
             let phase = reduceMotion
                 ? 0.17
                 : timeline.date.timeIntervalSinceReferenceDate / 7.5
@@ -619,8 +647,8 @@ private struct LifeCoreCollapsedFallbackArtwork: View {
         .accessibilityHidden(true)
     }
 
-    private var pausesTimeline: Bool {
-        LivingOSAnimationActivity.isPaused(
+    private var timelinePolicy: CompanionPointCloudTimelinePolicy {
+        CompanionPointCloudTimelinePolicy(
             reduceMotion: reduceMotion,
             isVisible: isVisible,
             isSceneActive: scenePhase == .active
@@ -630,6 +658,7 @@ private struct LifeCoreCollapsedFallbackArtwork: View {
 
 private struct LifeCoreCenterTapTarget: View {
     let isAccessibilitySize: Bool
+    let isAccessibilityHidden: Bool
     let action: () -> Void
 
     var body: some View {
@@ -643,7 +672,7 @@ private struct LifeCoreCenterTapTarget: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityHidden(LifeCoreAccessibilityContract.centerCoreIsAccessibilityHidden)
+        .accessibilityHidden(isAccessibilityHidden)
     }
 }
 
@@ -697,6 +726,7 @@ private struct LifeCoreCollapseButton: View {
 
 private struct LifeCoreCompactWidget: View {
     let presentation: LifeCoreWidgetPresentation
+    let accessibility: LifeCoreDockAccessibility
     let isRewarding: Bool
     let isAccessibilitySize: Bool
     let action: () -> Void
@@ -757,10 +787,10 @@ private struct LifeCoreCompactWidget: View {
                 }
                 .shadow(color: Color.black.opacity(0.10), radius: 12, y: 6)
         }
-        .accessibilityLabel(presentation.compactAccessibilityLabel)
-        .accessibilityValue(presentation.accessibilityValue)
-        .accessibilityHint(presentation.compactAccessibilityHint)
-        .accessibilityIdentifier(presentation.compactAccessibilityIdentifier)
+        .accessibilityLabel(accessibility.label)
+        .accessibilityValue(accessibility.value)
+        .accessibilityHint(accessibility.hint)
+        .accessibilityIdentifier(accessibility.identifier)
         .dynamicTypeSize(.large ... .accessibility1)
     }
 
@@ -780,7 +810,7 @@ private struct LifeCoreArtwork: View {
     @State private var isVisible = false
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: timelinePolicy.isPaused)) { timeline in
             let phase = reduceMotion
                 ? 0.17
                 : timeline.date.timeIntervalSinceReferenceDate / 7.5
@@ -838,8 +868,8 @@ private struct LifeCoreArtwork: View {
         .accessibilityHidden(true)
     }
 
-    private var pausesTimeline: Bool {
-        LivingOSAnimationActivity.isPaused(
+    private var timelinePolicy: CompanionPointCloudTimelinePolicy {
+        CompanionPointCloudTimelinePolicy(
             reduceMotion: reduceMotion,
             isVisible: isVisible,
             isSceneActive: scenePhase == .active

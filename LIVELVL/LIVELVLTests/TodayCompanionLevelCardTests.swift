@@ -114,12 +114,23 @@ struct TodayCompanionLevelCardTests {
             definition: CollectionCatalog.ordinary[1],
             stage: .stageTwo
         )
+        let compact = LifeCoreAccessibilityComposition(
+            displayMode: .compact,
+            presentation: presentation
+        )
+        let expanded = LifeCoreAccessibilityComposition(
+            displayMode: .expanded,
+            presentation: presentation
+        )
 
-        #expect(presentation.compactAccessibilityIdentifier == "today-life-core-expand")
-        #expect(presentation.accessibilityValue == "当前 80，共需 2000，还差 1920 XP")
-        #expect(presentation.compactAccessibilityHint == "轻点展开成长卡")
-        #expect(LifeCoreAccessibilityContract.compactExpansionActionCount == 1)
-        #expect(LifeCoreAccessibilityContract.centerCoreIsAccessibilityHidden)
+        #expect(compact.dock?.label == presentation.compactAccessibilityLabel)
+        #expect(compact.dock?.value == presentation.accessibilityValue)
+        #expect(compact.dock?.hint == presentation.compactAccessibilityHint)
+        #expect(compact.dock?.identifier == presentation.compactAccessibilityIdentifier)
+        #expect(compact.centerTargetIsAccessibilityHidden)
+        #expect([compact.dock != nil, !compact.centerTargetIsAccessibilityHidden].filter(\.self).count == 1)
+        #expect(expanded.dock == nil)
+        #expect([expanded.dock != nil, !expanded.centerTargetIsAccessibilityHidden].filter(\.self).isEmpty)
     }
 
     @Test func lifeCoreDescribesTheActiveCompanionInsteadOfAFixedMascot() {

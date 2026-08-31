@@ -93,7 +93,7 @@ struct CompanionPointCloudMotionTests {
         #expect(CompanionPointCloudMode.expanded.visualDimension(isAccessibilitySize: false) == nil)
     }
 
-    @Test func reduceMotionFreezesEveryPointCloudModeAndInactiveTimelinesPause() {
+    @Test func reduceMotionFreezesEveryPointCloudModeAndTimelinePolicyPausesWhenInactive() {
         for mode in [CompanionPointCloudMode.expanded, .collapsed] {
             let first = CompanionPointCloudMotion.samples(
                 descriptor: fixture,
@@ -111,16 +111,26 @@ struct CompanionPointCloudMotionTests {
             #expect(first == later)
         }
 
-        #expect(LivingOSAnimationActivity.isPaused(
+        #expect(!CompanionPointCloudTimelinePolicy(
+            reduceMotion: false,
+            isVisible: true,
+            isSceneActive: true
+        ).isPaused)
+        #expect(CompanionPointCloudTimelinePolicy(
             reduceMotion: false,
             isVisible: false,
             isSceneActive: true
-        ))
-        #expect(LivingOSAnimationActivity.isPaused(
+        ).isPaused)
+        #expect(CompanionPointCloudTimelinePolicy(
             reduceMotion: false,
             isVisible: true,
             isSceneActive: false
-        ))
+        ).isPaused)
+        #expect(CompanionPointCloudTimelinePolicy(
+            reduceMotion: true,
+            isVisible: true,
+            isSceneActive: true
+        ).isPaused)
     }
 
     private var fixture: CompanionPointCloudDescriptor {
