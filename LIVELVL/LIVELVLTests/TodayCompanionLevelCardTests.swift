@@ -49,11 +49,28 @@ struct TodayCompanionLevelCardTests {
         )
     }
 
-    @Test func centerCoreAndExpandedCardAppearInExclusiveDisplayStates() {
-        #expect(LifeCoreDisplayMode.expanded.showsExpandedCard)
-        #expect(!LifeCoreDisplayMode.expanded.showsCenterCore)
-        #expect(!LifeCoreDisplayMode.compact.showsExpandedCard)
-        #expect(LifeCoreDisplayMode.compact.showsCenterCore)
+    @Test func compactCompositionRendersDockAndCenterWithoutExpandedCard() {
+        let composition = LifeCoreDisplayComposition(
+            displayMode: .compact,
+            artworkState: .fallback
+        )
+
+        #expect(composition.showsCompactDock)
+        #expect(composition.showsCenterCore)
+        #expect(!composition.showsExpandedCard)
+        #expect(composition.centerArtwork == .transparentParticleFallback)
+    }
+
+    @Test func expandedCompositionRendersCardWithoutCompactDockOrCenter() {
+        let composition = LifeCoreDisplayComposition(
+            displayMode: .expanded,
+            artworkState: .fallback
+        )
+
+        #expect(!composition.showsCompactDock)
+        #expect(!composition.showsCenterCore)
+        #expect(composition.showsExpandedCard)
+        #expect(composition.centerArtwork == nil)
     }
 
     @Test func compactDockNeverOverlapsOrCompressesTheLifeField() {

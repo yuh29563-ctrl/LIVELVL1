@@ -15,9 +15,6 @@ nonisolated enum LifeCoreDisplayMode: Equatable, Sendable {
 
     static let initial = LifeCoreDisplayMode.expanded
 
-    var showsExpandedCard: Bool { self == .expanded }
-    var showsCenterCore: Bool { self == .compact }
-
     var toggleSymbolName: String {
         switch self {
         case .expanded: "chevron.up"
@@ -27,6 +24,35 @@ nonisolated enum LifeCoreDisplayMode: Equatable, Sendable {
 
     mutating func toggle() {
         self = self == .expanded ? .compact : .expanded
+    }
+}
+
+nonisolated enum LifeCoreCenterArtwork: Equatable, Sendable {
+    case pointCloud
+    case transparentParticleFallback
+}
+
+nonisolated struct LifeCoreDisplayComposition: Equatable, Sendable {
+    let showsCompactDock: Bool
+    let showsCenterCore: Bool
+    let showsExpandedCard: Bool
+    let centerArtwork: LifeCoreCenterArtwork?
+
+    init(
+        displayMode: LifeCoreDisplayMode,
+        artworkState: CompanionPointCloudLoader.State
+    ) {
+        showsCompactDock = displayMode == .compact
+        showsCenterCore = displayMode == .compact
+        showsExpandedCard = displayMode == .expanded
+        centerArtwork = switch artworkState {
+        case .fallback where displayMode == .compact:
+            .transparentParticleFallback
+        case _ where displayMode == .compact:
+            .pointCloud
+        default:
+            nil
+        }
     }
 }
 
@@ -348,13 +374,17 @@ struct TodayLifeFieldSection: View {
             displayMode: coreDisplayMode,
             isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
         )
+        let composition = LifeCoreDisplayComposition(
+            displayMode: coreDisplayMode,
+            artworkState: pointCloudLoader.state
+        )
 
         GeometryReader { proxy in
             let coreWidth = resolvedCoreWidth(containerWidth: proxy.size.width)
             let coreHeight = coreWidth * 1.94
 
             VStack(spacing: layout.spacing) {
-                if coreDisplayMode == .compact {
+                if composition.showsCompactDock {
                     LifeCoreCompactWidget(
                         presentation: core,
                         isRewarding: growthPhase == .core,
@@ -370,18 +400,19 @@ struct TodayLifeFieldSection: View {
 
                 ZStack {
                     LifeFieldBackdrop(summary: summary) {
-                        if coreDisplayMode.showsCenterCore {
+                        if let centerArtwork = composition.centerArtwork {
                             LifeCoreCollapsedArtwork(
                                 presentation: core,
                                 artworkState: pointCloudLoader.state,
                                 levelUpFeedback: levelUpFeedback,
+                                artworkPresentation: centerArtwork,
                                 artworkNamespace: coreArtworkNamespace
                             )
                         }
                     }
                     .zIndex(LifeFieldLayerOrder.backdropDots)
 
-                    if coreDisplayMode.showsCenterCore {
+                    if composition.showsCenterCore {
                         GeometryReader { fieldProxy in
                             LifeCoreCenterTapTarget(
                                 isAccessibilitySize: dynamicTypeSize.isAccessibilitySize,
@@ -398,7 +429,7 @@ struct TodayLifeFieldSection: View {
                         .zIndex(LifeFieldLayerOrder.companionCore)
                     }
 
-                    if coreDisplayMode.showsExpandedCard {
+                    if composition.showsExpandedCard {
                         LifeCoreWidget(
                             presentation: core,
                             artworkState: pointCloudLoader.state,
@@ -509,6 +540,7 @@ private struct LifeCoreCollapsedArtwork: View {
     let presentation: LifeCoreWidgetPresentation
     let artworkState: CompanionPointCloudLoader.State
     let levelUpFeedback: Int?
+    let artworkPresentation: LifeCoreCenterArtwork
     let artworkNamespace: Namespace.ID
 
     var body: some View {
@@ -516,15 +548,16 @@ private struct LifeCoreCollapsedArtwork: View {
             isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
         )
         let content = Group {
-            if artworkState == .fallback {
-                LifeCoreArtwork()
-            } else {
+            switch artworkPresentation {
+            case .pointCloud:
                 CompanionPointCloudView(
                     loadState: artworkState,
                     mode: .collapsed,
                     progress: presentation.progress,
                     rewardToken: levelUpFeedback
                 )
+            case .transparentParticleFallback:
+                LifeCoreCollapsedFallbackArtwork()
             }
         }
         .frame(width: dimension, height: dimension)
@@ -539,6 +572,54 @@ private struct LifeCoreCollapsedArtwork: View {
                 )
                 .modifier(LifeCoreArtworkDissolve(isCollapsed: true))
         }
+    }
+}
+
+private struct LifeCoreCollapsedFallbackArtwork: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
+            let phase = reduceMotion
+                ? 0.17
+                : timeline.date.timeIntervalSinceReferenceDate / 7.5
+            let samples = LifeCoreParticleGeometry.samples(
+                columns: 21,
+                rows: 31,
+                phase: phase,
+                reduceMotion: reduceMotion
+            )
+
+            Canvas { context, size in
+                for sample in samples {
+                    let diameter = sample.diameter
+                    let rect = CGRect(
+                        x: sample.position.x * size.width - diameter / 2,
+                        y: sample.position.y * size.height - diameter / 2,
+                        width: diameter,
+                        height: diameter
+                    )
+                    context.fill(
+                        Path(ellipseIn: rect),
+                        with: .color(LivingOSTheme.ink.opacity(min(0.62, sample.opacity * 0.64)))
+                    )
+                }
+            }
+        }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
     }
 }
 
