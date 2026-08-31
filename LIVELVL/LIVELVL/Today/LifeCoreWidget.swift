@@ -32,6 +32,11 @@ nonisolated enum LifeCoreCenterArtwork: Equatable, Sendable {
     case transparentParticleFallback
 }
 
+nonisolated enum LifeCoreAccessibilityContract {
+    static let compactExpansionActionCount = 1
+    static let centerCoreIsAccessibilityHidden = true
+}
+
 nonisolated struct LifeCoreDisplayComposition: Equatable, Sendable {
     let showsCompactDock: Bool
     let showsCenterCore: Bool
@@ -638,7 +643,7 @@ private struct LifeCoreCenterTapTarget: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityHidden(true)
+        .accessibilityHidden(LifeCoreAccessibilityContract.centerCoreIsAccessibilityHidden)
     }
 }
 

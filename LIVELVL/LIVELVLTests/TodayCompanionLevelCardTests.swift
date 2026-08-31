@@ -109,6 +109,19 @@ struct TodayCompanionLevelCardTests {
         #expect(presentation.compactTitleText == "月兔 · LV 2")
     }
 
+    @Test func compactDockIsTheOnlyAccessibleExpansionAction() {
+        let presentation = makePresentation(
+            definition: CollectionCatalog.ordinary[1],
+            stage: .stageTwo
+        )
+
+        #expect(presentation.compactAccessibilityIdentifier == "today-life-core-expand")
+        #expect(presentation.accessibilityValue == "当前 80，共需 2000，还差 1920 XP")
+        #expect(presentation.compactAccessibilityHint == "轻点展开成长卡")
+        #expect(LifeCoreAccessibilityContract.compactExpansionActionCount == 1)
+        #expect(LifeCoreAccessibilityContract.centerCoreIsAccessibilityHidden)
+    }
+
     @Test func lifeCoreDescribesTheActiveCompanionInsteadOfAFixedMascot() {
         let presentation = LifeCoreWidgetPresentation(
             definition: CollectionCatalog.ordinary[1],
@@ -353,4 +366,5 @@ struct TodayCompanionLevelCardTests {
             remainingXP: 1_920
         )
     }
+
 }
