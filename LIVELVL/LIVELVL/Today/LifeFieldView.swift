@@ -11,10 +11,11 @@ nonisolated struct LifeFieldNodeAnchors: Equatable, Sendable {
 }
 
 nonisolated enum LifeFieldLayerOrder {
-    static let backdrop = 0.0
-    static let core = 1.0
-    static let controls = 2.0
-    static let coreControl = 3.0
+    static let backdropDots = 0.0
+    static let companionCore = 1.0
+    static let dynamicEdges = 2.0
+    static let controls = 3.0
+    static let coreControl = 4.0
 }
 
 nonisolated enum LifeFieldLayout {
@@ -349,8 +350,17 @@ struct LifeFieldView: View {
     }
 }
 
-struct LifeFieldBackdrop: View {
+struct LifeFieldBackdrop<CenterContent: View>: View {
     let summary: LifeStateSummary
+    private let centerContent: CenterContent
+
+    init(
+        summary: LifeStateSummary,
+        @ViewBuilder centerContent: () -> CenterContent
+    ) {
+        self.summary = summary
+        self.centerContent = centerContent()
+    }
 
     private var nodes: [LifeFieldNodePresentation] {
         LifeFieldNodePresentation.make(summary: summary)
@@ -365,27 +375,39 @@ struct LifeFieldBackdrop: View {
     }
 
     var body: some View {
-        ZStack {
-            LivingDotField(columns: 34, rows: 45)
-                .opacity(0.72)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 14)
+        GeometryReader { proxy in
+            let size = proxy.size
 
-            LifeFieldEdgeParticles(targets: officialTargets)
+            ZStack {
+                LivingDotField(columns: 34, rows: 45)
+                    .opacity(0.72)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 14)
+                    .zIndex(LifeFieldLayerOrder.backdropDots)
 
-            LifeFieldPolygon(
-                normalizedPoints: LifeFieldEdge.ordered.map {
-                    LifeFieldLayout.anchor(for: $0.start)
-                }
-            )
-            .stroke(LivingOSTheme.graphite.opacity(0.10), lineWidth: 0.6)
+                centerContent
+                    .position(LifeFieldLayout.point(for: LifeFieldLayout.visualCore, in: size))
+                    .zIndex(LifeFieldLayerOrder.companionCore)
 
-            LifeFieldPolygon(
-                normalizedPoints: LifeFieldEdge.ordered.compactMap {
-                    officialTargets[$0.start]
-                }
-            )
-            .stroke(LivingOSTheme.ink.opacity(0.46), lineWidth: 0.85)
+                LifeFieldEdgeParticles(targets: officialTargets)
+                    .zIndex(LifeFieldLayerOrder.dynamicEdges)
+
+                LifeFieldPolygon(
+                    normalizedPoints: LifeFieldEdge.ordered.map {
+                        LifeFieldLayout.anchor(for: $0.start)
+                    }
+                )
+                .stroke(LivingOSTheme.graphite.opacity(0.10), lineWidth: 0.6)
+                .zIndex(LifeFieldLayerOrder.dynamicEdges)
+
+                LifeFieldPolygon(
+                    normalizedPoints: LifeFieldEdge.ordered.compactMap {
+                        officialTargets[$0.start]
+                    }
+                )
+                .stroke(LivingOSTheme.ink.opacity(0.46), lineWidth: 0.85)
+                .zIndex(LifeFieldLayerOrder.dynamicEdges)
+            }
         }
         .frame(minHeight: 470, idealHeight: 520, maxHeight: 560)
         .allowsHitTesting(false)

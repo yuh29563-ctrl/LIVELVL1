@@ -40,6 +40,20 @@ struct TodayCompanionLevelCardTests {
         #expect(accessibility.fieldOriginY == 100)
         #expect(accessibility.sectionHeight == 690)
         #expect(LifeCoreCollapseLayout.minimumTapDimension >= 44)
+        #expect(LifeCoreCollapseLayout.centerCoreTapDimension >= 44)
+        #expect(
+            LifeCoreCollapseLayout.collapsedCoreDimension(isAccessibilitySize: false) == 108
+        )
+        #expect(
+            LifeCoreCollapseLayout.collapsedCoreDimension(isAccessibilitySize: true) == 120
+        )
+    }
+
+    @Test func centerCoreAndExpandedCardAppearInExclusiveDisplayStates() {
+        #expect(LifeCoreDisplayMode.expanded.showsExpandedCard)
+        #expect(!LifeCoreDisplayMode.expanded.showsCenterCore)
+        #expect(!LifeCoreDisplayMode.compact.showsExpandedCard)
+        #expect(LifeCoreDisplayMode.compact.showsCenterCore)
     }
 
     @Test func compactDockNeverOverlapsOrCompressesTheLifeField() {

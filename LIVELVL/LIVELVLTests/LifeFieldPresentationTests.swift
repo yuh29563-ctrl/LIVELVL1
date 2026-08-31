@@ -178,10 +178,10 @@ struct LifeFieldPresentationTests {
         )
     }
 
-    @Test func interactiveNodesRenderAboveTheCoreWhileFieldGeometryStaysBehindIt() {
-        #expect(LifeFieldLayerOrder.backdrop < LifeFieldLayerOrder.core)
-        #expect(LifeFieldLayerOrder.core < LifeFieldLayerOrder.controls)
-        #expect(LifeFieldLayerOrder.controls < LifeFieldLayerOrder.coreControl)
+    @Test func collapsedCenterCoreLayersBelowDynamicFieldGeometryAndControls() {
+        #expect(LifeFieldLayerOrder.backdropDots < LifeFieldLayerOrder.companionCore)
+        #expect(LifeFieldLayerOrder.companionCore < LifeFieldLayerOrder.dynamicEdges)
+        #expect(LifeFieldLayerOrder.dynamicEdges < LifeFieldLayerOrder.controls)
     }
 
     @Test func accessibilitySizesPresentDimensionDetailsOutsideTheCrowdedField() {

@@ -15,6 +15,9 @@ nonisolated enum LifeCoreDisplayMode: Equatable, Sendable {
 
     static let initial = LifeCoreDisplayMode.expanded
 
+    var showsExpandedCard: Bool { self == .expanded }
+    var showsCenterCore: Bool { self == .compact }
+
     var toggleSymbolName: String {
         switch self {
         case .expanded: "chevron.up"
@@ -29,6 +32,15 @@ nonisolated enum LifeCoreDisplayMode: Equatable, Sendable {
 
 nonisolated enum LifeCoreCollapseLayout {
     static let minimumTapDimension: CGFloat = 44
+    static let centerCoreTapDimension: CGFloat = 108
+
+    static func collapsedCoreDimension(isAccessibilitySize: Bool) -> CGFloat {
+        isAccessibilitySize ? 120 : centerCoreTapDimension
+    }
+}
+
+private enum LifeCoreArtworkTransition {
+    static let id = "today-life-core-artwork"
 }
 
 extension CompanionStage {
@@ -204,23 +216,11 @@ struct LifeCoreWidget: View {
     let artworkState: CompanionPointCloudLoader.State
     let isRewarding: Bool
     let levelUpFeedback: Int?
+    let artworkNamespace: Namespace.ID?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Group {
-                if artworkState == .fallback {
-                    LifeCoreArtwork()
-                } else {
-                    CompanionPointCloudView(
-                        loadState: artworkState,
-                        mode: .expanded,
-                        progress: presentation.progress,
-                        rewardToken: levelUpFeedback
-                    )
-                }
-            }
-                .frame(maxWidth: .infinity)
-                .frame(height: 146)
+            artwork
 
             VStack(alignment: .leading, spacing: 7) {
                 Text(presentation.levelText)
@@ -300,6 +300,35 @@ struct LifeCoreWidget: View {
             }
         }
     }
+
+    @ViewBuilder
+    private var artwork: some View {
+        let content = Group {
+            if artworkState == .fallback {
+                LifeCoreArtwork()
+            } else {
+                CompanionPointCloudView(
+                    loadState: artworkState,
+                    mode: .expanded,
+                    progress: presentation.progress,
+                    rewardToken: levelUpFeedback
+                )
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 146)
+
+        if let artworkNamespace, !reduceMotion {
+            content
+                .matchedGeometryEffect(
+                    id: LifeCoreArtworkTransition.id,
+                    in: artworkNamespace
+                )
+                .modifier(LifeCoreArtworkDissolve(isCollapsed: false))
+        } else {
+            content
+        }
+    }
 }
 
 struct TodayLifeFieldSection: View {
@@ -307,6 +336,7 @@ struct TodayLifeFieldSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var coreDisplayMode = LifeCoreDisplayMode.initial
     @StateObject private var pointCloudLoader = makeCompanionPointCloudLoader()
+    @Namespace private var coreArtworkNamespace
 
     let summary: LifeStateSummary
     let core: LifeCoreWidgetPresentation
@@ -339,19 +369,46 @@ struct TodayLifeFieldSection: View {
                 }
 
                 ZStack {
-                    LifeFieldBackdrop(summary: summary)
-                        .zIndex(LifeFieldLayerOrder.backdrop)
+                    LifeFieldBackdrop(summary: summary) {
+                        if coreDisplayMode.showsCenterCore {
+                            LifeCoreCollapsedArtwork(
+                                presentation: core,
+                                artworkState: pointCloudLoader.state,
+                                levelUpFeedback: levelUpFeedback,
+                                artworkNamespace: coreArtworkNamespace
+                            )
+                        }
+                    }
+                    .zIndex(LifeFieldLayerOrder.backdropDots)
 
-                    if coreDisplayMode == .expanded {
+                    if coreDisplayMode.showsCenterCore {
+                        GeometryReader { fieldProxy in
+                            LifeCoreCenterTapTarget(
+                                isAccessibilitySize: dynamicTypeSize.isAccessibilitySize,
+                                action: toggleCoreDisplayMode
+                            )
+                            .position(
+                                LifeFieldLayout.point(
+                                    for: LifeFieldLayout.visualCore,
+                                    in: fieldProxy.size
+                                )
+                            )
+                        }
+                        .transition(centerCoreTransition)
+                        .zIndex(LifeFieldLayerOrder.companionCore)
+                    }
+
+                    if coreDisplayMode.showsExpandedCard {
                         LifeCoreWidget(
                             presentation: core,
                             artworkState: pointCloudLoader.state,
                             isRewarding: growthPhase == .core,
-                            levelUpFeedback: levelUpFeedback
+                            levelUpFeedback: levelUpFeedback,
+                            artworkNamespace: coreArtworkNamespace
                         )
                         .frame(width: coreWidth, height: coreHeight)
                         .transition(coreTransition)
-                        .zIndex(LifeFieldLayerOrder.core)
+                        .zIndex(LifeFieldLayerOrder.companionCore)
 
                         LifeCoreCollapseButton(action: toggleCoreDisplayMode)
                             .offset(
@@ -400,6 +457,12 @@ struct TodayLifeFieldSection: View {
                 .combined(with: .scale(scale: 0.96, anchor: .top))
     }
 
+    private var centerCoreTransition: AnyTransition {
+        reduceMotion
+            ? .opacity
+            : .opacity.combined(with: .scale(scale: 0.88))
+    }
+
     private var sectionAnimation: Animation {
         reduceMotion
             ? .easeOut(duration: 0.16)
@@ -436,6 +499,92 @@ private func makeCompanionPointCloudLoader() -> CompanionPointCloudLoader {
 private nonisolated struct UnavailableCompanionArtworkProvider: CompanionArtworkDataProviding {
     func payload(for id: CompanionArtworkID) async throws -> CompanionArtworkPayload? {
         nil
+    }
+}
+
+private struct LifeCoreCollapsedArtwork: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    let presentation: LifeCoreWidgetPresentation
+    let artworkState: CompanionPointCloudLoader.State
+    let levelUpFeedback: Int?
+    let artworkNamespace: Namespace.ID
+
+    var body: some View {
+        let dimension = LifeCoreCollapseLayout.collapsedCoreDimension(
+            isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+        )
+        let content = Group {
+            if artworkState == .fallback {
+                LifeCoreArtwork()
+            } else {
+                CompanionPointCloudView(
+                    loadState: artworkState,
+                    mode: .collapsed,
+                    progress: presentation.progress,
+                    rewardToken: levelUpFeedback
+                )
+            }
+        }
+        .frame(width: dimension, height: dimension)
+
+        if reduceMotion {
+            content
+        } else {
+            content
+                .matchedGeometryEffect(
+                    id: LifeCoreArtworkTransition.id,
+                    in: artworkNamespace
+                )
+                .modifier(LifeCoreArtworkDissolve(isCollapsed: true))
+        }
+    }
+}
+
+private struct LifeCoreCenterTapTarget: View {
+    let isAccessibilitySize: Bool
+    let action: () -> Void
+
+    var body: some View {
+        let dimension = LifeCoreCollapseLayout.collapsedCoreDimension(
+            isAccessibilitySize: isAccessibilitySize
+        )
+
+        Button(action: action) {
+            Color.clear
+                .frame(width: dimension, height: dimension)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHidden(true)
+    }
+}
+
+private struct LifeCoreArtworkDissolve: ViewModifier {
+    let isCollapsed: Bool
+    @State private var isSettled = false
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(isSettled ? 1 : 0.18)
+            .scaleEffect(isSettled ? 1 : 0.90)
+            .offset(isSettled ? .zero : seededScatterOffset)
+            .onAppear {
+                withAnimation(.easeOut(duration: 0.22)) {
+                    isSettled = true
+                }
+            }
+    }
+
+    private var seededScatterOffset: CGSize {
+        let seed = isCollapsed ? 0.618_033_988_75 : 0.381_966_011_25
+        let angle = seed * .pi * 2
+        let radius: CGFloat = isCollapsed ? 8 : 6
+        return CGSize(
+            width: cos(angle) * radius,
+            height: sin(angle) * radius
+        )
     }
 }
 
