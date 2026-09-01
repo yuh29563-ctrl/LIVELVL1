@@ -88,8 +88,10 @@ nonisolated enum LifeCoreCollapseLayout {
 }
 
 nonisolated enum LifeCoreReadabilityTreatment {
-    static let textShieldPeakOpacity = 0.94
-    static let textShieldEdgeOpacity = 0.06
+    static let textShieldPeakOpacity = 0.58
+    static let textShieldMiddleOpacity = 0.32
+    static let textShieldEdgeOpacity = 0.02
+    static let progressTrackOpacity = 0.62
 }
 
 private enum LifeCoreArtworkTransition {
@@ -290,7 +292,11 @@ struct LifeCoreWidget: View {
 
                 GeometryReader { proxy in
                     Capsule()
-                        .fill(LivingOSTheme.mist)
+                        .fill(
+                            LivingOSTheme.mist.opacity(
+                                LifeCoreReadabilityTreatment.progressTrackOpacity
+                            )
+                        )
                         .overlay(alignment: .leading) {
                             Capsule()
                                 .fill(LivingOSTheme.ink)
@@ -314,13 +320,14 @@ struct LifeCoreWidget: View {
                 LinearGradient(
                     colors: [
                         Color.white.opacity(LifeCoreReadabilityTreatment.textShieldEdgeOpacity),
+                        Color.white.opacity(LifeCoreReadabilityTreatment.textShieldMiddleOpacity),
                         Color.white.opacity(LifeCoreReadabilityTreatment.textShieldPeakOpacity),
-                        Color.white.opacity(LifeCoreReadabilityTreatment.textShieldPeakOpacity)
+                        Color.white.opacity(LifeCoreReadabilityTreatment.textShieldMiddleOpacity)
                     ],
                     startPoint: .top,
                     endPoint: .bottom
                 )
-                .blur(radius: 8)
+                .blur(radius: 12)
                 .padding(.horizontal, -10)
                 .padding(.vertical, -8)
                 .accessibilityHidden(true)

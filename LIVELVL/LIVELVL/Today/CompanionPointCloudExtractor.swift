@@ -18,6 +18,22 @@ nonisolated struct CompanionPointCloudDescriptor: Equatable, Sendable {
     let id: CompanionArtworkID
     let points: [CompanionPointSeed]
     let occupiedBounds: CGRect
+    let renderMode: CompanionArtworkRenderMode
+    let sourceImageData: Data?
+
+    init(
+        id: CompanionArtworkID,
+        points: [CompanionPointSeed],
+        occupiedBounds: CGRect,
+        renderMode: CompanionArtworkRenderMode = .pointCloud,
+        sourceImageData: Data? = nil
+    ) {
+        self.id = id
+        self.points = points
+        self.occupiedBounds = occupiedBounds
+        self.renderMode = renderMode
+        self.sourceImageData = sourceImageData
+    }
 }
 
 nonisolated struct CompanionPointCloudExtractionConfiguration: Equatable, Sendable {

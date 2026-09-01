@@ -63,10 +63,17 @@ actor CompanionPointCloudRepository {
         }
         try Task.checkCancellation()
 
-        let descriptor = CompanionPointCloudExtractor.extract(
+        let extracted = CompanionPointCloudExtractor.extract(
             id: id,
             raster: raster,
             configuration: configuration
+        )
+        let descriptor = CompanionPointCloudDescriptor(
+            id: extracted.id,
+            points: extracted.points,
+            occupiedBounds: extracted.occupiedBounds,
+            renderMode: payload.renderMode,
+            sourceImageData: payload.renderMode == .transparentRaster ? payload.data : nil
         )
         try Task.checkCancellation()
         insert(descriptor, for: cacheKey)

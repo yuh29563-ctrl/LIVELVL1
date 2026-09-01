@@ -6,15 +6,34 @@ nonisolated struct CompanionArtworkID: Hashable, Codable, Sendable {
     let stage: CompanionStage
 }
 
+nonisolated enum CompanionArtworkRenderMode: String, Codable, Equatable, Sendable {
+    case pointCloud
+    case transparentRaster
+}
+
 nonisolated struct CompanionArtworkResource: Equatable, Sendable {
     let name: String
     let fileExtension: String
+    let renderMode: CompanionArtworkRenderMode
 }
 
 nonisolated struct CompanionArtworkPayload: Equatable, Sendable {
     let id: CompanionArtworkID
     let data: Data
     let fingerprint: String
+    let renderMode: CompanionArtworkRenderMode
+
+    init(
+        id: CompanionArtworkID,
+        data: Data,
+        fingerprint: String,
+        renderMode: CompanionArtworkRenderMode = .pointCloud
+    ) {
+        self.id = id
+        self.data = data
+        self.fingerprint = fingerprint
+        self.renderMode = renderMode
+    }
 }
 
 protocol CompanionArtworkDataProviding: Sendable {
@@ -48,7 +67,8 @@ nonisolated struct CompanionArtworkManifest: Sendable {
             }
             resources[id] = CompanionArtworkResource(
                 name: entry.resourceName,
-                fileExtension: entry.fileExtension
+                fileExtension: entry.fileExtension,
+                renderMode: entry.renderMode ?? .pointCloud
             )
         }
 
@@ -62,6 +82,7 @@ nonisolated struct CompanionArtworkManifest: Sendable {
 
 nonisolated struct BundledCompanionArtworkProvider: CompanionArtworkDataProviding {
     private let resourceURLs: [CompanionArtworkID: URL]
+    private let renderModes: [CompanionArtworkID: CompanionArtworkRenderMode]
 
     init(bundle: Bundle = .main, subdirectory: String = "CompanionArtwork") throws {
         guard let manifestURL = bundledResourceURL(
@@ -75,6 +96,7 @@ nonisolated struct BundledCompanionArtworkProvider: CompanionArtworkDataProvidin
 
         let manifest = try CompanionArtworkManifest.decode(data: Data(contentsOf: manifestURL))
         var resourceURLs: [CompanionArtworkID: URL] = [:]
+        var renderModes: [CompanionArtworkID: CompanionArtworkRenderMode] = [:]
         for (id, resource) in manifest.resources {
             guard let resourceURL = bundledResourceURL(
                 named: resource.name,
@@ -85,8 +107,10 @@ nonisolated struct BundledCompanionArtworkProvider: CompanionArtworkDataProvidin
                 throw CocoaError(.fileNoSuchFile)
             }
             resourceURLs[id] = resourceURL
+            renderModes[id] = resource.renderMode
         }
         self.resourceURLs = resourceURLs
+        self.renderModes = renderModes
     }
 
     func payload(for id: CompanionArtworkID) async throws -> CompanionArtworkPayload? {
@@ -96,7 +120,12 @@ nonisolated struct BundledCompanionArtworkProvider: CompanionArtworkDataProvidin
 
         let data = try Data(contentsOf: resourceURL)
         let fingerprint = SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-        return CompanionArtworkPayload(id: id, data: data, fingerprint: fingerprint)
+        return CompanionArtworkPayload(
+            id: id,
+            data: data,
+            fingerprint: fingerprint,
+            renderMode: renderModes[id] ?? .pointCloud
+        )
     }
 }
 
@@ -122,6 +151,7 @@ private nonisolated struct DecodedManifestEntry: Decodable {
     let stage: String
     let resourceName: String
     let fileExtension: String
+    let renderMode: CompanionArtworkRenderMode?
 }
 
 private nonisolated func bundledResourceURL(

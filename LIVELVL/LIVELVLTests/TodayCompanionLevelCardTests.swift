@@ -73,11 +73,14 @@ struct TodayCompanionLevelCardTests {
         #expect(composition.showsExpandedCard)
     }
 
-    @Test func expandedCardOccludesFieldNodesAndProtectsItsReadingZone() {
+    @Test func expandedCardUsesASoftTranslucentReadingZone() {
         #expect(LifeFieldLayerOrder.controls < LifeFieldLayerOrder.expandedCore)
         #expect(LifeFieldLayerOrder.expandedCore < LifeFieldLayerOrder.coreControl)
-        #expect(LifeCoreReadabilityTreatment.textShieldPeakOpacity >= 0.90)
-        #expect(LifeCoreReadabilityTreatment.textShieldEdgeOpacity <= 0.10)
+        #expect(LifeCoreReadabilityTreatment.textShieldPeakOpacity >= 0.50)
+        #expect(LifeCoreReadabilityTreatment.textShieldPeakOpacity <= 0.65)
+        #expect(LifeCoreReadabilityTreatment.textShieldMiddleOpacity < LifeCoreReadabilityTreatment.textShieldPeakOpacity)
+        #expect(LifeCoreReadabilityTreatment.textShieldEdgeOpacity <= 0.05)
+        #expect(LifeCoreReadabilityTreatment.progressTrackOpacity < 0.70)
     }
 
     @Test func compactDockNeverOverlapsOrCompressesTheLifeField() {

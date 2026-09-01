@@ -1,4 +1,19 @@
 import SwiftUI
+import UIKit
+
+nonisolated enum CompanionArtworkLayerKind: Equatable, Sendable {
+    case pointCloud
+    case transparentRaster
+
+    static func resolve(
+        renderMode: CompanionArtworkRenderMode,
+        hasSourceImageData: Bool
+    ) -> Self {
+        renderMode == .transparentRaster && hasSourceImageData
+            ? .transparentRaster
+            : .pointCloud
+    }
+}
 
 nonisolated enum CompanionPointCloudMode: Equatable, Sendable {
     case expanded
@@ -206,21 +221,58 @@ struct CompanionPointCloudView<RewardToken: Equatable>: View {
             hasNext: pair.next != nil
         )
 
-        return Canvas { context, size in
-            draw(
-                samples: nextSamples,
-                opacity: ghostOpacity,
-                color: LivingOSTheme.graphite,
-                in: &context,
-                size: size
-            )
-            draw(
+        return ZStack {
+            if let next = pair.next, ghostOpacity > 0 {
+                artworkLayer(
+                    descriptor: next,
+                    samples: nextSamples,
+                    opacity: ghostOpacity,
+                    color: LivingOSTheme.graphite
+                )
+            }
+            artworkLayer(
+                descriptor: pair.current,
                 samples: currentSamples,
                 opacity: 1,
-                color: LivingOSTheme.ink,
-                in: &context,
-                size: size
+                color: LivingOSTheme.ink
             )
+        }
+    }
+
+    @ViewBuilder
+    private func artworkLayer(
+        descriptor: CompanionPointCloudDescriptor,
+        samples: [CompanionPointCloudSample],
+        opacity: Double,
+        color: Color
+    ) -> some View {
+        switch CompanionArtworkLayerKind.resolve(
+            renderMode: descriptor.renderMode,
+            hasSourceImageData: descriptor.sourceImageData != nil
+        ) {
+        case .transparentRaster:
+            if let data = descriptor.sourceImageData, let image = UIImage(data: data) {
+                Image(uiImage: image)
+                    .resizable()
+                    .interpolation(.high)
+                    .antialiased(true)
+                    .scaledToFit()
+                    .frame(
+                        width: mode == .expanded ? 124 : 92,
+                        height: mode == .expanded ? 116 : 86
+                    )
+                    .opacity(opacity)
+            }
+        case .pointCloud:
+            Canvas { context, size in
+                draw(
+                    samples: samples,
+                    opacity: opacity,
+                    color: color,
+                    in: &context,
+                    size: size
+                )
+            }
         }
     }
 

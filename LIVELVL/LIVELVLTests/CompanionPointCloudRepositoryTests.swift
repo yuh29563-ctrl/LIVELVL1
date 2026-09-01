@@ -3,6 +3,18 @@ import Testing
 @testable import LIVELVL
 
 struct CompanionPointCloudRepositoryTests {
+    @Test func transparentRasterPayloadKeepsItsFullResolutionSourceData() async throws {
+        let id = artworkID("transparent", stage: .juvenile)
+        let source = try await payload(for: id, renderMode: .transparentRaster)
+        let provider = CountingArtworkProvider(payloads: [id: source])
+        let repository = CompanionPointCloudRepository(provider: provider)
+
+        let descriptor = try #require(try await repository.descriptor(for: id))
+
+        #expect(descriptor.renderMode == .transparentRaster)
+        #expect(descriptor.sourceImageData == source.data)
+    }
+
     @Test func repeatedIdentityUsesOneProviderLoad() async throws {
         let id = artworkID("pilot", stage: .juvenile)
         let provider = CountingArtworkProvider(payloads: [id: try await payload(for: id)])
@@ -169,7 +181,10 @@ private func artworkID(_ collectibleID: String, stage: CompanionStage) -> Compan
     CompanionArtworkID(collectibleID: collectibleID, stage: stage)
 }
 
-private func payload(for id: CompanionArtworkID) async throws -> CompanionArtworkPayload {
+private func payload(
+    for id: CompanionArtworkID,
+    renderMode: CompanionArtworkRenderMode = .pointCloud
+) async throws -> CompanionArtworkPayload {
     let bundledID = CompanionArtworkID(collectibleID: "ordinary.sprout", stage: .juvenile)
     let provider = try BundledCompanionArtworkProvider(
         bundle: .main,
@@ -179,7 +194,8 @@ private func payload(for id: CompanionArtworkID) async throws -> CompanionArtwor
     return CompanionArtworkPayload(
         id: id,
         data: bundledPayload.data,
-        fingerprint: "\(id.collectibleID)-\(id.stage.rawValue)"
+        fingerprint: "\(id.collectibleID)-\(id.stage.rawValue)",
+        renderMode: renderMode
     )
 }
 

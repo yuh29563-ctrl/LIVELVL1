@@ -4,6 +4,27 @@ import Testing
 @testable import LIVELVL
 
 struct CompanionPointCloudMotionTests {
+    @Test func transparentRasterIsRenderedDirectlyOnlyWhenSourceDataExists() {
+        #expect(
+            CompanionArtworkLayerKind.resolve(
+                renderMode: .transparentRaster,
+                hasSourceImageData: true
+            ) == .transparentRaster
+        )
+        #expect(
+            CompanionArtworkLayerKind.resolve(
+                renderMode: .transparentRaster,
+                hasSourceImageData: false
+            ) == .pointCloud
+        )
+        #expect(
+            CompanionArtworkLayerKind.resolve(
+                renderMode: .pointCloud,
+                hasSourceImageData: true
+            ) == .pointCloud
+        )
+    }
+
     @Test func collapsedMotionMovesNormallyAndFreezesForReduceMotion() {
         let movingA = CompanionPointCloudMotion.samples(
             descriptor: fixture,

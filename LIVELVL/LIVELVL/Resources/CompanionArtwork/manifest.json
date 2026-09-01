@@ -2,5 +2,9 @@
   {"collectibleID":"ordinary.sprout","stage":"juvenile","resourceName":"ordinary-sprout-juvenile","fileExtension":"jpg"},
   {"collectibleID":"ordinary.sprout","stage":"stageTwo","resourceName":"ordinary-sprout-stage-two","fileExtension":"jpg"},
   {"collectibleID":"ordinary.sprout","stage":"stageThree","resourceName":"ordinary-sprout-stage-three","fileExtension":"jpg"},
-  {"collectibleID":"ordinary.sprout","stage":"mature","resourceName":"ordinary-sprout-mature","fileExtension":"jpg"}
+  {"collectibleID":"ordinary.sprout","stage":"mature","resourceName":"ordinary-sprout-mature","fileExtension":"jpg"},
+  {"collectibleID":"ordinary.hare","stage":"juvenile","resourceName":"ordinary-hare-juvenile","fileExtension":"png","renderMode":"transparentRaster"},
+  {"collectibleID":"ordinary.hare","stage":"stageTwo","resourceName":"ordinary-sprout-stage-two","fileExtension":"jpg"},
+  {"collectibleID":"ordinary.hare","stage":"stageThree","resourceName":"ordinary-sprout-stage-three","fileExtension":"jpg"},
+  {"collectibleID":"ordinary.hare","stage":"mature","resourceName":"ordinary-sprout-mature","fileExtension":"jpg"}
 ]}

@@ -3,6 +3,32 @@ import Testing
 @testable import LIVELVL
 
 struct CompanionArtworkTests {
+    @Test func manifestCanRequestCrispTransparentRasterRendering() throws {
+        let manifest = try CompanionArtworkManifest.decode(data: Data(#"""
+        {"version":1,"entries":[
+          {"collectibleID":"ordinary.hare","stage":"juvenile","resourceName":"ordinary-hare-juvenile","fileExtension":"png","renderMode":"transparentRaster"}
+        ]}
+        """#.utf8))
+
+        let resource = try #require(
+            manifest.resource(for: .init(collectibleID: "ordinary.hare", stage: .juvenile))
+        )
+        #expect(resource.renderMode == .transparentRaster)
+    }
+
+    @Test func manifestDefaultsExistingArtworkToPointCloudRendering() throws {
+        let manifest = try CompanionArtworkManifest.decode(data: Data(#"""
+        {"version":1,"entries":[
+          {"collectibleID":"ordinary.sprout","stage":"juvenile","resourceName":"ordinary-sprout-juvenile","fileExtension":"jpg"}
+        ]}
+        """#.utf8))
+
+        let resource = try #require(
+            manifest.resource(for: .init(collectibleID: "ordinary.sprout", stage: .juvenile))
+        )
+        #expect(resource.renderMode == .pointCloud)
+    }
+
     @Test func pilotManifestMapsEverySproutStageInOrder() throws {
         let manifest = try CompanionArtworkManifest.decode(data: Data(#"""
         {"version":1,"entries":[
@@ -54,6 +80,22 @@ struct CompanionArtworkTests {
         }
     }
 
+    @Test func bundledHareJuvenileUsesTheApprovedTransparentArtwork() async throws {
+        let provider = try BundledCompanionArtworkProvider(
+            bundle: .main,
+            subdirectory: "CompanionArtwork"
+        )
+
+        let payload = try #require(
+            try await provider.payload(
+                for: CompanionArtworkID(collectibleID: "ordinary.hare", stage: .juvenile)
+            )
+        )
+
+        #expect(payload.renderMode == .transparentRaster)
+        #expect(payload.data.prefix(8).elementsEqual([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
+    }
+
     @Test func bundledProviderReturnsNilForAnUnmappedIdentity() async throws {
         let provider = try BundledCompanionArtworkProvider(
             bundle: .main,
@@ -61,7 +103,7 @@ struct CompanionArtworkTests {
         )
 
         let payload = try await provider.payload(
-            for: CompanionArtworkID(collectibleID: "ordinary.hare", stage: .juvenile)
+            for: CompanionArtworkID(collectibleID: "unmapped", stage: .juvenile)
         )
 
         #expect(payload == nil)
