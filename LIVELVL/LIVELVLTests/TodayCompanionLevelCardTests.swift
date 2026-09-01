@@ -49,16 +49,16 @@ struct TodayCompanionLevelCardTests {
         )
     }
 
-    @Test func compactCompositionRendersDockAndCenterWithoutExpandedCard() {
+    @Test func compactCompositionRendersDockAndClearCenterTargetWithoutArtwork() {
         let composition = LifeCoreDisplayComposition(
             displayMode: .compact,
             artworkState: .fallback
         )
 
         #expect(composition.showsCompactDock)
-        #expect(composition.showsCenterCore)
+        #expect(composition.showsCenterTapTarget)
+        #expect(!composition.showsCenterArtwork)
         #expect(!composition.showsExpandedCard)
-        #expect(composition.centerArtwork == .transparentParticleFallback)
     }
 
     @Test func expandedCompositionRendersCardWithoutCompactDockOrCenter() {
@@ -68,9 +68,16 @@ struct TodayCompanionLevelCardTests {
         )
 
         #expect(!composition.showsCompactDock)
-        #expect(!composition.showsCenterCore)
+        #expect(!composition.showsCenterTapTarget)
+        #expect(!composition.showsCenterArtwork)
         #expect(composition.showsExpandedCard)
-        #expect(composition.centerArtwork == nil)
+    }
+
+    @Test func expandedCardOccludesFieldNodesAndProtectsItsReadingZone() {
+        #expect(LifeFieldLayerOrder.controls < LifeFieldLayerOrder.expandedCore)
+        #expect(LifeFieldLayerOrder.expandedCore < LifeFieldLayerOrder.coreControl)
+        #expect(LifeCoreReadabilityTreatment.textShieldPeakOpacity >= 0.90)
+        #expect(LifeCoreReadabilityTreatment.textShieldEdgeOpacity <= 0.10)
     }
 
     @Test func compactDockNeverOverlapsOrCompressesTheLifeField() {
@@ -214,6 +221,20 @@ struct TodayCompanionLevelCardTests {
         #expect(presentation.remainingText == "下一形态 1920 XP")
     }
 
+    @Test func lifeCoreProvidesAShortRemainingXPLabelWhenLargeTextCannotFit() {
+        let presentation = LifeCoreWidgetPresentation(
+            definition: CollectionCatalog.ordinary[1],
+            stage: .stageTwo,
+            level: 2,
+            currentXP: 80,
+            requiredXP: 2_000,
+            remainingXP: 1_920
+        )
+
+        #expect(presentation.remainingText == "下一形态 1920 XP")
+        #expect(presentation.compactRemainingText == "还差 1920 XP")
+    }
+
     @Test func mainCoreUsesTheApprovedPointCloudOrbWithoutLegacyControls() {
         #expect(!LifeCoreWidgetPresentation.showsMediaControlsOnMainSurface)
         #expect(!LifeCoreWidgetPresentation.allowsOpeningLegacyDetail)
@@ -342,7 +363,9 @@ struct TodayCompanionLevelCardTests {
 
         #expect(presentation.xpText == nil)
         #expect(!presentation.isRewarding)
-        #expect(presentation.accessibilityActionLabel == "完成 阅读 20 分钟")
+        #expect(presentation.completionAccessibilityLabel == "完成 阅读 20 分钟")
+        #expect(presentation.editAccessibilityLabel == "编辑 阅读 20 分钟")
+        #expect(TaskRailMetrics.minimumActionHitTarget == 44)
     }
 
     @Test func taskRailAccessibilityIncludesCompletionDimensionAndXP() {
@@ -361,7 +384,59 @@ struct TodayCompanionLevelCardTests {
         )
 
         #expect(presentation.accessibilityLabel == "整理房间，兴趣，10 XP，已完成")
-        #expect(presentation.accessibilityActionLabel == "取消完成 整理房间")
+        #expect(presentation.completionAccessibilityLabel == "取消完成 整理房间")
+        #expect(presentation.editAccessibilityLabel == "编辑 整理房间")
+    }
+
+    @Test func taskEditorLocksCompletedTasksUntilTheirCompletionIsRevoked() {
+        let item = Item(
+            title: "整理房间",
+            dimension: .interests,
+            minutes: 15,
+            difficulty: 1,
+            xp: 10,
+            recurrence: .once
+        )
+
+        let create = TaskEditorPresentation(item: nil, isCompletedToday: false)
+        let edit = TaskEditorPresentation(item: item, isCompletedToday: false)
+        let completed = TaskEditorPresentation(item: item, isCompletedToday: true)
+
+        #expect(create.navigationTitle == "新任务")
+        #expect(create.allowsFieldEditing)
+        #expect(!create.showsArchiveAction)
+        #expect(edit.navigationTitle == "编辑任务")
+        #expect(edit.allowsFieldEditing)
+        #expect(edit.showsArchiveAction)
+        #expect(!edit.showsRevokeToEditAction)
+        #expect(!completed.allowsFieldEditing)
+        #expect(completed.showsArchiveAction)
+        #expect(completed.showsRevokeToEditAction)
+    }
+
+    @Test func taskEditorPrefillsExistingTaskAndUnlocksOnlyAfterSuccessfulRevoke() {
+        let item = Item(
+            title: "阅读 20 分钟",
+            dimension: .learning,
+            minutes: 20,
+            difficulty: 2,
+            xp: 20,
+            recurrence: .daily
+        )
+        let form = TaskEditorFormState(item: item)
+        var session = TaskEditorSessionState(isCompletedToday: true)
+
+        #expect(form.title == "阅读 20 分钟")
+        #expect(form.dimension == .learning)
+        #expect(form.minutes == 20)
+        #expect(form.difficulty == 2)
+        #expect(form.recurrence == .daily)
+        #expect(form.draft.recommendedXP == 20)
+        #expect(session.isLocked)
+
+        session.completionWasRevoked()
+
+        #expect(!session.isLocked)
     }
 
     private func makePresentation(

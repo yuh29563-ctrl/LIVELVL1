@@ -61,7 +61,8 @@ struct LifeCoreAccessibilityComposition: Equatable, Sendable {
 
 nonisolated struct LifeCoreDisplayComposition: Equatable, Sendable {
     let showsCompactDock: Bool
-    let showsCenterCore: Bool
+    let showsCenterTapTarget: Bool
+    let showsCenterArtwork: Bool
     let showsExpandedCard: Bool
     let centerArtwork: LifeCoreCenterArtwork?
 
@@ -70,16 +71,10 @@ nonisolated struct LifeCoreDisplayComposition: Equatable, Sendable {
         artworkState: CompanionPointCloudLoader.State
     ) {
         showsCompactDock = displayMode == .compact
-        showsCenterCore = displayMode == .compact
+        showsCenterTapTarget = displayMode == .compact
+        showsCenterArtwork = false
         showsExpandedCard = displayMode == .expanded
-        centerArtwork = switch artworkState {
-        case .fallback where displayMode == .compact:
-            .transparentParticleFallback
-        case _ where displayMode == .compact:
-            .pointCloud
-        default:
-            nil
-        }
+        centerArtwork = nil
     }
 }
 
@@ -90,6 +85,11 @@ nonisolated enum LifeCoreCollapseLayout {
     static func collapsedCoreDimension(isAccessibilitySize: Bool) -> CGFloat {
         isAccessibilitySize ? 120 : centerCoreTapDimension
     }
+}
+
+nonisolated enum LifeCoreReadabilityTreatment {
+    static let textShieldPeakOpacity = 0.94
+    static let textShieldEdgeOpacity = 0.06
 }
 
 private enum LifeCoreArtworkTransition {
@@ -181,6 +181,7 @@ struct LifeCoreWidgetPresentation: Equatable, Sendable {
     var levelText: String { "LV \(level)" }
     var xpText: String { "\(max(0, currentXP)) / \(max(0, requiredXP)) XP" }
     var remainingText: String { "下一形态 \(max(0, remainingXP)) XP" }
+    var compactRemainingText: String { "还差 \(max(0, remainingXP)) XP" }
     var accessibilityLabel: String {
         "正在陪伴，\(companionName)，\(stageTitle)，等级 \(level)"
     }
@@ -298,11 +299,31 @@ struct LifeCoreWidget: View {
                 }
                 .frame(height: 5)
 
-                Text(presentation.remainingText)
-                    .font(.system(.caption2, design: .monospaced, weight: .regular))
-                    .foregroundStyle(LivingOSTheme.graphite)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
+                ViewThatFits(in: .horizontal) {
+                    Text(presentation.remainingText)
+                        .fixedSize(horizontal: true, vertical: false)
+
+                    Text(presentation.compactRemainingText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
+                }
+                .font(.system(.caption2, design: .monospaced, weight: .regular))
+                .foregroundStyle(LivingOSTheme.graphite)
+            }
+            .background {
+                LinearGradient(
+                    colors: [
+                        Color.white.opacity(LifeCoreReadabilityTreatment.textShieldEdgeOpacity),
+                        Color.white.opacity(LifeCoreReadabilityTreatment.textShieldPeakOpacity),
+                        Color.white.opacity(LifeCoreReadabilityTreatment.textShieldPeakOpacity)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .blur(radius: 8)
+                .padding(.horizontal, -10)
+                .padding(.vertical, -8)
+                .accessibilityHidden(true)
             }
         }
         .padding(.horizontal, 14)
@@ -431,20 +452,10 @@ struct TodayLifeFieldSection: View {
                 }
 
                 ZStack {
-                    LifeFieldBackdrop(summary: summary) {
-                        if let centerArtwork = composition.centerArtwork {
-                            LifeCoreCollapsedArtwork(
-                                presentation: core,
-                                artworkState: pointCloudLoader.state,
-                                levelUpFeedback: levelUpFeedback,
-                                artworkPresentation: centerArtwork,
-                                artworkNamespace: coreArtworkNamespace
-                            )
-                        }
-                    }
+                    LifeFieldBackdrop(summary: summary) { EmptyView() }
                     .zIndex(LifeFieldLayerOrder.backdropDots)
 
-                    if composition.showsCenterCore {
+                    if composition.showsCenterTapTarget {
                         GeometryReader { fieldProxy in
                             LifeCoreCenterTapTarget(
                                 isAccessibilitySize: dynamicTypeSize.isAccessibilitySize,
@@ -472,7 +483,7 @@ struct TodayLifeFieldSection: View {
                         )
                         .frame(width: coreWidth, height: coreHeight)
                         .transition(coreTransition)
-                        .zIndex(LifeFieldLayerOrder.companionCore)
+                        .zIndex(LifeFieldLayerOrder.expandedCore)
 
                         LifeCoreCollapseButton(action: toggleCoreDisplayMode)
                             .offset(

@@ -29,7 +29,111 @@ enum GrowthEngine {
         Double(xpInCurrentLevel(for: xp)) / Double(xpNeededForNextLevel(for: xp))
     }
 }
-@Model final class Item { var id: UUID; var title: String; var dimensionRaw: String; var minutes: Int; var difficulty: Int; var xp: Int; var recurrenceRaw: String; var createdAt: Date; init(title: String, dimension: LifeDimension, minutes: Int, difficulty: Int, xp: Int, recurrence: Recurrence) { id = UUID(); self.title = title; dimensionRaw = dimension.rawValue; self.minutes = minutes; self.difficulty = difficulty; self.xp = xp; recurrenceRaw = recurrence.rawValue; createdAt = .now }; var dimension: LifeDimension { LifeDimension(rawValue: dimensionRaw) ?? .learning } }
+@Model final class Item {
+    var id: UUID
+    var title: String
+    var dimensionRaw: String
+    var minutes: Int
+    var difficulty: Int
+    var xp: Int
+    var recurrenceRaw: String
+    var createdAt: Date
+    var isArchived: Bool = false
+
+    init(
+        title: String,
+        dimension: LifeDimension,
+        minutes: Int,
+        difficulty: Int,
+        xp: Int,
+        recurrence: Recurrence
+    ) {
+        id = UUID()
+        self.title = title
+        dimensionRaw = dimension.rawValue
+        self.minutes = minutes
+        self.difficulty = difficulty
+        self.xp = xp
+        recurrenceRaw = recurrence.rawValue
+        createdAt = .now
+    }
+
+    var dimension: LifeDimension {
+        get { LifeDimension(rawValue: dimensionRaw) ?? .learning }
+        set { dimensionRaw = newValue.rawValue }
+    }
+
+    var recurrence: Recurrence {
+        get { Recurrence(rawValue: recurrenceRaw) ?? .once }
+        set { recurrenceRaw = newValue.rawValue }
+    }
+}
+
+struct TaskDraft: Equatable, Sendable {
+    let title: String
+    let dimension: LifeDimension
+    let minutes: Int
+    let difficulty: Int
+    let recurrence: Recurrence
+
+    var normalizedTitle: String {
+        title.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    var recommendedXP: Int {
+        GrowthEngine.recommendedXP(minutes: minutes, difficulty: difficulty)
+    }
+}
+
+enum TaskMutationError: Error, Equatable {
+    case emptyTitle
+}
+
+@MainActor
+enum TaskMutationService {
+    static func update(
+        _ item: Item,
+        draft: TaskDraft,
+        in context: ModelContext
+    ) throws {
+        guard !draft.normalizedTitle.isEmpty else {
+            throw TaskMutationError.emptyTitle
+        }
+
+        item.title = draft.normalizedTitle
+        item.dimension = draft.dimension
+        item.minutes = draft.minutes
+        item.difficulty = draft.difficulty
+        item.xp = draft.recommendedXP
+        item.recurrence = draft.recurrence
+        try saveOrRollback(context)
+    }
+
+    static func archive(_ item: Item, in context: ModelContext) throws {
+        item.isArchived = true
+        try saveOrRollback(context)
+    }
+
+    static func restore(_ item: Item, in context: ModelContext) throws {
+        item.isArchived = false
+        try saveOrRollback(context)
+    }
+
+    private static func saveOrRollback(_ context: ModelContext) throws {
+        do {
+            try context.save()
+        } catch {
+            context.rollback()
+            throw error
+        }
+    }
+}
+
+enum TodayTaskCollection {
+    static func activeItems(from items: [Item]) -> [Item] {
+        items.filter { !$0.isArchived }
+    }
+}
 @Model final class Progress { var totalXP: Int; var onboardingCompleted: Bool; init(totalXP: Int = 0, onboardingCompleted: Bool = true) { self.totalXP = totalXP; self.onboardingCompleted = onboardingCompleted }; var level: Int { GrowthEngine.level(for: totalXP) } }
 @Model final class Completion {
     var id: UUID?

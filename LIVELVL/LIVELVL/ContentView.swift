@@ -105,6 +105,9 @@ struct TodayView: View {
     @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
     private var snapshots: [StateSnapshot]
     @State private var showAdd = false
+    @State private var selectedTask: Item?
+    @State private var pendingArchivedItemID: UUID?
+    @State private var archivedUndoItemID: UUID?
     @State private var showConfirm = false
     @State private var showMessage = false
     @State private var message = ""
@@ -116,8 +119,9 @@ struct TodayView: View {
 
     private var progress: Progress { progressItems.first ?? Progress() }
     private var rewardFeedback: TaskRewardFeedback? { growthPresentation.feedback }
+    private var activeItems: [Item] { TodayTaskCollection.activeItems(from: items) }
     private var headerPresentation: TodayHeaderPresentation {
-        TodayHeaderPresentation(itemCount: items.count)
+        TodayHeaderPresentation(itemCount: activeItems.count)
     }
 
     private var activeCompanion: (definition: CollectibleDefinition, stage: CompanionStage) {
@@ -207,7 +211,7 @@ struct TodayView: View {
                             .fill(LivingOSTheme.mist)
                             .frame(height: 0.5)
 
-                        if items.isEmpty {
+                        if activeItems.isEmpty {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("今天还没有任务")
                                     .font(.system(size: 17, weight: .medium))
@@ -221,7 +225,7 @@ struct TodayView: View {
                             .frame(maxWidth: .infinity, minHeight: 120, alignment: .leading)
                         }
 
-                        ForEach(items) { item in
+                        ForEach(activeItems) { item in
                             TaskRailView(
                                 presentation: TaskRailPresentation(
                                     item: item,
@@ -230,7 +234,8 @@ struct TodayView: View {
                                         ? rewardFeedback?.xp
                                         : nil
                                 ),
-                                onToggle: { toggle(item) }
+                                onToggle: { toggle(item) },
+                                onEdit: { selectedTask = item }
                             )
                             .todayGrowthAnchor(.task(item.id))
                         }
@@ -249,7 +254,15 @@ struct TodayView: View {
                 }
             }
             .background(LivingOSTheme.canvas)
-            .sheet(isPresented: $showAdd) { AddTaskView() }
+            .sheet(isPresented: $showAdd) { TaskEditorView() }
+            .sheet(item: $selectedTask, onDismiss: presentArchiveUndoIfNeeded) { item in
+                TaskEditorView(
+                    item: item,
+                    completion: todayCompletion(for: item),
+                    progress: progress,
+                    onArchived: { pendingArchivedItemID = $0 }
+                )
+            }
             .alert("确认完成任务？", isPresented: $showConfirm) {
                 Button("确认完成") { confirmCompletion() }
                 Button("先不完成", role: .cancel) { pendingItemID = nil }
@@ -257,6 +270,17 @@ struct TodayView: View {
                 Text("完成后将获得对应 XP。误触时再次点击勾选按钮可以取消，并退回 XP。")
             }
             .alert("任务状态已更新", isPresented: $showMessage) { Button("好的") {} } message: { Text(message) }
+            .alert("任务已取消", isPresented: Binding(
+                get: { archivedUndoItemID != nil },
+                set: { isPresented in
+                    if !isPresented { archivedUndoItemID = nil }
+                }
+            )) {
+                Button("撤销") { restoreArchivedTask() }
+                Button("好的", role: .cancel) { archivedUndoItemID = nil }
+            } message: {
+                Text("任务已从 Today 隐藏，历史完成记录与奖励保持不变。")
+            }
             .alert("奖励处理未完成", isPresented: Binding(
                 get: { rewardFlow.requiresRetry },
                 set: { _ in }
@@ -360,7 +384,13 @@ struct TodayView: View {
     }
 
     private func isCompleted(_ item: Item) -> Bool {
-        completions.contains { $0.itemID == item.id && Calendar.current.isDateInToday($0.date) }
+        todayCompletion(for: item) != nil
+    }
+
+    private func todayCompletion(for item: Item) -> Completion? {
+        completions.first {
+            $0.itemID == item.id && Calendar.current.isDateInToday($0.date)
+        }
     }
 
     private func toggle(_ item: Item) {
@@ -386,7 +416,8 @@ struct TodayView: View {
     }
 
     private func confirmCompletion() {
-        guard let id = pendingItemID, let item = items.first(where: { $0.id == id }) else { return }
+        guard let id = pendingItemID,
+              let item = activeItems.first(where: { $0.id == id }) else { return }
         let levelBefore = progress.level
         do {
             _ = try TaskRewardCoordinator.complete(
@@ -476,39 +507,196 @@ struct TodayView: View {
         )
         _ = try? CardRewardService.ensureProgress(in: context)
     }
+
+    private func presentArchiveUndoIfNeeded() {
+        guard let pendingArchivedItemID else { return }
+        archivedUndoItemID = pendingArchivedItemID
+        self.pendingArchivedItemID = nil
+    }
+
+    private func restoreArchivedTask() {
+        guard let id = archivedUndoItemID,
+              let item = items.first(where: { $0.id == id }) else {
+            archivedUndoItemID = nil
+            return
+        }
+        do {
+            try TaskMutationService.restore(item, in: context)
+            archivedUndoItemID = nil
+        } catch {
+            archivedUndoItemID = nil
+            message = "恢复任务失败，请重试"
+            showMessage = true
+        }
+    }
 }
 
-struct AddTaskView: View {
+private enum TaskEditorAlert: Identifiable {
+    case archive
+    case error(String)
+
+    var id: String {
+        switch self {
+        case .archive: "archive"
+        case .error(let message): "error:\(message)"
+        }
+    }
+}
+
+struct TaskEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var context
-    @State private var title = ""
-    @State private var minutes = 30
-    @State private var difficulty = 3
-    @State private var dimension: LifeDimension = .learning
-    @State private var recurrence: Recurrence = .once
-    private var xp: Int { GrowthEngine.recommendedXP(minutes: minutes, difficulty: difficulty) }
+    let item: Item?
+    let completion: Completion?
+    let progress: Progress?
+    let onArchived: (UUID) -> Void
+
+    @State private var form: TaskEditorFormState
+    @State private var session: TaskEditorSessionState
+    @State private var alert: TaskEditorAlert?
+
+    init(
+        item: Item? = nil,
+        completion: Completion? = nil,
+        progress: Progress? = nil,
+        onArchived: @escaping (UUID) -> Void = { _ in }
+    ) {
+        self.item = item
+        self.completion = completion
+        self.progress = progress
+        self.onArchived = onArchived
+        _form = State(initialValue: TaskEditorFormState(item: item))
+        _session = State(initialValue: TaskEditorSessionState(
+            isCompletedToday: completion != nil
+        ))
+    }
+
+    private var presentation: TaskEditorPresentation {
+        TaskEditorPresentation(item: item, isCompletedToday: session.isLocked)
+    }
 
     var body: some View {
         NavigationStack {
             Form {
-                TextField("例如：学习英语 30 分钟", text: $title)
-                Picker("生活维度", selection: $dimension) { ForEach(LifeDimension.allCases) { Text($0.title).tag($0) } }
-                Picker("重复", selection: $recurrence) { ForEach(Recurrence.allCases) { Text($0.title).tag($0) } }
-                Stepper("预计 \(minutes) 分钟", value: $minutes, in: 5...240, step: 5)
-                Picker("难度 \(difficulty)/5", selection: $difficulty) { ForEach(1...5, id: \.self) { Text("\($0)").tag($0) } }
-                Text("系统推荐：\(xp) XP").foregroundStyle(.secondary)
+                Section {
+                    TextField("例如：学习英语 30 分钟", text: $form.title)
+                    Picker("生活维度", selection: $form.dimension) {
+                        ForEach(LifeDimension.allCases) { Text($0.title).tag($0) }
+                    }
+                    Picker("重复", selection: $form.recurrence) {
+                        ForEach(Recurrence.allCases) { Text($0.title).tag($0) }
+                    }
+                    Stepper(
+                        "预计 \(form.minutes) 分钟",
+                        value: $form.minutes,
+                        in: 5...240,
+                        step: 5
+                    )
+                    Picker("难度 \(form.difficulty)/5", selection: $form.difficulty) {
+                        ForEach(1...5, id: \.self) { Text("\($0)").tag($0) }
+                    }
+                    Text("系统推荐：\(form.draft.recommendedXP) XP")
+                        .foregroundStyle(.secondary)
+                }
+                .disabled(!presentation.allowsFieldEditing)
+
+                if presentation.showsRevokeToEditAction {
+                    Section {
+                        Text("该任务今天已经完成。先取消完成，才能修改任务内容。")
+                            .foregroundStyle(.secondary)
+                        Button("取消完成并编辑") { revokeCompletionForEditing() }
+                    }
+                }
+
+                if presentation.showsArchiveAction {
+                    Section {
+                        Button("取消任务", role: .destructive) {
+                            alert = .archive
+                        }
+                    } footer: {
+                        Text("任务将从 Today 隐藏；历史完成记录、XP 和金币保持不变。")
+                    }
+                }
             }
-            .navigationTitle("新任务")
+            .navigationTitle(presentation.navigationTitle)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("取消") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("添加") {
-                        context.insert(Item(title: title, dimension: dimension, minutes: minutes, difficulty: difficulty, xp: xp, recurrence: recurrence))
-                        try? context.save()
-                        dismiss()
-                    }.disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
+                    Button(item == nil ? "添加" : "保存") { saveTask() }
+                        .disabled(
+                            !presentation.allowsFieldEditing
+                                || form.draft.normalizedTitle.isEmpty
+                        )
                 }
             }
+            .alert(item: $alert) { alert in
+                switch alert {
+                case .archive:
+                    Alert(
+                        title: Text("取消这个任务？"),
+                        message: Text("任务会从 Today 隐藏，但不会删除历史记录或撤销奖励。"),
+                        primaryButton: .destructive(Text("取消任务")) { archiveTask() },
+                        secondaryButton: .cancel(Text("保留任务"))
+                    )
+                case .error(let message):
+                    Alert(
+                        title: Text("操作失败"),
+                        message: Text(message),
+                        dismissButton: .default(Text("好的"))
+                    )
+                }
+            }
+        }
+    }
+
+    private func saveTask() {
+        do {
+            if let item {
+                try TaskMutationService.update(item, draft: form.draft, in: context)
+            } else {
+                let draft = form.draft
+                context.insert(Item(
+                    title: draft.normalizedTitle,
+                    dimension: draft.dimension,
+                    minutes: draft.minutes,
+                    difficulty: draft.difficulty,
+                    xp: draft.recommendedXP,
+                    recurrence: draft.recurrence
+                ))
+                try context.save()
+            }
+            dismiss()
+        } catch {
+            context.rollback()
+            alert = .error("任务未保存，请重试。")
+        }
+    }
+
+    private func revokeCompletionForEditing() {
+        guard let completion, let progress else {
+            alert = .error("未找到今天的完成记录，请关闭后重试。")
+            return
+        }
+        do {
+            try TaskRewardCoordinator.revoke(
+                completion: completion,
+                progress: progress,
+                in: context
+            )
+            session.completionWasRevoked()
+        } catch {
+            alert = .error("取消完成失败，请重试。")
+        }
+    }
+
+    private func archiveTask() {
+        guard let item else { return }
+        do {
+            try TaskMutationService.archive(item, in: context)
+            onArchived(item.id)
+            dismiss()
+        } catch {
+            alert = .error("任务未取消，请重试。")
         }
     }
 }

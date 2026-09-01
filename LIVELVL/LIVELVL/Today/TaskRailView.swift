@@ -1,5 +1,73 @@
 import SwiftUI
 
+enum TaskRailMetrics {
+    static let minimumActionHitTarget: CGFloat = 44
+}
+
+struct TaskEditorPresentation: Equatable {
+    let isEditingExistingTask: Bool
+    let isCompletedToday: Bool
+
+    init(item: Item?, isCompletedToday: Bool) {
+        isEditingExistingTask = item != nil
+        self.isCompletedToday = isCompletedToday
+    }
+
+    var navigationTitle: String {
+        isEditingExistingTask ? "编辑任务" : "新任务"
+    }
+
+    var allowsFieldEditing: Bool {
+        !isCompletedToday
+    }
+
+    var showsArchiveAction: Bool {
+        isEditingExistingTask
+    }
+
+    var showsRevokeToEditAction: Bool {
+        isEditingExistingTask && isCompletedToday
+    }
+}
+
+struct TaskEditorFormState: Equatable {
+    var title: String
+    var dimension: LifeDimension
+    var minutes: Int
+    var difficulty: Int
+    var recurrence: Recurrence
+
+    init(item: Item?) {
+        title = item?.title ?? ""
+        dimension = item?.dimension ?? .learning
+        minutes = item?.minutes ?? 30
+        difficulty = item?.difficulty ?? 3
+        recurrence = item?.recurrence ?? .once
+    }
+
+    var draft: TaskDraft {
+        TaskDraft(
+            title: title,
+            dimension: dimension,
+            minutes: minutes,
+            difficulty: difficulty,
+            recurrence: recurrence
+        )
+    }
+}
+
+struct TaskEditorSessionState: Equatable {
+    private(set) var isLocked: Bool
+
+    init(isCompletedToday: Bool) {
+        isLocked = isCompletedToday
+    }
+
+    mutating func completionWasRevoked() {
+        isLocked = false
+    }
+}
+
 struct TaskRailPresentation: Equatable, Sendable {
     let title: String
     let dimensionTitle: String
@@ -22,9 +90,10 @@ struct TaskRailPresentation: Equatable, Sendable {
     var accessibilityLabel: String {
         "\(title)，\(dimensionTitle)，\(baseXP) XP，\(isCompleted ? "已完成" : "未完成")"
     }
-    var accessibilityActionLabel: String {
+    var completionAccessibilityLabel: String {
         isCompleted ? "取消完成 \(title)" : "完成 \(title)"
     }
+    var editAccessibilityLabel: String { "编辑 \(title)" }
 }
 
 struct TaskRailView: View {
@@ -34,10 +103,11 @@ struct TaskRailView: View {
 
     let presentation: TaskRailPresentation
     let onToggle: () -> Void
+    let onEdit: () -> Void
 
     var body: some View {
-        Button(action: onToggle) {
-            HStack(spacing: 10) {
+        HStack(spacing: 0) {
+            Button(action: onToggle) {
                 ZStack {
                     Circle()
                         .stroke(LivingOSTheme.ink.opacity(0.72), lineWidth: 1.4)
@@ -52,47 +122,60 @@ struct TaskRailView: View {
                             .foregroundStyle(LivingOSTheme.surface)
                     }
                 }
-                .frame(width: 24, height: 44)
+                .frame(
+                    width: TaskRailMetrics.minimumActionHitTarget,
+                    height: TaskRailMetrics.minimumActionHitTarget
+                )
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(presentation.completionAccessibilityLabel)
 
-                Text(presentation.title)
-                    .font(.system(LivingOSTypography.taskTitle, weight: .regular))
-                    .foregroundStyle(LivingOSTheme.ink)
-                    .lineLimit(2)
+            Button(action: onEdit) {
+                HStack(spacing: 10) {
+                    Text(presentation.title)
+                        .font(.system(LivingOSTypography.taskTitle, weight: .regular))
+                        .foregroundStyle(LivingOSTheme.ink)
+                        .lineLimit(2)
 
-                Spacer(minLength: 8)
+                    Spacer(minLength: 8)
 
-                HStack(spacing: 7) {
-                    if let xpText = presentation.xpText {
-                        Text(xpText)
-                            .font(.subheadline.weight(.medium))
-                            .foregroundStyle(LivingOSTheme.ink)
-                            .contentTransition(.numericText())
+                    HStack(spacing: 7) {
+                        if let xpText = presentation.xpText {
+                            Text(xpText)
+                                .font(.subheadline.weight(.medium))
+                                .foregroundStyle(LivingOSTheme.ink)
+                                .contentTransition(.numericText())
 
-                        Circle()
-                            .fill(LivingOSTheme.signal)
-                            .frame(width: 6, height: 6)
-                            .opacity(rewardOpacity)
-                            .offset(y: rewardOffset)
+                            Circle()
+                                .fill(LivingOSTheme.signal)
+                                .frame(width: 6, height: 6)
+                                .opacity(rewardOpacity)
+                                .offset(y: rewardOffset)
+                                .accessibilityHidden(true)
+                        }
+
+                        Image(systemName: "chevron.right")
+                            .font(.caption.weight(.regular))
+                            .foregroundStyle(LivingOSTheme.graphite.opacity(0.52))
                             .accessibilityHidden(true)
                     }
-
-                    Image(systemName: "chevron.right")
-                        .font(.caption.weight(.regular))
-                        .foregroundStyle(LivingOSTheme.graphite.opacity(0.52))
-                        .accessibilityHidden(true)
                 }
+                .frame(minHeight: 58)
+                .contentShape(Rectangle())
             }
-            .frame(minHeight: 58)
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+            .accessibilityLabel(presentation.editAccessibilityLabel)
+            .accessibilityValue(
+                "\(presentation.dimensionTitle)，\(presentation.baseXP) XP，\(presentation.isCompleted ? "已完成" : "未完成")"
+            )
+            .accessibilityHint("轻点编辑任务")
         }
-        .buttonStyle(.plain)
         .overlay(alignment: .bottom) {
             Rectangle()
                 .fill(LivingOSTheme.mist)
                 .frame(height: 0.5)
         }
-        .accessibilityLabel(presentation.accessibilityLabel)
-        .accessibilityHint(presentation.accessibilityActionLabel)
         .task(id: presentation.rewardXP) {
             rewardOpacity = presentation.isRewarding ? 0 : 1
             rewardOffset = reduceMotion ? 0 : 4

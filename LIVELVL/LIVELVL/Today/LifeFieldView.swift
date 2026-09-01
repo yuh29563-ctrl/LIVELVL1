@@ -13,8 +13,10 @@ nonisolated struct LifeFieldNodeAnchors: Equatable, Sendable {
 nonisolated enum LifeFieldLayerOrder {
     static let backdropDots = 0.0
     static let companionCore = 1.0
+    static let radialLinks = 1.5
     static let dynamicEdges = 2.0
     static let controls = 3.0
+    static let expandedCore = 3.5
     static let coreControl = 4.0
 }
 
@@ -189,6 +191,34 @@ nonisolated struct LifeFieldParticleLinkSample: Equatable, Sendable {
     let position: CGPoint
     let opacity: Double
     let diameter: CGFloat
+}
+
+nonisolated enum LifeFieldRadialLinkPresentation {
+    private static let opacityMultiplier = 0.62
+
+    static var targets: [LifeDimension: CGPoint] {
+        Dictionary(
+            uniqueKeysWithValues: LifeDimension.allCases.map {
+                ($0, LifeFieldLayout.anchor(for: $0))
+            }
+        )
+    }
+
+    static func renderedOpacity(for sampleOpacity: Double) -> Double {
+        min(1, max(0, sampleOpacity * opacityMultiplier))
+    }
+}
+
+nonisolated enum LifeFieldPolygonTone: Equatable {
+    case strong
+    case subtle
+}
+
+nonisolated enum LifeFieldPolygonPresentation {
+    static let outerTone: LifeFieldPolygonTone = .subtle
+    static let innerTone: LifeFieldPolygonTone = .strong
+    static let outerOpacity = 0.18
+    static let innerOpacity = 0.28
 }
 
 nonisolated enum LifeFieldParticleLinkGeometry {
@@ -389,6 +419,9 @@ struct LifeFieldBackdrop<CenterContent: View>: View {
                     .position(LifeFieldLayout.point(for: LifeFieldLayout.visualCore, in: size))
                     .zIndex(LifeFieldLayerOrder.companionCore)
 
+                LifeFieldParticleLinks(targets: LifeFieldRadialLinkPresentation.targets)
+                    .zIndex(LifeFieldLayerOrder.radialLinks)
+
                 LifeFieldEdgeParticles(targets: officialTargets)
                     .zIndex(LifeFieldLayerOrder.dynamicEdges)
 
@@ -397,7 +430,10 @@ struct LifeFieldBackdrop<CenterContent: View>: View {
                         LifeFieldLayout.anchor(for: $0.start)
                     }
                 )
-                .stroke(LivingOSTheme.graphite.opacity(0.10), lineWidth: 0.6)
+                .stroke(
+                    LivingOSTheme.graphite.opacity(LifeFieldPolygonPresentation.outerOpacity),
+                    lineWidth: 0.6
+                )
                 .zIndex(LifeFieldLayerOrder.dynamicEdges)
 
                 LifeFieldPolygon(
@@ -405,7 +441,10 @@ struct LifeFieldBackdrop<CenterContent: View>: View {
                         officialTargets[$0.start]
                     }
                 )
-                .stroke(LivingOSTheme.ink.opacity(0.46), lineWidth: 0.85)
+                .stroke(
+                    LivingOSTheme.graphite.opacity(LifeFieldPolygonPresentation.innerOpacity),
+                    lineWidth: 0.85
+                )
                 .zIndex(LifeFieldLayerOrder.dynamicEdges)
             }
         }
@@ -630,6 +669,61 @@ private struct LifeFieldEdgeParticles: View {
                     context.fill(
                         Path(ellipseIn: rect),
                         with: .color(LivingOSTheme.ink.opacity(sample.opacity))
+                    )
+                }
+            }
+        }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
+    }
+}
+
+private struct LifeFieldParticleLinks: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
+
+    let targets: [LifeDimension: CGPoint]
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
+            let phase = reduceMotion
+                ? 0.19
+                : timeline.date.timeIntervalSinceReferenceDate / 8.0
+            let samples = LifeFieldParticleLinkGeometry.presentationSamples(
+                phase: phase,
+                reduceMotion: reduceMotion,
+                targets: targets
+            )
+
+            Canvas { context, size in
+                for sample in samples {
+                    let diameter = sample.diameter
+                    let rect = CGRect(
+                        x: sample.position.x * size.width - diameter / 2,
+                        y: sample.position.y * size.height - diameter / 2,
+                        width: diameter,
+                        height: diameter
+                    )
+                    context.fill(
+                        Path(ellipseIn: rect),
+                        with: .color(
+                            LivingOSTheme.ink.opacity(
+                                LifeFieldRadialLinkPresentation.renderedOpacity(
+                                    for: sample.opacity
+                                )
+                            )
+                        )
                     )
                 }
             }

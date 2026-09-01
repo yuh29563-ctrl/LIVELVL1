@@ -25,7 +25,7 @@ struct LifeFieldPresentationTests {
         )
 
         #expect(nodes.map(\.dimension) == LifeDimension.allCases)
-        #expect(nodes.map(\.title) == ["身体", "专注", "成长", "秩序", "连接", "恢复"])
+        #expect(nodes.map(\.title) == ["健康", "学习", "事业", "财务", "关系", "兴趣"])
         #expect(nodes.map(\.displayValue) == [78, 86, 83, 64, 79, 80])
         #expect(nodes.first?.projectedDisplayValue == 80)
         #expect(nodes.first?.delta == 2)
@@ -178,9 +178,9 @@ struct LifeFieldPresentationTests {
         )
     }
 
-    @Test func collapsedCenterCoreLayersBelowDynamicFieldGeometryAndControls() {
-        #expect(LifeFieldLayerOrder.backdropDots < LifeFieldLayerOrder.companionCore)
-        #expect(LifeFieldLayerOrder.companionCore < LifeFieldLayerOrder.dynamicEdges)
+    @Test func radialLinksLayerBetweenBackdropAndDynamicFieldGeometry() {
+        #expect(LifeFieldLayerOrder.backdropDots < LifeFieldLayerOrder.radialLinks)
+        #expect(LifeFieldLayerOrder.radialLinks < LifeFieldLayerOrder.dynamicEdges)
         #expect(LifeFieldLayerOrder.dynamicEdges < LifeFieldLayerOrder.controls)
     }
 
@@ -286,6 +286,13 @@ struct LifeFieldPresentationTests {
         }
     }
 
+    @Test func innerAndOuterHexagonsUseTheApprovedQuietContrast() {
+        #expect(LifeFieldPolygonPresentation.outerTone == .subtle)
+        #expect(LifeFieldPolygonPresentation.innerTone == .strong)
+        #expect(LifeFieldPolygonPresentation.outerOpacity == 0.18)
+        #expect(LifeFieldPolygonPresentation.innerOpacity == 0.28)
+    }
+
     @Test func sixParticleLinksRunFromTheVisualCoreToTheExactHexagonNodes() {
         let samples = LifeFieldParticleLinkGeometry.samples(
             countPerLink: 24,
@@ -303,6 +310,21 @@ struct LifeFieldPresentationTests {
             #expect(abs((terminal?.position.x ?? 0) - target.x) < 0.02)
             #expect(abs((terminal?.position.y ?? 0) - target.y) < 0.02)
         }
+    }
+
+    @Test func renderedRadialLinksTargetTheFixedOuterHexagon() {
+        let targets = LifeFieldRadialLinkPresentation.targets
+
+        for dimension in LifeDimension.allCases {
+            #expect(targets[dimension] == LifeFieldLayout.anchor(for: dimension))
+            #expect(targets[dimension] != LifeFieldLayout.anchor(for: dimension, score: 50))
+        }
+    }
+
+    @Test func radialParticleColorTreatmentIsQuieterWithoutChangingSamples() {
+        #expect(LifeFieldRadialLinkPresentation.renderedOpacity(for: 0.5) == 0.31)
+        #expect(LifeFieldRadialLinkPresentation.renderedOpacity(for: 0) == 0)
+        #expect(LifeFieldRadialLinkPresentation.renderedOpacity(for: 1) == 0.62)
     }
 
     @Test func particleLinksTerminateAtDynamicOfficialNodePositions() {
