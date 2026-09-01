@@ -19,6 +19,63 @@ struct LocalDataResetServiceTests {
         }
     }
 
+    @Test func resetDeletesRewardLedgerProductsRedemptionsAndImages() throws {
+        let schema = Schema([
+            CoinTransaction.self,
+            RewardProduct.self,
+            RewardRedemption.self,
+        ])
+        let container = try ModelContainer(
+            for: schema,
+            configurations: .init(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+        let product = RewardProduct(name: "看电影", priceCoinUnits: 50)
+        context.insert(CoinTransaction(
+            operationKey: "reset-coin",
+            kind: .legacyImport,
+            amountCoinUnits: 50,
+            requestedCoinUnits: 50,
+            sourceID: nil,
+            createdAt: .now,
+            note: "测试"
+        ))
+        context.insert(product)
+        context.insert(RewardRedemption(
+            requestKey: "reset-redemption",
+            productID: product.id,
+            productNameSnapshot: product.name,
+            priceCoinUnitsSnapshot: product.priceCoinUnits,
+            noteSnapshot: product.note,
+            imageReferenceSnapshot: nil,
+            redeemedAt: .now,
+            status: .pending
+        ))
+        try context.save()
+
+        let applicationSupportURL = FileManager.default.temporaryDirectory
+            .appending(path: UUID().uuidString, directoryHint: .isDirectory)
+        let imageDirectoryURL = applicationSupportURL
+            .appending(path: "RewardProductImages", directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(
+            at: imageDirectoryURL,
+            withIntermediateDirectories: true
+        )
+        try Data([0x01]).write(to: imageDirectoryURL.appending(path: "sample.image"))
+        defer { try? FileManager.default.removeItem(at: applicationSupportURL) }
+
+        try LocalDataResetService.reset(
+            context: context,
+            fileManager: .default,
+            applicationSupportURL: applicationSupportURL
+        )
+
+        #expect(try context.fetch(FetchDescriptor<CoinTransaction>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<RewardProduct>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<RewardRedemption>()).isEmpty)
+        #expect(!FileManager.default.fileExists(atPath: imageDirectoryURL.path))
+    }
+
     @Test func hostedResetActionPresentsPartialFailureAfterSnapshotDeletion() async throws {
         let schema = Schema([
             PendingCardReward.self,

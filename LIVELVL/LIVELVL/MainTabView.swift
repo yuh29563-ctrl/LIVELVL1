@@ -6,6 +6,24 @@ enum AppTab: Hashable {
     case collection
     case rewards
     case profile
+
+    var title: String {
+        switch self {
+        case .today: "今天"
+        case .collection: "收集"
+        case .rewards: "奖励"
+        case .profile: "我的"
+        }
+    }
+
+    var systemImageName: String {
+        switch self {
+        case .today: "sun.max"
+        case .collection: CollectionTabIdentity.systemImageName
+        case .rewards: "gift"
+        case .profile: "person"
+        }
+    }
 }
 
 struct CollectionAttentionState: Equatable, Sendable {
@@ -104,15 +122,15 @@ struct CardRewardPresentationState: Equatable, Sendable {
         return true
     }
 
-    mutating func finishSuccessfulClaim(feedbackToken: Int) -> Bool {
+    mutating func finishSuccessfulClaim(feedbackToken: Int) -> String? {
         guard awaitedFeedbackToken == feedbackToken,
-              locallyClaimingAwardKey != nil else {
-            return false
+              let locallyClaimingAwardKey else {
+            return nil
         }
-        locallyClaimingAwardKey = nil
+        self.locallyClaimingAwardKey = nil
         awaitedFeedbackToken = nil
         presentedReward = nil
-        return true
+        return locallyClaimingAwardKey
     }
 }
 
@@ -214,7 +232,7 @@ struct CollectionTabFeedbackAnimationPlan: Equatable, Sendable {
 
 enum CollectionTabIdentity {
     static let accessibilityIdentifier = "main-tab.collection"
-    static let systemImageName = "square.grid.2x2.fill"
+    static let systemImageName = "circle.grid.3x3.fill"
 }
 
 @MainActor
@@ -313,6 +331,7 @@ struct MainTabView: View {
     @State private var attention = CollectionAttentionState()
     @State private var presentation = CardRewardPresentationState()
     @State private var handoff = CardRewardHandoffState()
+    @State private var archiveArrival = ArchiveArrivalPresentationState()
     @State private var collectionTabFrameInWindow: CGRect?
 #if DEBUG
     let reportLocalDataResetFailure: (LocalDataResetFailure) -> Void
@@ -368,11 +387,14 @@ struct MainTabView: View {
             TabView(selection: $selectedTab) {
                 TodayView()
                     .tag(AppTab.today)
-                    .tabItem { Label("今天", systemImage: "sun.max.fill") }
+                    .tabItem {
+                        Label(AppTab.today.title, systemImage: AppTab.today.systemImageName)
+                    }
 
                 CollectionView(
                     isCollectionSelected: selectedTab == .collection,
                     isObscured: presentation.presentedReward != nil,
+                    arrivalState: $archiveArrival,
                     onMarkedSeen: { attention.markSeen() }
                 )
                     .tag(AppTab.collection)
@@ -383,9 +405,11 @@ struct MainTabView: View {
                         .accessibilityIdentifier(CollectionTabIdentity.accessibilityIdentifier)
                     }
 
-                RewardPlaceholderView()
+                RewardStoreView()
                     .tag(AppTab.rewards)
-                    .tabItem { Label("奖励", systemImage: "gift.fill") }
+                    .tabItem {
+                        Label(AppTab.rewards.title, systemImage: AppTab.rewards.systemImageName)
+                    }
 
                 Group {
 #if DEBUG
@@ -399,7 +423,9 @@ struct MainTabView: View {
 #endif
                 }
                     .tag(AppTab.profile)
-                    .tabItem { Label("我的", systemImage: "person.crop.circle") }
+                    .tabItem {
+                        Label(AppTab.profile.title, systemImage: AppTab.profile.systemImageName)
+                    }
             }
             .tint(TodayVisualTheme.ink)
             .accessibilityHidden(presentation.presentedReward != nil)
@@ -498,9 +524,12 @@ struct MainTabView: View {
     }
 
     private func completeClaimAfterCollectionFeedback(_ feedbackToken: Int) {
-        guard presentation.finishSuccessfulClaim(feedbackToken: feedbackToken) else {
+        guard let awardKey = presentation.finishSuccessfulClaim(
+            feedbackToken: feedbackToken
+        ) else {
             return
         }
+        archiveArrival.registerClaimed(awardKey: awardKey)
         handoff.recordDismissalCompletion(at: .now)
     }
 
@@ -511,8 +540,12 @@ struct CollectionTabLabel: View {
     let hasUnseenReward: Bool
 
     var body: some View {
-        Label("收集", systemImage: CollectionTabIdentity.systemImageName)
-            .accessibilityLabel(hasUnseenReward ? "收集，有未查看奖励" : "收集")
+        Label(AppTab.collection.title, systemImage: AppTab.collection.systemImageName)
+            .accessibilityLabel(
+                hasUnseenReward
+                    ? "\(AppTab.collection.title)，有未查看奖励"
+                    : AppTab.collection.title
+            )
     }
 }
 

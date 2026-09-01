@@ -1,3 +1,5 @@
+import CoreGraphics
+import Foundation
 import Testing
 @testable import LIVELVL
 
@@ -119,5 +121,383 @@ struct CollectionViewStateTests {
         #expect(!didBegin)
         #expect(!state.isAttempting)
         #expect(!state.needsRetry)
+    }
+
+    @Test func carouselKeepsCenterSeparateFromExpansion() {
+        var state = ArchiveCarouselState()
+        state.reconcile(orderedAwardKeys: ["new", "old"])
+        #expect(state.centeredAwardKey == "new")
+
+        state.center("old")
+        state.expandCentered()
+
+        #expect(state.centeredAwardKey == "old")
+        #expect(state.expandedAwardKey == "old")
+        state.closeExpanded()
+        #expect(state.centeredAwardKey == "old")
+        #expect(state.expandedAwardKey == nil)
+        #expect(!state.isShowingBack)
+    }
+
+    @Test func staleCarouselKeysReconcileWithoutChangingAValidCenter() {
+        var state = ArchiveCarouselState()
+        state.reconcile(orderedAwardKeys: ["new", "old"])
+        state.center("old")
+        state.expandCentered()
+
+        state.reconcile(orderedAwardKeys: ["old", "older"])
+        #expect(state.centeredAwardKey == "old")
+        #expect(state.expandedAwardKey == "old")
+
+        state.reconcile(orderedAwardKeys: ["older"])
+        #expect(state.centeredAwardKey == "older")
+        #expect(state.expandedAwardKey == nil)
+    }
+
+    @Test func transientNilScrollPositionDoesNotDiscardAValidCenter() {
+        var state = ArchiveCarouselState()
+        state.reconcile(orderedAwardKeys: ["new", "old"])
+
+        state.updateScrollPosition(nil, orderedAwardKeys: ["new", "old"])
+        #expect(state.centeredAwardKey == "new")
+
+        state.updateScrollPosition("old", orderedAwardKeys: ["new", "old"])
+        #expect(state.centeredAwardKey == "old")
+
+        state.updateScrollPosition(nil, orderedAwardKeys: [])
+        #expect(state.centeredAwardKey == nil)
+    }
+
+    @Test func onlyCenteredUnobscuredCardBecomesSeen() {
+        var visibility = CollectionSeenVisibilityState()
+        visibility.center("center")
+
+        let result = visibility.awardKeysToMarkSeen(
+            unseenAwardKeys: ["left", "center", "right"],
+            isCollectionSelected: true,
+            isObscured: false
+        )
+
+        #expect(result == ["center"])
+    }
+
+    @Test func archiveCardsTravelOnARestrainedThreeDimensionalArc() {
+        let side = ArchiveCardTransform.make(
+            normalizedDistance: 1,
+            reduceMotion: false
+        )
+        #expect(abs(side.scale - 0.82) < 0.001)
+        #expect(abs(side.opacity - 0.7) < 0.001)
+        #expect(abs(side.yawDegrees + 28) < 0.001)
+        #expect(abs(side.rollDegrees + 3) < 0.001)
+        #expect(abs(side.verticalOffset - 22) < 0.001)
+
+        let halfway = ArchiveCardTransform.make(
+            normalizedDistance: 0.5,
+            reduceMotion: false
+        )
+        #expect(halfway.scale > 0.89 && halfway.scale < 0.9)
+        #expect(halfway.opacity > 0.82 && halfway.opacity < 0.84)
+        #expect(halfway.yawDegrees > -20 && halfway.yawDegrees < -19)
+        #expect(halfway.verticalOffset > 1.2 && halfway.verticalOffset < 1.4)
+
+        let nearCenter = ArchiveCardTransform.make(
+            normalizedDistance: 0.25,
+            reduceMotion: false
+        )
+        #expect(nearCenter.verticalOffset > -1.9 && nearCenter.verticalOffset < -1.8)
+
+        let mirrored = ArchiveCardTransform.make(
+            normalizedDistance: -0.5,
+            reduceMotion: false
+        )
+        #expect(mirrored.yawDegrees == -halfway.yawDegrees)
+        #expect(mirrored.rollDegrees == -halfway.rollDegrees)
+        #expect(mirrored.verticalOffset == halfway.verticalOffset)
+
+        let reduced = ArchiveCardTransform.make(
+            normalizedDistance: -1,
+            reduceMotion: true
+        )
+        #expect(reduced.yawDegrees == 0)
+        #expect(reduced.rollDegrees == 0)
+        #expect(reduced.verticalOffset == 0)
+        #expect(reduced.scale == 1)
+        #expect(reduced.opacity == 1)
+    }
+
+    @Test func archiveArrivalOnlyCompletesWhileItIsActuallyVisible() {
+        #expect(ArchiveArrivalPresentationActivity.shouldAdvance(
+            isCollectionSelected: true,
+            isObscured: false,
+            isSceneActive: true
+        ))
+        #expect(!ArchiveArrivalPresentationActivity.shouldAdvance(
+            isCollectionSelected: false,
+            isObscured: false,
+            isSceneActive: true
+        ))
+        #expect(!ArchiveArrivalPresentationActivity.shouldAdvance(
+            isCollectionSelected: true,
+            isObscured: true,
+            isSceneActive: true
+        ))
+        #expect(!ArchiveArrivalPresentationActivity.shouldAdvance(
+            isCollectionSelected: true,
+            isObscured: false,
+            isSceneActive: false
+        ))
+    }
+
+    @Test func closingExpandedArchiveRestoresFocusToItsCarouselCard() {
+        #expect(
+            ArchiveAccessibilityFocusRestoration.target(awardKey: "core-12")
+                == .grid(awardKey: "core-12")
+        )
+    }
+
+    @Test func voiceOverAdjustmentMovesCenterAndFocusTogether() throws {
+        let first = try #require(
+            ArchiveAccessibilityNavigation.destination(
+                awardKeys: ["a", "b", "c"],
+                from: 0,
+                increment: true
+            )
+        )
+        #expect(first.awardKey == "b")
+        #expect(first.focusTarget == .grid(awardKey: "b"))
+
+        let second = try #require(
+            ArchiveAccessibilityNavigation.destination(
+                awardKeys: ["a", "b", "c"],
+                from: 1,
+                increment: true
+            )
+        )
+        #expect(second.awardKey == "c")
+        #expect(second.focusTarget == .grid(awardKey: "c"))
+    }
+
+    @Test func reducedMotionNeverAnimatesArchiveArrivalCentering() {
+        #expect(ArchiveArrivalMotion.allowsAnimatedCentering(reduceMotion: false))
+        #expect(!ArchiveArrivalMotion.allowsAnimatedCentering(reduceMotion: true))
+    }
+
+    @Test func expandedArchiveCardClearsTheHeaderOnIPhone17Pro() {
+        let frame = ArchiveExpandedLayout.cardFrame(
+            in: CGSize(width: 368, height: 717)
+        )
+
+        #expect(frame == CGRect(x: 66, y: 132, width: 236, height: 470))
+        #expect(frame.minY > 112)
+    }
+
+    @Test func archiveCarouselMatchesTheApprovedIPhone17ProCardAndCaptionScale() {
+        // iOS 26's tab container proposes 340 pt inside the 368 pt screen.
+        // The visual spec is screen-relative, so the card must not shrink with
+        // that system content margin.
+        let layout = ArchiveCarouselLayout.make(containerWidth: 340)
+
+        #expect(abs(layout.cardSize.width - 192) < 0.01)
+        #expect(abs(layout.cardSize.height - 336) < 0.01)
+        #expect(abs(layout.cardSpacing - -8) < 0.01)
+        #expect(abs(layout.captionHeight - 150) < 0.01)
+        #expect(abs(layout.totalHeight - 502) < 0.01)
+    }
+
+    @Test func archiveCaptionExpandsAtAccessibilitySizesWithoutChangingTheCard() {
+        #expect(ArchiveCarouselLayout.resolvedCaptionHeight(isAccessibilitySize: false) == 150)
+        #expect(ArchiveCarouselLayout.resolvedCaptionHeight(isAccessibilitySize: true) == 194)
+        #expect(!ArchiveCarouselLayout.usesVerticalPageScroll(isAccessibilitySize: false))
+        #expect(ArchiveCarouselLayout.usesVerticalPageScroll(isAccessibilitySize: true))
+    }
+
+    @Test func archiveCaptionKeepsPersistedIdentityLevelAndAcquisitionDate() {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let date = calendar.date(from: DateComponents(year: 2026, month: 8, day: 26))!
+        let caption = ArchiveCardCaptionPresentation(
+            name: "CORE-12",
+            kindTitle: "成熟卡",
+            sourceTitle: "陪伴成熟",
+            awardKey: "ordinary.level.12",
+            acquiredAt: date,
+            calendar: calendar
+        )
+
+        #expect(caption.title == "CORE-12")
+        #expect(caption.kindTitle == "成熟卡")
+        #expect(caption.levelText == "LV 12")
+        #expect(caption.acquiredText == "获得于 08 / 26")
+    }
+
+    @Test func archiveAccessibilityDescribesPositionAndNewState() {
+        let value = ArchiveCardAccessibility.value(
+            name: "小芽",
+            index: 1,
+            count: 3,
+            isUnseen: true,
+            sourceTitle: "陪伴成熟"
+        )
+        #expect(value == "小芽，第 1 张，共 3 张，新收藏，获得来源 陪伴成熟")
+    }
+
+    @Test func archiveMetadataUsesPersistedKinds() {
+        #expect(ArchiveCardMetadata.kindTitle(for: .ordinaryMature) == "成熟卡")
+        #expect(ArchiveCardMetadata.kindTitle(for: .hiddenDiscovery) == "隐藏发现")
+    }
+
+    @Test func archiveOrganismParticlesAreStableDistinctAndMotionAware() {
+        let first = ArchiveOrganismGeometry.samples(
+            identifier: "ordinary.sprout",
+            count: 180,
+            phase: 0.1,
+            reduceMotion: false
+        )
+        let repeated = ArchiveOrganismGeometry.samples(
+            identifier: "ordinary.sprout",
+            count: 180,
+            phase: 0.1,
+            reduceMotion: false
+        )
+        let moved = ArchiveOrganismGeometry.samples(
+            identifier: "ordinary.sprout",
+            count: 180,
+            phase: 0.5,
+            reduceMotion: false
+        )
+        let different = ArchiveOrganismGeometry.samples(
+            identifier: "hidden.study-streak",
+            count: 180,
+            phase: 0.1,
+            reduceMotion: false
+        )
+        let frozenA = ArchiveOrganismGeometry.samples(
+            identifier: "ordinary.sprout",
+            count: 180,
+            phase: 0,
+            reduceMotion: true
+        )
+        let frozenB = ArchiveOrganismGeometry.samples(
+            identifier: "ordinary.sprout",
+            count: 180,
+            phase: 0.8,
+            reduceMotion: true
+        )
+
+        #expect(first.count == 180)
+        #expect(first == repeated)
+        #expect(first != moved)
+        #expect(first != different)
+        #expect(frozenA == frozenB)
+        #expect(first.allSatisfy {
+            (0...1).contains($0.position.x)
+                && (0...1).contains($0.position.y)
+                && (0...1).contains($0.opacity)
+                && $0.diameter > 0
+        })
+    }
+
+    @Test func archiveOrganismArmsBranchOutAndRespectReduceMotion() {
+        let normalA = ArchiveOrganismGeometry.arms(
+            identifier: "ordinary.sprout",
+            phase: 0,
+            reduceMotion: false
+        )
+        let normalB = ArchiveOrganismGeometry.arms(
+            identifier: "ordinary.sprout",
+            phase: 0.4,
+            reduceMotion: false
+        )
+        let frozenA = ArchiveOrganismGeometry.arms(
+            identifier: "ordinary.sprout",
+            phase: 0,
+            reduceMotion: true
+        )
+        let frozenB = ArchiveOrganismGeometry.arms(
+            identifier: "ordinary.sprout",
+            phase: 0.9,
+            reduceMotion: true
+        )
+
+        #expect(normalA.count == 9)
+        #expect(normalA.allSatisfy { $0.points.count == 12 })
+        #expect(normalA != normalB)
+        #expect(frozenA == frozenB)
+        #expect(normalA.flatMap(\.points).allSatisfy {
+            (0...1).contains($0.x) && (0...1).contains($0.y)
+        })
+    }
+
+    @Test func claimedCardLandsAtMostOncePerPresentationSession() {
+        var state = ArchiveArrivalPresentationState()
+        state.registerClaimed(awardKey: "ordinary.level.4")
+
+        #expect(
+            state.takeArrivalIfNeeded(validAwardKeys: ["ordinary.level.4"])
+                == "ordinary.level.4"
+        )
+        state.markCompleted(awardKey: "ordinary.level.4")
+        #expect(state.takeArrivalIfNeeded(validAwardKeys: ["ordinary.level.4"]) == nil)
+    }
+
+    @Test func arrivalWaitsForThePersistedOwnedRow() {
+        var state = ArchiveArrivalPresentationState()
+        state.registerClaimed(awardKey: "hidden.study")
+
+        #expect(state.takeArrivalIfNeeded(validAwardKeys: []) == nil)
+        #expect(
+            state.takeArrivalIfNeeded(validAwardKeys: ["hidden.study"])
+                == "hidden.study"
+        )
+    }
+
+    @Test func successiveClaimsKeepTheirArrivalOrderUntilEachCardSettles() {
+        var state = ArchiveArrivalPresentationState()
+        state.registerClaimed(awardKey: "ordinary.level.4")
+        state.registerClaimed(awardKey: "hidden.study")
+        let validAwardKeys: Set<String> = ["ordinary.level.4", "hidden.study"]
+
+        #expect(state.takeArrivalIfNeeded(validAwardKeys: validAwardKeys) == "ordinary.level.4")
+        state.markCompleted(awardKey: "ordinary.level.4")
+        #expect(state.takeArrivalIfNeeded(validAwardKeys: validAwardKeys) == "hidden.study")
+    }
+
+    @Test func archiveArrivalTraceFlowsFromTabToTheCenteredCard() throws {
+        let samples = ArchiveArrivalTraceGeometry.samples(
+            progress: 1,
+            phase: 0.2,
+            reduceMotion: false
+        )
+        let first = try #require(samples.first)
+        let last = try #require(samples.last)
+
+        #expect(samples.count == 48)
+        #expect(abs(first.position.x - 0.50) < 0.03)
+        #expect(first.position.y > 1)
+        #expect(abs(last.position.x - 0.50) < 0.03)
+        #expect(last.position.y < 0.72)
+        #expect(samples.allSatisfy { $0.opacity > 0 && $0.diameter > 0 })
+    }
+
+    @Test func archiveArrivalParticlesDanceNormallyAndDisappearForReduceMotion() {
+        let movingA = ArchiveArrivalTraceGeometry.samples(
+            progress: 0.7,
+            phase: 0,
+            reduceMotion: false
+        )
+        let movingB = ArchiveArrivalTraceGeometry.samples(
+            progress: 0.7,
+            phase: 0.4,
+            reduceMotion: false
+        )
+        let reduced = ArchiveArrivalTraceGeometry.samples(
+            progress: 1,
+            phase: 0.4,
+            reduceMotion: true
+        )
+
+        #expect(movingA != movingB)
+        #expect(reduced.isEmpty)
     }
 }

@@ -41,6 +41,15 @@ enum LocalDataResetService {
                     context.delete(model)
                 }
             }
+            for model in try context.fetch(FetchDescriptor<CoinTransaction>()) {
+                context.delete(model)
+            }
+            for model in try context.fetch(FetchDescriptor<RewardProduct>()) {
+                context.delete(model)
+            }
+            for model in try context.fetch(FetchDescriptor<RewardRedemption>()) {
+                context.delete(model)
+            }
             try save(context)
         } catch {
             context.rollback()
