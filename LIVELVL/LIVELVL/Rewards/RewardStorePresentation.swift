@@ -4,6 +4,7 @@ nonisolated enum RewardProductTrailingAccessory: Equatable, Sendable {
     case image
     case redeem
     case insufficient
+    case redeemed
     case archived
 }
 
@@ -14,20 +15,41 @@ nonisolated struct RewardProductRailPresentation: Equatable, Sendable {
     let imageReference: String?
     let balanceCoinUnits: Int?
     let isArchived: Bool
+    let isRedeemed: Bool
+
+    init(
+        name: String,
+        priceCoinUnits: Int,
+        note: String,
+        imageReference: String?,
+        balanceCoinUnits: Int?,
+        isArchived: Bool,
+        isRedeemed: Bool = false
+    ) {
+        self.name = name
+        self.priceCoinUnits = priceCoinUnits
+        self.note = note
+        self.imageReference = imageReference
+        self.balanceCoinUnits = balanceCoinUnits
+        self.isArchived = isArchived
+        self.isRedeemed = isRedeemed
+    }
 
     var showsImage: Bool { imageReference != nil }
     var canRedeem: Bool {
         guard let balanceCoinUnits else { return false }
-        return !isArchived && balanceCoinUnits >= priceCoinUnits
+        return !isArchived && !isRedeemed && balanceCoinUnits >= priceCoinUnits
     }
     var canArchive: Bool { !isArchived }
     var trailingAccessory: RewardProductTrailingAccessory {
-        if showsImage { return .image }
         if isArchived { return .archived }
+        if isRedeemed { return .redeemed }
+        if showsImage { return .image }
         return canRedeem ? .redeem : .insufficient
     }
     var statusText: String {
         if isArchived { return "已归档" }
+        if isRedeemed { return "已兑换" }
         guard balanceCoinUnits != nil else { return "余额不可用" }
         return canRedeem ? "可兑换" : "余额不足"
     }
@@ -58,6 +80,19 @@ nonisolated struct RewardGuidanceProduct: Equatable, Sendable {
     let id: UUID
     let priceCoinUnits: Int
     let isArchived: Bool
+    let isRedeemed: Bool
+
+    init(
+        id: UUID,
+        priceCoinUnits: Int,
+        isArchived: Bool,
+        isRedeemed: Bool = false
+    ) {
+        self.id = id
+        self.priceCoinUnits = priceCoinUnits
+        self.isArchived = isArchived
+        self.isRedeemed = isRedeemed
+    }
 }
 
 nonisolated enum RewardGuidanceStatus: Equatable, Sendable {
@@ -86,7 +121,7 @@ nonisolated enum RewardGuidanceTargetResolver {
     ) -> RewardGuidanceTarget? {
         guard let balanceCoinUnits, balanceCoinUnits >= 0 else { return nil }
         let validProducts = products.filter {
-            !$0.isArchived && $0.priceCoinUnits > 0
+            !$0.isArchived && !$0.isRedeemed && $0.priceCoinUnits > 0
         }
         guard let firstProduct = validProducts.first else { return nil }
 

@@ -93,6 +93,23 @@ struct RewardStorePresentationTests {
         #expect(row.statusText == "已归档")
     }
 
+    @Test func redeemedProductShowsRedeemedAndCannotBeRedeemedAgain() {
+        let row = RewardProductRailPresentation(
+            name: "已兑换奖励",
+            priceCoinUnits: 100,
+            note: "",
+            imageReference: nil,
+            balanceCoinUnits: 500,
+            isArchived: false,
+            isRedeemed: true
+        )
+
+        #expect(!row.canRedeem)
+        #expect(row.statusText == "已兑换")
+        #expect(row.trailingAccessory == .redeemed)
+        #expect(row.accessibilityLabel == "已兑换奖励，10.0 金币，已兑换")
+    }
+
     @Test func repeatConfirmationReusesOneSubmissionUntilFinish() throws {
         let productID = UUID()
         var state = RewardRedemptionSubmissionState()
@@ -351,6 +368,42 @@ struct RewardStorePresentationTests {
 
         #expect(target.productID == active)
         #expect(target.status == .progress(missingCoinUnits: 25))
+    }
+
+    @Test func guidanceExcludesRedeemedProducts() throws {
+        let redeemed = UUID()
+        let available = UUID()
+        let target = try #require(RewardGuidanceTargetResolver.resolve(
+            products: [
+                RewardGuidanceProduct(
+                    id: redeemed,
+                    priceCoinUnits: 100,
+                    isArchived: false,
+                    isRedeemed: true
+                ),
+                RewardGuidanceProduct(
+                    id: available,
+                    priceCoinUnits: 200,
+                    isArchived: false,
+                    isRedeemed: false
+                ),
+            ],
+            balanceCoinUnits: 500
+        ))
+
+        #expect(target.productID == available)
+        #expect(target.status == .affordable)
+        #expect(RewardGuidanceTargetResolver.resolve(
+            products: [
+                RewardGuidanceProduct(
+                    id: redeemed,
+                    priceCoinUnits: 100,
+                    isArchived: false,
+                    isRedeemed: true
+                ),
+            ],
+            balanceCoinUnits: 500
+        ) == nil)
     }
 
     @Test func guidanceIsAbsentWithoutAUsableBalanceOrValidProduct() {

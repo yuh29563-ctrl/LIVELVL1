@@ -49,6 +49,10 @@ struct RewardStoreView: View {
         products.filter(\.isArchived)
     }
 
+    private var redeemedProductIDs: Set<UUID> {
+        Set(redemptions.compactMap(\.productID))
+    }
+
     private var balancePresentation: RewardBalancePresentation {
         _ = coinTransactions.count
         do {
@@ -64,7 +68,8 @@ struct RewardStoreView: View {
                 RewardGuidanceProduct(
                     id: $0.id,
                     priceCoinUnits: $0.priceCoinUnits,
-                    isArchived: $0.isArchived
+                    isArchived: $0.isArchived,
+                    isRedeemed: redeemedProductIDs.contains($0.id)
                 )
             },
             balanceCoinUnits: balancePresentation.coinUnits
@@ -95,6 +100,7 @@ struct RewardStoreView: View {
                             products: activeProducts,
                             balance: balancePresentation,
                             guidanceTarget: guidanceTarget,
+                            redeemedProductIDs: redeemedProductIDs,
                             isSubmitting: submissionState.isSubmitting,
                             onRedeem: requestRedemption,
                             onEdit: edit,
@@ -108,6 +114,7 @@ struct RewardStoreView: View {
                                     products: archivedProducts,
                                     balance: balancePresentation,
                                     guidanceTarget: nil,
+                                    redeemedProductIDs: redeemedProductIDs,
                                     isSubmitting: submissionState.isSubmitting,
                                     onRedeem: { _ in },
                                     onEdit: edit,
@@ -213,6 +220,7 @@ struct RewardStoreView: View {
 
     private func requestRedemption(_ product: RewardProduct) {
         guard balancePresentation.allowsRedemption,
+              !redeemedProductIDs.contains(product.id),
               !submissionState.isSubmitting else { return }
         pendingProduct = product
         isShowingRedemptionConfirmation = true
@@ -604,6 +612,7 @@ private struct RewardProductList: View {
     let products: [RewardProduct]
     let balance: RewardBalancePresentation
     let guidanceTarget: RewardGuidanceTarget?
+    let redeemedProductIDs: Set<UUID>
     let isSubmitting: Bool
     let onRedeem: (RewardProduct) -> Void
     let onEdit: (RewardProduct) -> Void
@@ -632,6 +641,7 @@ private struct RewardProductList: View {
                         guidanceStatus: guidanceTarget?.productID == product.id
                             ? guidanceTarget?.status
                             : nil,
+                        isRedeemed: redeemedProductIDs.contains(product.id),
                         isSubmitting: isSubmitting,
                         onRedeem: { onRedeem(product) },
                         onEdit: { onEdit(product) },
@@ -648,6 +658,7 @@ private struct RewardProductRail: View {
     let product: RewardProduct
     let balance: RewardBalancePresentation
     let guidanceStatus: RewardGuidanceStatus?
+    let isRedeemed: Bool
     let isSubmitting: Bool
     let onRedeem: () -> Void
     let onEdit: () -> Void
@@ -660,7 +671,8 @@ private struct RewardProductRail: View {
             note: product.note,
             imageReference: product.imageReference,
             balanceCoinUnits: balance.coinUnits,
-            isArchived: product.isArchived
+            isArchived: product.isArchived,
+            isRedeemed: isRedeemed
         )
     }
 
@@ -747,7 +759,11 @@ private struct RewardProductRail: View {
                 .buttonStyle(.plain)
                 .disabled(!canRedeem)
                 .opacity(canRedeem ? 1 : 0.58)
-                .accessibilityLabel("兑换 \(presentation.name)")
+                .accessibilityLabel(
+                    isRedeemed
+                        ? "\(presentation.name)，已兑换"
+                        : "兑换 \(presentation.name)"
+                )
                 .accessibilityIdentifier("rewards.redeem.\(product.id.uuidString)")
             } else if !product.isArchived {
                 Button(action: onRedeem) {
