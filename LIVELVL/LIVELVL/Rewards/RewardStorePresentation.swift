@@ -54,6 +54,65 @@ nonisolated enum RewardBalancePresentation: Equatable, Sendable {
     }
 }
 
+nonisolated struct RewardGuidanceProduct: Equatable, Sendable {
+    let id: UUID
+    let priceCoinUnits: Int
+    let isArchived: Bool
+}
+
+nonisolated enum RewardGuidanceStatus: Equatable, Sendable {
+    case affordable
+    case progress(missingCoinUnits: Int)
+
+    var displayText: String {
+        switch self {
+        case .affordable:
+            "可兑换"
+        case let .progress(missingCoinUnits):
+            "还差 \(CoinDisplayFormatter.text(forCoinUnits: missingCoinUnits)) 金币"
+        }
+    }
+}
+
+nonisolated struct RewardGuidanceTarget: Equatable, Sendable {
+    let productID: UUID
+    let status: RewardGuidanceStatus
+}
+
+nonisolated enum RewardGuidanceTargetResolver {
+    static func resolve(
+        products: [RewardGuidanceProduct],
+        balanceCoinUnits: Int?
+    ) -> RewardGuidanceTarget? {
+        guard let balanceCoinUnits, balanceCoinUnits >= 0 else { return nil }
+        let validProducts = products.filter {
+            !$0.isArchived && $0.priceCoinUnits > 0
+        }
+        guard let firstProduct = validProducts.first else { return nil }
+
+        if let affordable = validProducts.first(where: {
+            balanceCoinUnits >= $0.priceCoinUnits
+        }) {
+            return RewardGuidanceTarget(
+                productID: affordable.id,
+                status: .affordable
+            )
+        }
+
+        let nearest = validProducts.dropFirst().reduce(firstProduct) { current, candidate in
+            let currentShortfall = current.priceCoinUnits - balanceCoinUnits
+            let candidateShortfall = candidate.priceCoinUnits - balanceCoinUnits
+            return candidateShortfall < currentShortfall ? candidate : current
+        }
+        return RewardGuidanceTarget(
+            productID: nearest.id,
+            status: .progress(
+                missingCoinUnits: nearest.priceCoinUnits - balanceCoinUnits
+            )
+        )
+    }
+}
+
 nonisolated struct RewardRedemptionSubmissionState: Equatable, Sendable {
     private(set) var productID: UUID?
     private(set) var requestKey: String?
@@ -79,7 +138,6 @@ nonisolated enum RewardStoreLayout {
     static let balanceTopSpacing: CGFloat = 24
     static let balanceInternalSpacing: CGFloat = 0
     static let productTopSpacing: CGFloat = 69
-    static let particleTrailTopOffset: CGFloat = 125
     static let heroMinimumScale = 0.55
 
     static func usesVerticalBalanceLayout(isAccessibilitySize: Bool) -> Bool {
@@ -93,10 +151,46 @@ nonisolated struct RewardLedgerSample: Equatable, Sendable {
     let diameter: CGFloat
     let row: Int
     let column: Int
+    let fillFraction: Double
     let isFilled: Bool
 }
 
+nonisolated struct RewardLedgerFill: Equatable, Sendable {
+    let fullPointCount: Int
+    let partialPointFraction: Double
+    let overflowCoinUnits: Int
+
+    var overflowText: String? {
+        guard overflowCoinUnits > 0 else { return nil }
+        return "+\(CoinDisplayFormatter.text(forCoinUnits: overflowCoinUnits))"
+    }
+}
+
 nonisolated enum RewardLedgerGeometry {
+    static let coinUnitsPerPoint = 100
+
+    static func fill(
+        columns: Int,
+        rows: Int,
+        balanceCoinUnits: Int
+    ) -> RewardLedgerFill {
+        let pointCount = max(0, columns) * max(0, rows)
+        let capacityCoinUnits = pointCount * coinUnitsPerPoint
+        let availableCoinUnits = max(0, balanceCoinUnits)
+        let visibleCoinUnits = min(availableCoinUnits, capacityCoinUnits)
+        let fullPointCount = visibleCoinUnits / coinUnitsPerPoint
+        let remainderCoinUnits = visibleCoinUnits % coinUnitsPerPoint
+        let partialPointFraction = fullPointCount < pointCount
+            ? Double(remainderCoinUnits) / Double(coinUnitsPerPoint)
+            : 0
+
+        return RewardLedgerFill(
+            fullPointCount: fullPointCount,
+            partialPointFraction: partialPointFraction,
+            overflowCoinUnits: max(0, availableCoinUnits - capacityCoinUnits)
+        )
+    }
+
     static func samples(
         columns: Int,
         rows: Int,
@@ -104,14 +198,39 @@ nonisolated enum RewardLedgerGeometry {
         phase: Double,
         reduceMotion: Bool
     ) -> [RewardLedgerSample] {
+        samples(
+            columns: columns,
+            rows: rows,
+            displayedBalanceCoinUnits: Double(max(0, balanceCoinUnits)),
+            phase: phase,
+            reduceMotion: reduceMotion
+        )
+    }
+
+    static func samples(
+        columns: Int,
+        rows: Int,
+        displayedBalanceCoinUnits: Double,
+        phase: Double,
+        reduceMotion: Bool
+    ) -> [RewardLedgerSample] {
         guard columns > 0, rows > 0 else { return [] }
         let resolvedPhase = reduceMotion ? 0.21 : phase - floor(phase)
-        let balanceSeed = Double(abs(balanceCoinUnits % 997)) / 997
-        let cycleBalance = abs(balanceCoinUnits % 1_000)
-        let filledColumns = min(
-            columns,
-            max(0, Int((Double(cycleBalance) / 1_000 * Double(columns)).rounded()))
+        let availableCoinUnits = max(0, displayedBalanceCoinUnits)
+        let balanceSeed = Double(Int(availableCoinUnits.rounded(.down)) % 997) / 997
+        let pointCount = columns * rows
+        let visibleCoinUnits = min(
+            availableCoinUnits,
+            Double(pointCount * coinUnitsPerPoint)
         )
+        let fullPointCount = min(
+            pointCount,
+            Int(visibleCoinUnits / Double(coinUnitsPerPoint))
+        )
+        let partialPointFraction = fullPointCount < pointCount
+            ? visibleCoinUnits.truncatingRemainder(dividingBy: Double(coinUnitsPerPoint))
+                / Double(coinUnitsPerPoint)
+            : 0
         var result: [RewardLedgerSample] = []
         result.reserveCapacity(columns * rows)
 
@@ -124,7 +243,17 @@ nonisolated enum RewardLedgerGeometry {
                 let angle = (resolvedPhase + seed + balanceSeed * 0.18) * .pi * 2
                 let driftX = reduceMotion ? 0 : cos(angle + baseY * 4) * 0.003
                 let driftY = reduceMotion ? 0 : sin(angle * 0.82 + baseX * 8) * 0.006
-                let isFilled = row == rows - 1 && column < filledColumns
+                let fillIndex = (rows - 1 - row) * columns + column
+                let fillFraction: Double
+                if fillIndex < fullPointCount {
+                    fillFraction = 1
+                } else if fillIndex == fullPointCount {
+                    fillFraction = partialPointFraction
+                } else {
+                    fillFraction = 0
+                }
+                let emptyOpacity = 0.10 + seed * 0.13
+                let emptyDiameter = 1.4 + CGFloat(seed) * 0.45
 
                 result.append(
                     RewardLedgerSample(
@@ -132,11 +261,12 @@ nonisolated enum RewardLedgerGeometry {
                             x: min(1, max(0, baseX + driftX)),
                             y: min(1, max(0, baseY + driftY))
                         ),
-                        opacity: isFilled ? 0.92 : 0.10 + seed * 0.13,
-                        diameter: isFilled ? 2.25 : 1.4 + CGFloat(seed) * 0.45,
+                        opacity: emptyOpacity + (0.92 - emptyOpacity) * fillFraction,
+                        diameter: emptyDiameter + (2.25 - emptyDiameter) * CGFloat(fillFraction),
                         row: row,
                         column: column,
-                        isFilled: isFilled
+                        fillFraction: fillFraction,
+                        isFilled: fillFraction == 1
                     )
                 )
             }
@@ -146,42 +276,84 @@ nonisolated enum RewardLedgerGeometry {
     }
 }
 
-nonisolated struct RewardPageTrailSample: Equatable, Sendable {
+nonisolated struct RewardGuidanceTrailSample: Equatable, Sendable {
     let position: CGPoint
     let opacity: Double
     let diameter: CGFloat
-    let usesLightInk: Bool
 }
 
-nonisolated enum RewardPageTrailGeometry {
+nonisolated enum RewardGuidanceTrailGeometry {
+    static func controlPoints(
+        start: CGPoint,
+        end: CGPoint
+    ) -> (first: CGPoint, second: CGPoint) {
+        let deltaX = end.x - start.x
+        let deltaY = end.y - start.y
+        let lateralBow = min(84, max(48, abs(deltaY) * 0.18))
+        return (
+            first: CGPoint(
+                x: start.x + deltaX * 0.12 - lateralBow,
+                y: start.y + max(42, deltaY * 0.28)
+            ),
+            second: CGPoint(
+                x: end.x - deltaX * 0.18 - lateralBow * 0.58,
+                y: end.y - max(48, deltaY * 0.20)
+            )
+        )
+    }
+
     static func samples(
         count: Int,
         phase: Double,
-        reduceMotion: Bool
-    ) -> [RewardPageTrailSample] {
-        guard count > 1, !reduceMotion else { return [] }
-        let resolvedPhase = phase - floor(phase)
+        reduceMotion: Bool,
+        start: CGPoint,
+        end: CGPoint,
+        status: RewardGuidanceStatus
+    ) -> [RewardGuidanceTrailSample] {
+        guard count > 1 else { return [] }
+        let resolvedPhase = reduceMotion ? 0.21 : phase - floor(phase)
+        let controls = controlPoints(start: start, end: end)
+        let statusOpacity: Double
+        switch status {
+        case .affordable:
+            statusOpacity = 1
+        case .progress:
+            statusOpacity = 0.48
+        }
 
         return (0..<count).map { index in
             let t = Double(index) / Double(count - 1)
             let inverse = 1 - t
             let seed = Double((index * 61 + 23) % 101) / 101
-            let baseX = inverse * inverse * 0.48
-                + 2 * inverse * t * 0.40
-                + t * t * 0.82
-            let taper = sin(t * .pi)
-            let dance = sin((resolvedPhase + seed) * .pi * 2 + t * 13)
-            let driftX = dance * taper * 0.008
-            let driftY = cos((resolvedPhase * 0.8 + seed) * .pi * 2) * taper * 0.004
+            var position = CGPoint(
+                x: inverse * inverse * inverse * start.x
+                    + 3 * inverse * inverse * t * controls.first.x
+                    + 3 * inverse * t * t * controls.second.x
+                    + t * t * t * end.x,
+                y: inverse * inverse * inverse * start.y
+                    + 3 * inverse * inverse * t * controls.first.y
+                    + 3 * inverse * t * t * controls.second.y
+                    + t * t * t * end.y
+            )
+            if index == 0 {
+                position = start
+            } else if index == count - 1 {
+                position = end
+            } else if !reduceMotion {
+                let taper = sin(t * .pi)
+                position.x += sin((resolvedPhase + seed) * .pi * 2 + t * 11)
+                    * taper * 2.2
+                position.y += cos((resolvedPhase * 0.82 + seed) * .pi * 2 + t * 7)
+                    * taper * 1.4
+            }
+            let flow = reduceMotion
+                ? 0.86
+                : 0.78 + 0.22 * sin((resolvedPhase + t * 0.72) * .pi * 2)
 
-            return RewardPageTrailSample(
-                position: CGPoint(
-                    x: min(1, max(0, baseX + driftX)),
-                    y: min(1, max(0, t + driftY))
-                ),
-                opacity: 0.16 + t * 0.56 + seed * 0.12,
-                diameter: 1 + CGFloat(t) * 1.4 + CGFloat(seed) * 0.55,
-                usesLightInk: t > 0.66
+            return RewardGuidanceTrailSample(
+                position: position,
+                opacity: (0.24 + t * 0.42 + seed * 0.08) * flow * statusOpacity,
+                diameter: 1.5 + CGFloat(t) * 1.5 + CGFloat(seed) * 0.45
             )
         }
     }

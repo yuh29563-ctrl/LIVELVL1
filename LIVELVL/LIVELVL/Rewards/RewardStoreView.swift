@@ -4,12 +4,31 @@ import SwiftData
 import SwiftUI
 import UIKit
 
+private enum RewardGuidanceAnchor: Hashable {
+    case ledger
+    case product(UUID)
+}
+
+private struct RewardGuidanceAnchorPreferenceKey: PreferenceKey {
+    static let defaultValue: [RewardGuidanceAnchor: Anchor<CGRect>] = [:]
+
+    static func reduce(
+        value: inout [RewardGuidanceAnchor: Anchor<CGRect>],
+        nextValue: () -> [RewardGuidanceAnchor: Anchor<CGRect>]
+    ) {
+        value.merge(nextValue(), uniquingKeysWith: { _, newValue in newValue })
+    }
+}
+
 struct RewardStoreView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \RewardProduct.createdAt, order: .reverse)
     private var products: [RewardProduct]
     @Query(sort: \RewardRedemption.redeemedAt, order: .reverse)
     private var redemptions: [RewardRedemption]
+    @Query(sort: \CoinTransaction.createdAt, order: .forward)
+    private var coinTransactions: [CoinTransaction]
     @Query private var progressItems: [Progress]
 
     @State private var editorRoute: RewardProductEditorRoute?
@@ -31,11 +50,25 @@ struct RewardStoreView: View {
     }
 
     private var balancePresentation: RewardBalancePresentation {
+        _ = coinTransactions.count
         do {
             return .available(try CoinLedgerService.balance(in: context))
         } catch {
             return .unavailable
         }
+    }
+
+    private var guidanceTarget: RewardGuidanceTarget? {
+        RewardGuidanceTargetResolver.resolve(
+            products: products.map {
+                RewardGuidanceProduct(
+                    id: $0.id,
+                    priceCoinUnits: $0.priceCoinUnits,
+                    isArchived: $0.isArchived
+                )
+            },
+            balanceCoinUnits: balancePresentation.coinUnits
+        )
     }
 
     private var pendingRedemptionCount: Int {
@@ -44,10 +77,8 @@ struct RewardStoreView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                ZStack(alignment: .top) {
-                    RewardPageParticleTrail()
-
+            ScrollViewReader { scrollProxy in
+                ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         RewardStoreHeader(
                             onHistory: { isShowingHistory = true },
@@ -63,6 +94,7 @@ struct RewardStoreView: View {
                         RewardProductList(
                             products: activeProducts,
                             balance: balancePresentation,
+                            guidanceTarget: guidanceTarget,
                             isSubmitting: submissionState.isSubmitting,
                             onRedeem: requestRedemption,
                             onEdit: edit,
@@ -75,6 +107,7 @@ struct RewardStoreView: View {
                                 RewardProductList(
                                     products: archivedProducts,
                                     balance: balancePresentation,
+                                    guidanceTarget: nil,
                                     isSubmitting: submissionState.isSubmitting,
                                     onRedeem: { _ in },
                                     onEdit: edit,
@@ -87,12 +120,44 @@ struct RewardStoreView: View {
                             .padding(.top, 28)
                         }
                     }
+                    .overlayPreferenceValue(RewardGuidanceAnchorPreferenceKey.self) { anchors in
+                        GeometryReader { geometry in
+                            if let guidanceTarget,
+                               let sourceAnchor = anchors[.ledger],
+                               let targetAnchor = anchors[.product(guidanceTarget.productID)] {
+                                RewardGuidanceParticleTrail(
+                                    start: CGPoint(
+                                        x: geometry[sourceAnchor].midX,
+                                        y: geometry[sourceAnchor].midY
+                                    ),
+                                    end: CGPoint(
+                                        x: geometry[targetAnchor].midX,
+                                        y: geometry[targetAnchor].midY
+                                    ),
+                                    status: guidanceTarget.status,
+                                    onActivate: {
+                                        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.32)) {
+                                            scrollProxy.scrollTo(
+                                                guidanceTarget.productID,
+                                                anchor: .center
+                                            )
+                                        }
+                                    }
+                                )
+                                .frame(
+                                    width: geometry.size.width,
+                                    height: geometry.size.height,
+                                    alignment: .topLeading
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                    .padding(.top, RewardStoreLayout.pageTopPadding)
+                    .padding(.bottom, RootTabPageLayout.contentBottomPadding)
                 }
-                .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
-                .padding(.top, RewardStoreLayout.pageTopPadding)
-                .padding(.bottom, RootTabPageLayout.contentBottomPadding)
+                .background(LivingOSTheme.canvas)
             }
-            .background(LivingOSTheme.canvas)
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $editorRoute) { route in
                 RewardProductEditor(product: route.product)
@@ -346,9 +411,30 @@ private struct RewardBalanceHero: View {
     }
 
     private func ledgerStrip(height: CGFloat) -> some View {
-        RewardLedgerStrip(balanceCoinUnits: balance.coinUnits ?? 0)
-            .frame(maxWidth: .infinity)
-            .frame(height: height)
+        let balanceCoinUnits = balance.coinUnits ?? 0
+        let overflowText = RewardLedgerGeometry.fill(
+            columns: 24,
+            rows: 6,
+            balanceCoinUnits: balanceCoinUnits
+        ).overflowText
+
+        return HStack(alignment: .center, spacing: 8) {
+            RewardLedgerStrip(balanceCoinUnits: balanceCoinUnits)
+                .frame(maxWidth: .infinity)
+                .frame(height: height)
+                .anchorPreference(
+                    key: RewardGuidanceAnchorPreferenceKey.self,
+                    value: .bounds
+                ) { [.ledger: $0] }
+
+            if let overflowText {
+                Text(overflowText)
+                    .font(.system(.caption2, design: .monospaced, weight: .medium))
+                    .foregroundStyle(LivingOSTheme.graphite)
+                    .monospacedDigit()
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -360,21 +446,101 @@ private struct RewardLedgerStrip: View {
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
-            let samples = RewardLedgerGeometry.samples(
-                columns: 24,
-                rows: 6,
-                balanceCoinUnits: balanceCoinUnits,
+            RewardLedgerCanvas(
+                displayedBalanceCoinUnits: Double(balanceCoinUnits),
                 phase: timeline.date.timeIntervalSinceReferenceDate / 9,
                 reduceMotion: reduceMotion
             )
-            Canvas { context, size in
+            .animation(
+                reduceMotion ? nil : .easeInOut(duration: 0.48),
+                value: balanceCoinUnits
+            )
+        }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
+    }
+}
+
+private struct RewardLedgerCanvas: View, Animatable {
+    var displayedBalanceCoinUnits: Double
+    let phase: Double
+    let reduceMotion: Bool
+
+    var animatableData: Double {
+        get { displayedBalanceCoinUnits }
+        set { displayedBalanceCoinUnits = newValue }
+    }
+
+    var body: some View {
+        let samples = RewardLedgerGeometry.samples(
+            columns: 24,
+            rows: 6,
+            displayedBalanceCoinUnits: displayedBalanceCoinUnits,
+            phase: phase,
+            reduceMotion: reduceMotion
+        )
+
+        Canvas { context, size in
+            for sample in samples {
+                let diameter = sample.diameter
+                let rect = CGRect(
+                    x: sample.position.x * size.width - diameter / 2,
+                    y: sample.position.y * size.height - diameter / 2,
+                    width: diameter,
+                    height: diameter
+                )
+                context.fill(
+                    Path(ellipseIn: rect),
+                    with: .color(LivingOSTheme.ink.opacity(sample.opacity))
+                )
+            }
+        }
+    }
+}
+
+private struct RewardGuidanceParticleTrail: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
+
+    let start: CGPoint
+    let end: CGPoint
+    let status: RewardGuidanceStatus
+    let onActivate: () -> Void
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
+            let samples = RewardGuidanceTrailGeometry.samples(
+                count: 58,
+                phase: timeline.date.timeIntervalSinceReferenceDate / 8.5,
+                reduceMotion: reduceMotion,
+                start: start,
+                end: end,
+                status: status
+            )
+
+            Canvas { context, _ in
                 for sample in samples {
                     let diameter = sample.diameter
                     let rect = CGRect(
-                        x: sample.position.x * size.width - diameter / 2,
-                        y: sample.position.y * size.height - diameter / 2,
+                        x: sample.position.x - diameter / 2,
+                        y: sample.position.y - diameter / 2,
                         width: diameter,
                         height: diameter
+                    )
+                    context.fill(
+                        Path(ellipseIn: rect.insetBy(dx: -0.8, dy: -0.8)),
+                        with: .color(LivingOSTheme.ink.opacity(sample.opacity * 0.16))
                     )
                     context.fill(
                         Path(ellipseIn: rect),
@@ -382,11 +548,25 @@ private struct RewardLedgerStrip: View {
                     )
                 }
             }
+            .contentShape(
+                RewardGuidanceTrailHitShape(start: start, end: end)
+            )
+            .onTapGesture(perform: onActivate)
+            .accessibilityElement()
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel(accessibilityLabel)
         }
         .onAppear { isVisible = true }
         .onDisappear { isVisible = false }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
+    }
+
+    private var accessibilityLabel: String {
+        switch status {
+        case .affordable:
+            "定位到可兑换奖励"
+        case .progress:
+            "定位到最近可兑换奖励"
+        }
     }
 
     private var pausesTimeline: Bool {
@@ -398,56 +578,24 @@ private struct RewardLedgerStrip: View {
     }
 }
 
-private struct RewardPageParticleTrail: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
-    @State private var isVisible = false
+private struct RewardGuidanceTrailHitShape: Shape {
+    let start: CGPoint
+    let end: CGPoint
 
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
-            let samples = RewardPageTrailGeometry.samples(
-                count: 54,
-                phase: timeline.date.timeIntervalSinceReferenceDate / 7.5,
-                reduceMotion: reduceMotion
-            )
-
-            Canvas { context, size in
-                for sample in samples {
-                    let diameter = sample.diameter
-                    let rect = CGRect(
-                        x: sample.position.x * size.width - diameter / 2,
-                        y: sample.position.y * size.height - diameter / 2,
-                        width: diameter,
-                        height: diameter
-                    )
-                    let color = sample.usesLightInk ? Color.white : LivingOSTheme.graphite
-                    if sample.usesLightInk {
-                        context.fill(
-                            Path(ellipseIn: rect.insetBy(dx: -1.1, dy: -1.1)),
-                            with: .color(LivingOSTheme.graphite.opacity(0.08))
-                        )
-                    }
-                    context.fill(
-                        Path(ellipseIn: rect),
-                        with: .color(color.opacity(sample.opacity))
-                    )
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 500)
-        .offset(y: RewardStoreLayout.particleTrailTopOffset)
-        .onAppear { isVisible = true }
-        .onDisappear { isVisible = false }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-
-    private var pausesTimeline: Bool {
-        LivingOSAnimationActivity.isPaused(
-            reduceMotion: reduceMotion,
-            isVisible: isVisible,
-            isSceneActive: scenePhase == .active
+    func path(in rect: CGRect) -> Path {
+        let controls = RewardGuidanceTrailGeometry.controlPoints(
+            start: start,
+            end: end
+        )
+        var curve = Path()
+        curve.move(to: start)
+        curve.addCurve(
+            to: end,
+            control1: controls.first,
+            control2: controls.second
+        )
+        return curve.trimmedPath(from: 0, to: 0.82).strokedPath(
+            StrokeStyle(lineWidth: 32, lineCap: .round, lineJoin: .round)
         )
     }
 }
@@ -455,6 +603,7 @@ private struct RewardPageParticleTrail: View {
 private struct RewardProductList: View {
     let products: [RewardProduct]
     let balance: RewardBalancePresentation
+    let guidanceTarget: RewardGuidanceTarget?
     let isSubmitting: Bool
     let onRedeem: (RewardProduct) -> Void
     let onEdit: (RewardProduct) -> Void
@@ -480,11 +629,15 @@ private struct RewardProductList: View {
                     RewardProductRail(
                         product: product,
                         balance: balance,
+                        guidanceStatus: guidanceTarget?.productID == product.id
+                            ? guidanceTarget?.status
+                            : nil,
                         isSubmitting: isSubmitting,
                         onRedeem: { onRedeem(product) },
                         onEdit: { onEdit(product) },
                         onArchive: { onArchive(product) }
                     )
+                    .id(product.id)
                 }
             }
         }
@@ -494,6 +647,7 @@ private struct RewardProductList: View {
 private struct RewardProductRail: View {
     let product: RewardProduct
     let balance: RewardBalancePresentation
+    let guidanceStatus: RewardGuidanceStatus?
     let isSubmitting: Bool
     let onRedeem: () -> Void
     let onEdit: () -> Void
@@ -514,6 +668,10 @@ private struct RewardProductRail: View {
         balance.allowsRedemption && presentation.canRedeem && !isSubmitting
     }
 
+    private var resolvedStatusText: String {
+        guidanceStatus?.displayText ?? presentation.statusText
+    }
+
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
@@ -527,13 +685,13 @@ private struct RewardProductRail: View {
                     .monospacedDigit()
                     .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
 
-                Text(presentation.note.isEmpty ? presentation.statusText : presentation.note)
+                Text(presentation.note.isEmpty ? resolvedStatusText : presentation.note)
                     .font(.footnote)
                     .foregroundStyle(LivingOSTheme.graphite)
                     .lineLimit(2)
 
                 if !presentation.note.isEmpty, !presentation.canRedeem {
-                    Text(presentation.statusText)
+                    Text(resolvedStatusText)
                         .font(.system(.caption2, design: .monospaced, weight: .medium))
                         .foregroundStyle(LivingOSTheme.graphite)
                 }
@@ -541,6 +699,36 @@ private struct RewardProductRail: View {
 
             Spacer(minLength: 8)
 
+            trailingAccessory
+        }
+        .padding(.vertical, 22)
+        .contentShape(Rectangle())
+        .onTapGesture(count: 2, perform: onEdit)
+        .contextMenu {
+            Button("编辑", action: onEdit)
+            if !product.isArchived {
+                Button("归档", role: .destructive, action: onArchive)
+            }
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(presentation.accessibilityLabel)
+        .accessibilityValue(guidanceStatus?.displayText ?? "")
+        .accessibilityActions {
+            Button("编辑", action: onEdit)
+            if presentation.canArchive {
+                Button("归档", action: onArchive)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(LivingOSTheme.mist)
+                .frame(height: 0.5)
+        }
+    }
+
+    @ViewBuilder
+    private var trailingAccessory: some View {
+        Group {
             if let imageReference = product.imageReference {
                 Button(action: onRedeem) {
                     RewardProductImageView(reference: imageReference)
@@ -564,7 +752,7 @@ private struct RewardProductRail: View {
             } else if !product.isArchived {
                 Button(action: onRedeem) {
                     HStack(spacing: 8) {
-                        Text(presentation.canRedeem ? "兑换" : presentation.statusText)
+                        Text(presentation.canRedeem ? "兑换" : resolvedStatusText)
                         if presentation.canRedeem {
                             Circle()
                                 .fill(LivingOSTheme.signal)
@@ -587,27 +775,11 @@ private struct RewardProductRail: View {
                 .accessibilityIdentifier("rewards.redeem.\(product.id.uuidString)")
             }
         }
-        .padding(.vertical, 22)
-        .contentShape(Rectangle())
-        .onTapGesture(count: 2, perform: onEdit)
-        .contextMenu {
-            Button("编辑", action: onEdit)
-            if !product.isArchived {
-                Button("归档", role: .destructive, action: onArchive)
-            }
-        }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(presentation.accessibilityLabel)
-        .accessibilityActions {
-            Button("编辑", action: onEdit)
-            if presentation.canArchive {
-                Button("归档", action: onArchive)
-            }
-        }
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(LivingOSTheme.mist)
-                .frame(height: 0.5)
+        .anchorPreference(
+            key: RewardGuidanceAnchorPreferenceKey.self,
+            value: .bounds
+        ) { anchor in
+            guidanceStatus == nil ? [:] : [.product(product.id): anchor]
         }
     }
 }
