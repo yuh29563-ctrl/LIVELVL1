@@ -4,33 +4,70 @@ import SwiftData
 import SwiftUI
 import UIKit
 
+private enum RewardGuidanceAnchor: Hashable {
+    case ledger
+    case product(UUID)
+}
+
+private struct RewardGuidanceAnchorPreferenceKey: PreferenceKey {
+    static let defaultValue: [RewardGuidanceAnchor: Anchor<CGRect>] = [:]
+
+    static func reduce(
+        value: inout [RewardGuidanceAnchor: Anchor<CGRect>],
+        nextValue: () -> [RewardGuidanceAnchor: Anchor<CGRect>]
+    ) {
+        value.merge(nextValue(), uniquingKeysWith: { _, newValue in newValue })
+    }
+}
+
 struct RewardStoreView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \RewardProduct.createdAt, order: .reverse)
     private var products: [RewardProduct]
     @Query(sort: \RewardRedemption.redeemedAt, order: .reverse)
     private var redemptions: [RewardRedemption]
+    @Query(sort: \CoinTransaction.createdAt, order: .forward)
+    private var coinTransactions: [CoinTransaction]
     @Query private var progressItems: [Progress]
 
     @State private var editorRoute: RewardProductEditorRoute?
-    @State private var pendingProduct: RewardProduct?
-    @State private var isShowingRedemptionConfirmation = false
-    @State private var archivingProduct: RewardProduct?
-    @State private var isShowingArchiveConfirmation = false
+    @State private var confirmationSelection = RewardConfirmationSelection()
     @State private var isShowingHistory = false
     @State private var isShowingMessage = false
     @State private var message = ""
     @State private var submissionState = RewardRedemptionSubmissionState()
 
+    private var unavailableProductIDs: Set<UUID> {
+        RewardProductVisibility.hiddenProductIDs(
+            redemptions: redemptions.map {
+                RewardRedemptionVisibility(
+                    productID: $0.productID,
+                    status: $0.status,
+                    isHiddenFromHistory: $0.historyHiddenAt != nil
+                )
+            }
+        )
+    }
+
     private var activeProducts: [RewardProduct] {
-        products.filter { !$0.isArchived }
+        products.filter {
+            !$0.isArchived && !unavailableProductIDs.contains($0.id)
+        }
     }
 
     private var archivedProducts: [RewardProduct] {
-        products.filter(\.isArchived)
+        products.filter {
+            $0.isArchived && !unavailableProductIDs.contains($0.id)
+        }
+    }
+
+    private var visibleRedemptions: [RewardRedemption] {
+        redemptions.filter { $0.historyHiddenAt == nil }
     }
 
     private var balancePresentation: RewardBalancePresentation {
+        _ = coinTransactions.count
         do {
             return .available(try CoinLedgerService.balance(in: context))
         } catch {
@@ -38,16 +75,28 @@ struct RewardStoreView: View {
         }
     }
 
+    private var guidanceTarget: RewardGuidanceTarget? {
+        RewardGuidanceTargetResolver.resolve(
+            products: products.map {
+                RewardGuidanceProduct(
+                    id: $0.id,
+                    priceCoinUnits: $0.priceCoinUnits,
+                    isArchived: $0.isArchived,
+                    isRedeemed: unavailableProductIDs.contains($0.id)
+                )
+            },
+            balanceCoinUnits: balancePresentation.coinUnits
+        )
+    }
+
     private var pendingRedemptionCount: Int {
-        redemptions.lazy.filter { $0.status == .pending }.count
+        visibleRedemptions.lazy.filter { $0.status == .pending }.count
     }
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                ZStack(alignment: .top) {
-                    RewardPageParticleTrail()
-
+            ScrollViewReader { scrollProxy in
+                ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
                         RewardStoreHeader(
                             onHistory: { isShowingHistory = true },
@@ -63,10 +112,13 @@ struct RewardStoreView: View {
                         RewardProductList(
                             products: activeProducts,
                             balance: balancePresentation,
+                            guidanceTarget: guidanceTarget,
+                            redeemedProductIDs: unavailableProductIDs,
                             isSubmitting: submissionState.isSubmitting,
-                            onRedeem: requestRedemption,
+                            confirmationSelection: $confirmationSelection,
+                            onRedeem: redeem,
                             onEdit: edit,
-                            onArchive: requestArchive
+                            onArchive: archive
                         )
                         .padding(.top, RewardStoreLayout.productTopSpacing)
 
@@ -75,7 +127,10 @@ struct RewardStoreView: View {
                                 RewardProductList(
                                     products: archivedProducts,
                                     balance: balancePresentation,
+                                    guidanceTarget: nil,
+                                    redeemedProductIDs: unavailableProductIDs,
                                     isSubmitting: submissionState.isSubmitting,
+                                    confirmationSelection: $confirmationSelection,
                                     onRedeem: { _ in },
                                     onEdit: edit,
                                     onArchive: { _ in }
@@ -87,47 +142,50 @@ struct RewardStoreView: View {
                             .padding(.top, 28)
                         }
                     }
+                    .overlayPreferenceValue(RewardGuidanceAnchorPreferenceKey.self) { anchors in
+                        GeometryReader { geometry in
+                            if let guidanceTarget,
+                               let sourceAnchor = anchors[.ledger],
+                               let targetAnchor = anchors[.product(guidanceTarget.productID)] {
+                                RewardGuidanceParticleTrail(
+                                    start: CGPoint(
+                                        x: geometry[sourceAnchor].midX,
+                                        y: geometry[sourceAnchor].midY
+                                    ),
+                                    end: CGPoint(
+                                        x: geometry[targetAnchor].midX,
+                                        y: geometry[targetAnchor].midY
+                                    ),
+                                    status: guidanceTarget.status,
+                                    onActivate: {
+                                        withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.32)) {
+                                            scrollProxy.scrollTo(
+                                                guidanceTarget.productID,
+                                                anchor: .center
+                                            )
+                                        }
+                                    }
+                                )
+                                .frame(
+                                    width: geometry.size.width,
+                                    height: geometry.size.height,
+                                    alignment: .topLeading
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                    .padding(.top, RewardStoreLayout.pageTopPadding)
+                    .padding(.bottom, RootTabPageLayout.contentBottomPadding)
                 }
-                .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
-                .padding(.top, RewardStoreLayout.pageTopPadding)
-                .padding(.bottom, RootTabPageLayout.contentBottomPadding)
+                .background(LivingOSTheme.canvas)
             }
-            .background(LivingOSTheme.canvas)
             .toolbar(.hidden, for: .navigationBar)
             .sheet(item: $editorRoute) { route in
                 RewardProductEditor(product: route.product)
             }
             .sheet(isPresented: $isShowingHistory) {
-                RewardRedemptionHistoryView(redemptions: redemptions)
-            }
-            .confirmationDialog(
-                "确认兑换？",
-                isPresented: $isShowingRedemptionConfirmation
-            ) {
-                if let pendingProduct {
-                    Button("确认兑换") { redeem(pendingProduct) }
-                        .disabled(submissionState.isSubmitting)
-                    Button("取消", role: .cancel) {}
-                }
-            } message: {
-                if let pendingProduct {
-                    let postBalance = max(
-                        0,
-                        (balancePresentation.coinUnits ?? 0) - pendingProduct.priceCoinUnits
-                    )
-                    Text("\(pendingProduct.name) · 扣除 \(CoinDisplayFormatter.text(forCoinUnits: pendingProduct.priceCoinUnits)) 金币 · 兑换后余额 \(CoinDisplayFormatter.text(forCoinUnits: postBalance))。兑换记录将保存为待兑现。")
-                }
-            }
-            .confirmationDialog(
-                "归档这个奖励？",
-                isPresented: $isShowingArchiveConfirmation
-            ) {
-                Button("归档", role: .destructive) {
-                    if let archivingProduct { archive(archivingProduct) }
-                }
-                Button("取消", role: .cancel) {}
-            } message: {
-                Text("历史兑换记录会保留，归档后不能再次兑换。")
+                RewardRedemptionHistoryView(redemptions: visibleRedemptions)
             }
             .alert("奖励状态", isPresented: $isShowingMessage) {
                 Button("好的") {}
@@ -146,18 +204,6 @@ struct RewardStoreView: View {
         editorRoute = .edit(product)
     }
 
-    private func requestRedemption(_ product: RewardProduct) {
-        guard balancePresentation.allowsRedemption,
-              !submissionState.isSubmitting else { return }
-        pendingProduct = product
-        isShowingRedemptionConfirmation = true
-    }
-
-    private func requestArchive(_ product: RewardProduct) {
-        archivingProduct = product
-        isShowingArchiveConfirmation = true
-    }
-
     private func importLegacyXP() {
         guard let progress = progressItems.first else { return }
         _ = try? CoinLedgerService.ensureLegacyXPImported(progress: progress, in: context)
@@ -167,7 +213,6 @@ struct RewardStoreView: View {
         guard balancePresentation.allowsRedemption else {
             message = "金币余额暂时无法读取，请稍后重试。"
             isShowingMessage = true
-            pendingProduct = nil
             return
         }
         guard let requestKey = submissionState.begin(productID: product.id) else {
@@ -180,7 +225,7 @@ struct RewardStoreView: View {
                 requestKey: requestKey,
                 in: context
             )
-            message = "已兑换，记得兑现“\(product.name)”"
+            message = RewardRedemptionFeedback.successMessage
         } catch RewardRedemptionError.insufficientBalance {
             message = "金币余额不足，还需要更多 XP 才能兑换。"
         } catch RewardRedemptionError.productArchived {
@@ -189,7 +234,6 @@ struct RewardStoreView: View {
             message = "兑换失败，请重试。"
         }
         isShowingMessage = true
-        pendingProduct = nil
     }
 
     private func archive(_ product: RewardProduct) {
@@ -200,7 +244,6 @@ struct RewardStoreView: View {
             message = "归档失败，请重试。"
         }
         isShowingMessage = true
-        archivingProduct = nil
     }
 }
 
@@ -346,9 +389,30 @@ private struct RewardBalanceHero: View {
     }
 
     private func ledgerStrip(height: CGFloat) -> some View {
-        RewardLedgerStrip(balanceCoinUnits: balance.coinUnits ?? 0)
-            .frame(maxWidth: .infinity)
-            .frame(height: height)
+        let balanceCoinUnits = balance.coinUnits ?? 0
+        let overflowText = RewardLedgerGeometry.fill(
+            columns: 24,
+            rows: 6,
+            balanceCoinUnits: balanceCoinUnits
+        ).overflowText
+
+        return HStack(alignment: .center, spacing: 8) {
+            RewardLedgerStrip(balanceCoinUnits: balanceCoinUnits)
+                .frame(maxWidth: .infinity)
+                .frame(height: height)
+                .anchorPreference(
+                    key: RewardGuidanceAnchorPreferenceKey.self,
+                    value: .bounds
+                ) { [.ledger: $0] }
+
+            if let overflowText {
+                Text(overflowText)
+                    .font(.system(.caption2, design: .monospaced, weight: .medium))
+                    .foregroundStyle(LivingOSTheme.graphite)
+                    .monospacedDigit()
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 
@@ -360,21 +424,101 @@ private struct RewardLedgerStrip: View {
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
-            let samples = RewardLedgerGeometry.samples(
-                columns: 24,
-                rows: 6,
-                balanceCoinUnits: balanceCoinUnits,
+            RewardLedgerCanvas(
+                displayedBalanceCoinUnits: Double(balanceCoinUnits),
                 phase: timeline.date.timeIntervalSinceReferenceDate / 9,
                 reduceMotion: reduceMotion
             )
-            Canvas { context, size in
+            .animation(
+                reduceMotion ? nil : .easeInOut(duration: 0.48),
+                value: balanceCoinUnits
+            )
+        }
+        .onAppear { isVisible = true }
+        .onDisappear { isVisible = false }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    private var pausesTimeline: Bool {
+        LivingOSAnimationActivity.isPaused(
+            reduceMotion: reduceMotion,
+            isVisible: isVisible,
+            isSceneActive: scenePhase == .active
+        )
+    }
+}
+
+private struct RewardLedgerCanvas: View, Animatable {
+    var displayedBalanceCoinUnits: Double
+    let phase: Double
+    let reduceMotion: Bool
+
+    var animatableData: Double {
+        get { displayedBalanceCoinUnits }
+        set { displayedBalanceCoinUnits = newValue }
+    }
+
+    var body: some View {
+        let samples = RewardLedgerGeometry.samples(
+            columns: 24,
+            rows: 6,
+            displayedBalanceCoinUnits: displayedBalanceCoinUnits,
+            phase: phase,
+            reduceMotion: reduceMotion
+        )
+
+        Canvas { context, size in
+            for sample in samples {
+                let diameter = sample.diameter
+                let rect = CGRect(
+                    x: sample.position.x * size.width - diameter / 2,
+                    y: sample.position.y * size.height - diameter / 2,
+                    width: diameter,
+                    height: diameter
+                )
+                context.fill(
+                    Path(ellipseIn: rect),
+                    with: .color(LivingOSTheme.ink.opacity(sample.opacity))
+                )
+            }
+        }
+    }
+}
+
+private struct RewardGuidanceParticleTrail: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var isVisible = false
+
+    let start: CGPoint
+    let end: CGPoint
+    let status: RewardGuidanceStatus
+    let onActivate: () -> Void
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
+            let samples = RewardGuidanceTrailGeometry.samples(
+                count: 58,
+                phase: timeline.date.timeIntervalSinceReferenceDate / 8.5,
+                reduceMotion: reduceMotion,
+                start: start,
+                end: end,
+                status: status
+            )
+
+            Canvas { context, _ in
                 for sample in samples {
                     let diameter = sample.diameter
                     let rect = CGRect(
-                        x: sample.position.x * size.width - diameter / 2,
-                        y: sample.position.y * size.height - diameter / 2,
+                        x: sample.position.x - diameter / 2,
+                        y: sample.position.y - diameter / 2,
                         width: diameter,
                         height: diameter
+                    )
+                    context.fill(
+                        Path(ellipseIn: rect.insetBy(dx: -0.8, dy: -0.8)),
+                        with: .color(LivingOSTheme.ink.opacity(sample.opacity * 0.16))
                     )
                     context.fill(
                         Path(ellipseIn: rect),
@@ -382,11 +526,25 @@ private struct RewardLedgerStrip: View {
                     )
                 }
             }
+            .contentShape(
+                RewardGuidanceTrailHitShape(start: start, end: end)
+            )
+            .onTapGesture(perform: onActivate)
+            .accessibilityElement()
+            .accessibilityAddTraits(.isButton)
+            .accessibilityLabel(accessibilityLabel)
         }
         .onAppear { isVisible = true }
         .onDisappear { isVisible = false }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
+    }
+
+    private var accessibilityLabel: String {
+        switch status {
+        case .affordable:
+            "定位到可兑换奖励"
+        case .progress:
+            "定位到最近可兑换奖励"
+        }
     }
 
     private var pausesTimeline: Bool {
@@ -398,56 +556,24 @@ private struct RewardLedgerStrip: View {
     }
 }
 
-private struct RewardPageParticleTrail: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
-    @State private var isVisible = false
+private struct RewardGuidanceTrailHitShape: Shape {
+    let start: CGPoint
+    let end: CGPoint
 
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
-            let samples = RewardPageTrailGeometry.samples(
-                count: 54,
-                phase: timeline.date.timeIntervalSinceReferenceDate / 7.5,
-                reduceMotion: reduceMotion
-            )
-
-            Canvas { context, size in
-                for sample in samples {
-                    let diameter = sample.diameter
-                    let rect = CGRect(
-                        x: sample.position.x * size.width - diameter / 2,
-                        y: sample.position.y * size.height - diameter / 2,
-                        width: diameter,
-                        height: diameter
-                    )
-                    let color = sample.usesLightInk ? Color.white : LivingOSTheme.graphite
-                    if sample.usesLightInk {
-                        context.fill(
-                            Path(ellipseIn: rect.insetBy(dx: -1.1, dy: -1.1)),
-                            with: .color(LivingOSTheme.graphite.opacity(0.08))
-                        )
-                    }
-                    context.fill(
-                        Path(ellipseIn: rect),
-                        with: .color(color.opacity(sample.opacity))
-                    )
-                }
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: 500)
-        .offset(y: RewardStoreLayout.particleTrailTopOffset)
-        .onAppear { isVisible = true }
-        .onDisappear { isVisible = false }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-
-    private var pausesTimeline: Bool {
-        LivingOSAnimationActivity.isPaused(
-            reduceMotion: reduceMotion,
-            isVisible: isVisible,
-            isSceneActive: scenePhase == .active
+    func path(in rect: CGRect) -> Path {
+        let controls = RewardGuidanceTrailGeometry.controlPoints(
+            start: start,
+            end: end
+        )
+        var curve = Path()
+        curve.move(to: start)
+        curve.addCurve(
+            to: end,
+            control1: controls.first,
+            control2: controls.second
+        )
+        return curve.trimmedPath(from: 0, to: 0.82).strokedPath(
+            StrokeStyle(lineWidth: 32, lineCap: .round, lineJoin: .round)
         )
     }
 }
@@ -455,7 +581,10 @@ private struct RewardPageParticleTrail: View {
 private struct RewardProductList: View {
     let products: [RewardProduct]
     let balance: RewardBalancePresentation
+    let guidanceTarget: RewardGuidanceTarget?
+    let redeemedProductIDs: Set<UUID>
     let isSubmitting: Bool
+    @Binding var confirmationSelection: RewardConfirmationSelection
     let onRedeem: (RewardProduct) -> Void
     let onEdit: (RewardProduct) -> Void
     let onArchive: (RewardProduct) -> Void
@@ -480,11 +609,17 @@ private struct RewardProductList: View {
                     RewardProductRail(
                         product: product,
                         balance: balance,
+                        guidanceStatus: guidanceTarget?.productID == product.id
+                            ? guidanceTarget?.status
+                            : nil,
+                        isRedeemed: redeemedProductIDs.contains(product.id),
                         isSubmitting: isSubmitting,
+                        confirmationSelection: $confirmationSelection,
                         onRedeem: { onRedeem(product) },
                         onEdit: { onEdit(product) },
                         onArchive: { onArchive(product) }
                     )
+                    .id(product.id)
                 }
             }
         }
@@ -494,7 +629,10 @@ private struct RewardProductList: View {
 private struct RewardProductRail: View {
     let product: RewardProduct
     let balance: RewardBalancePresentation
+    let guidanceStatus: RewardGuidanceStatus?
+    let isRedeemed: Bool
     let isSubmitting: Bool
+    @Binding var confirmationSelection: RewardConfirmationSelection
     let onRedeem: () -> Void
     let onEdit: () -> Void
     let onArchive: () -> Void
@@ -506,7 +644,8 @@ private struct RewardProductRail: View {
             note: product.note,
             imageReference: product.imageReference,
             balanceCoinUnits: balance.coinUnits,
-            isArchived: product.isArchived
+            isArchived: product.isArchived,
+            isRedeemed: isRedeemed
         )
     }
 
@@ -514,35 +653,85 @@ private struct RewardProductRail: View {
         balance.allowsRedemption && presentation.canRedeem && !isSubmitting
     }
 
+    private var resolvedStatusText: String {
+        guidanceStatus?.displayText ?? presentation.statusText
+    }
+
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(presentation.name)
-                    .font(.title2.weight(.medium))
-                    .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
-                    .fixedSize(horizontal: false, vertical: true)
+            Button(action: onEdit) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(presentation.name)
+                            .font(.title2.weight(.medium))
+                            .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                Text(CoinDisplayFormatter.text(forCoinUnits: presentation.priceCoinUnits))
-                    .font(.system(.title3, design: .rounded, weight: .regular))
-                    .monospacedDigit()
-                    .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
+                        Text(CoinDisplayFormatter.text(forCoinUnits: presentation.priceCoinUnits))
+                            .font(.system(.title3, design: .rounded, weight: .regular))
+                            .monospacedDigit()
+                            .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
 
-                Text(presentation.note.isEmpty ? presentation.statusText : presentation.note)
-                    .font(.footnote)
-                    .foregroundStyle(LivingOSTheme.graphite)
-                    .lineLimit(2)
+                        Text(presentation.note.isEmpty ? resolvedStatusText : presentation.note)
+                            .font(.footnote)
+                            .foregroundStyle(LivingOSTheme.graphite)
+                            .lineLimit(2)
 
-                if !presentation.note.isEmpty, !presentation.canRedeem {
-                    Text(presentation.statusText)
-                        .font(.system(.caption2, design: .monospaced, weight: .medium))
-                        .foregroundStyle(LivingOSTheme.graphite)
+                        if !presentation.note.isEmpty, !presentation.canRedeem {
+                            Text(resolvedStatusText)
+                                .font(.system(.caption2, design: .monospaced, weight: .medium))
+                                .foregroundStyle(LivingOSTheme.graphite)
+                        }
+                    }
+
+                    Spacer(minLength: 8)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("编辑 \(presentation.name)")
+
+            trailingAccessory
+        }
+        .padding(.vertical, 22)
+        .contentShape(Rectangle())
+        .contextMenu {
+            Button("编辑", action: onEdit)
+            if !product.isArchived {
+                Button("归档", role: .destructive) {
+                    confirmationSelection.present(.archive(product.id))
                 }
             }
+        }
+        .rewardConfirmationPopover(
+            isPresented: confirmationBinding(for: .archive(product.id)),
+            message: "历史兑换记录会保留，归档后不能再次兑换。",
+            actionTitle: "归档",
+            role: .destructive
+        ) {
+            onArchive()
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(presentation.accessibilityLabel)
+        .accessibilityValue(guidanceStatus?.displayText ?? "")
+        .accessibilityActions {
+            Button("编辑", action: onEdit)
+            if presentation.canArchive {
+                Button("归档", action: onArchive)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(LivingOSTheme.mist)
+                .frame(height: 0.5)
+        }
+    }
 
-            Spacer(minLength: 8)
-
+    @ViewBuilder
+    private var trailingAccessory: some View {
+        Group {
             if let imageReference = product.imageReference {
-                Button(action: onRedeem) {
+                redeemButton(disabledOpacity: 0.58) {
                     RewardProductImageView(reference: imageReference)
                         .frame(width: 70, height: 88)
                         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -556,15 +745,10 @@ private struct RewardProductRail: View {
                             }
                         }
                 }
-                .buttonStyle(.plain)
-                .disabled(!canRedeem)
-                .opacity(canRedeem ? 1 : 0.58)
-                .accessibilityLabel("兑换 \(presentation.name)")
-                .accessibilityIdentifier("rewards.redeem.\(product.id.uuidString)")
             } else if !product.isArchived {
-                Button(action: onRedeem) {
+                redeemButton(disabledOpacity: 0.48) {
                     HStack(spacing: 8) {
-                        Text(presentation.canRedeem ? "兑换" : presentation.statusText)
+                        Text(presentation.canRedeem ? "兑换" : resolvedStatusText)
                         if presentation.canRedeem {
                             Circle()
                                 .fill(LivingOSTheme.signal)
@@ -581,34 +765,58 @@ private struct RewardProductRail: View {
                             .stroke(LivingOSTheme.graphite.opacity(0.42), lineWidth: 0.8)
                     }
                 }
-                .buttonStyle(.plain)
-                .disabled(!canRedeem)
-                .opacity(canRedeem ? 1 : 0.48)
-                .accessibilityIdentifier("rewards.redeem.\(product.id.uuidString)")
             }
         }
-        .padding(.vertical, 22)
-        .contentShape(Rectangle())
-        .onTapGesture(count: 2, perform: onEdit)
-        .contextMenu {
-            Button("编辑", action: onEdit)
-            if !product.isArchived {
-                Button("归档", role: .destructive, action: onArchive)
-            }
+        .anchorPreference(
+            key: RewardGuidanceAnchorPreferenceKey.self,
+            value: .bounds
+        ) { anchor in
+            guidanceStatus == nil ? [:] : [.product(product.id): anchor]
         }
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(presentation.accessibilityLabel)
-        .accessibilityActions {
-            Button("编辑", action: onEdit)
-            if presentation.canArchive {
-                Button("归档", action: onArchive)
-            }
+    }
+
+    private func redeemButton<Label: View>(
+        disabledOpacity: Double,
+        @ViewBuilder label: () -> Label
+    ) -> some View {
+        Button {
+            confirmationSelection.present(.redeem(product.id))
+        } label: {
+            label()
         }
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(LivingOSTheme.mist)
-                .frame(height: 0.5)
-        }
+        .buttonStyle(.plain)
+        .disabled(!canRedeem)
+        .opacity(canRedeem ? 1 : disabledOpacity)
+        .accessibilityLabel(
+            isRedeemed
+                ? "\(presentation.name)，已兑换"
+                : "兑换 \(presentation.name)"
+        )
+        .accessibilityIdentifier("rewards.redeem.\(product.id.uuidString)")
+        .rewardConfirmationPopover(
+            isPresented: confirmationBinding(for: .redeem(product.id)),
+            message: redemptionConfirmationMessage,
+            actionTitle: "确认兑换",
+            isActionDisabled: isSubmitting,
+            action: onRedeem
+        )
+    }
+
+    private var redemptionConfirmationMessage: String {
+        let postBalance = max(
+            0,
+            (balance.coinUnits ?? 0) - product.priceCoinUnits
+        )
+        return "\(product.name) · 扣除 \(CoinDisplayFormatter.text(forCoinUnits: product.priceCoinUnits)) 金币 · 兑换后余额 \(CoinDisplayFormatter.text(forCoinUnits: postBalance))。兑换记录将保存为待兑现。"
+    }
+
+    private func confirmationBinding(
+        for target: RewardConfirmationTarget
+    ) -> Binding<Bool> {
+        Binding(
+            get: { confirmationSelection.isPresented(for: target) },
+            set: { confirmationSelection.setPresented($0, for: target) }
+        )
     }
 }
 
@@ -624,6 +832,7 @@ private struct RewardProductEditor: View {
     @State private var imageReference: String?
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var errorMessage: String?
+    @State private var isShowingDeleteConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -660,6 +869,24 @@ private struct RewardProductEditor: View {
                         Text(errorMessage)
                             .foregroundStyle(.red)
                             .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+
+                if product != nil {
+                    Section {
+                        Button("删除奖励", role: .destructive) {
+                            isShowingDeleteConfirmation = true
+                        }
+                        .accessibilityIdentifier("reward-editor.delete")
+                        .rewardConfirmationPopover(
+                            isPresented: $isShowingDeleteConfirmation,
+                            message: "奖励会从主界面移除；已有兑换历史和金币流水保持不变。",
+                            actionTitle: "删除奖励",
+                            role: .destructive,
+                            action: deleteProduct
+                        )
+                    } footer: {
+                        Text("删除奖励不会删除已有的兑换快照。")
                     }
                 }
             }
@@ -735,6 +962,29 @@ private struct RewardProductEditor: View {
         }
     }
 
+    private func deleteProduct() {
+        guard let product else { return }
+        let deletedImageReference = product.imageReference
+        do {
+            try RewardStoreService.deleteProduct(product, in: context)
+            if let deletedImageReference,
+               try !RewardStoreService.imageReferenceIsInUse(
+                    deletedImageReference,
+                    in: context
+               ) {
+                try? RewardProductImageStore.remove(
+                    reference: deletedImageReference,
+                    applicationSupportURL: applicationSupportURL()
+                )
+            }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.18)) {
+                dismiss()
+            }
+        } catch {
+            errorMessage = "删除失败，请稍后重试。"
+        }
+    }
+
     private func applicationSupportURL() throws -> URL {
         try FileManager.default.url(
             for: .applicationSupportDirectory,
@@ -748,6 +998,8 @@ private struct RewardProductEditor: View {
 private struct RewardRedemptionHistoryView: View {
     @Environment(\.modelContext) private var context
     let redemptions: [RewardRedemption]
+    @State private var confirmationSelection = RewardConfirmationSelection()
+    @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -760,14 +1012,21 @@ private struct RewardRedemptionHistoryView: View {
                     )
                 } else {
                     ForEach(redemptions) { redemption in
+                        let presentation = RewardRedemptionHistoryPresentation(
+                            status: redemption.status
+                        )
                         VStack(alignment: .leading, spacing: 7) {
                             HStack(alignment: .firstTextBaseline) {
                                 Text(redemption.productNameSnapshot)
                                     .font(.headline)
                                 Spacer()
-                                Text(redemption.status == .fulfilled ? "已兑现" : "待兑现")
+                                Text(presentation.statusText)
                                     .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(redemption.status == .fulfilled ? .secondary : TodayVisualTheme.reward)
+                                    .foregroundStyle(
+                                        redemption.status == .pending
+                                            ? TodayVisualTheme.reward
+                                            : .secondary
+                                    )
                             }
                             Text("\(CoinDisplayFormatter.text(forCoinUnits: redemption.priceCoinUnitsSnapshot)) 金币 · \(redemption.redeemedAt.formatted(date: .abbreviated, time: .shortened))")
                                 .font(.subheadline.monospacedDigit())
@@ -777,21 +1036,148 @@ private struct RewardRedemptionHistoryView: View {
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
-                            if redemption.status == .pending {
-                                Button("标记为已兑现") {
-                                    try? RewardStoreService.fulfill(redemption, in: context)
+                            HStack(spacing: 18) {
+                                if presentation.canFulfill {
+                                    Button("标记为已兑现") {
+                                        fulfill(redemption)
+                                    }
+                                    .font(.subheadline.weight(.medium))
+                                }
+                                if presentation.canCancel {
+                                    Button("取消兑换", role: .destructive) {
+                                        confirmationSelection.present(
+                                            .cancelRedemption(redemption.id)
+                                        )
+                                    }
+                                    .font(.subheadline.weight(.medium))
+                                    .rewardConfirmationPopover(
+                                        isPresented: confirmationBinding(
+                                            for: .cancelRedemption(redemption.id)
+                                        ),
+                                        message: "将退回 \(CoinDisplayFormatter.text(forCoinUnits: redemption.priceCoinUnitsSnapshot)) 金币，奖励会重新回到主界面。",
+                                        actionTitle: "取消兑换并退币",
+                                        role: .destructive
+                                    ) {
+                                        cancel(redemption)
+                                    }
+                                }
+                                Spacer(minLength: 0)
+                                Button("删除记录", role: .destructive) {
+                                    confirmationSelection.present(
+                                        .deleteRedemption(redemption.id)
+                                    )
                                 }
                                 .font(.subheadline.weight(.medium))
+                                .rewardConfirmationPopover(
+                                    isPresented: confirmationBinding(
+                                        for: .deleteRedemption(redemption.id)
+                                    ),
+                                    message: "记录会从历史中消失，但不会退回金币，也不会让奖励重新出现。",
+                                    actionTitle: "删除记录",
+                                    role: .destructive
+                                ) {
+                                    hide(redemption)
+                                }
                             }
+                            .buttonStyle(.borderless)
                         }
                         .padding(.vertical, 4)
                         .accessibilityElement(children: .combine)
-                        .accessibilityLabel("\(redemption.productNameSnapshot)，\(redemption.status == .fulfilled ? "已兑现" : "待兑现")")
+                        .accessibilityLabel(
+                            "\(redemption.productNameSnapshot)，\(presentation.statusText)"
+                        )
                     }
                 }
             }
             .navigationTitle("兑换历史")
             .navigationBarTitleDisplayMode(.inline)
+            .alert(
+                "操作失败",
+                isPresented: Binding(
+                    get: { errorMessage != nil },
+                    set: { if !$0 { errorMessage = nil } }
+                )
+            ) {
+                Button("好的") {}
+            } message: {
+                Text(errorMessage ?? "请稍后重试。")
+            }
+        }
+    }
+
+    private func fulfill(_ redemption: RewardRedemption) {
+        do {
+            try RewardStoreService.fulfill(redemption, in: context)
+        } catch {
+            errorMessage = "无法更新兑现状态，请稍后重试。"
+        }
+    }
+
+    private func cancel(_ redemption: RewardRedemption) {
+        do {
+            try RewardStoreService.cancel(redemption, in: context)
+        } catch RewardRedemptionError.redemptionAlreadyFulfilled {
+            errorMessage = "这个奖励已经兑现，不能取消兑换。"
+        } catch {
+            errorMessage = "取消兑换失败，请稍后重试。"
+        }
+    }
+
+    private func hide(_ redemption: RewardRedemption) {
+        do {
+            try RewardStoreService.hideFromHistory(redemption, in: context)
+        } catch {
+            errorMessage = "删除记录失败，请稍后重试。"
+        }
+    }
+
+    private func confirmationBinding(
+        for target: RewardConfirmationTarget
+    ) -> Binding<Bool> {
+        Binding(
+            get: { confirmationSelection.isPresented(for: target) },
+            set: { confirmationSelection.setPresented($0, for: target) }
+        )
+    }
+}
+
+private extension View {
+    func rewardConfirmationPopover(
+        isPresented: Binding<Bool>,
+        message: String,
+        actionTitle: String,
+        role: ButtonRole? = nil,
+        isActionDisabled: Bool = false,
+        action: @escaping () -> Void
+    ) -> some View {
+        popover(
+            isPresented: isPresented,
+            attachmentAnchor: .rect(.bounds),
+            arrowEdge: .bottom
+        ) {
+            VStack(alignment: .leading, spacing: 20) {
+                Text(message)
+                    .font(.body)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Button(role: role) {
+                    isPresented.wrappedValue = false
+                    action()
+                } label: {
+                    Text(actionTitle)
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(isActionDisabled)
+                .foregroundStyle(role == .destructive ? Color.red : LivingOSTheme.ink)
+                .background(LivingOSTheme.mist.opacity(0.9), in: Capsule())
+            }
+            .padding(20)
+            .frame(width: 270)
+            .presentationCompactAdaptation(.popover)
         }
     }
 }

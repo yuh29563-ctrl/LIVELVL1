@@ -152,6 +152,154 @@ struct RewardStoreServiceTests {
             )
         }
     }
+
+    @Test func cancellingRedemptionRefundsOnceAndRestoresTheProduct() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let product = try makeProduct(in: context, price: 70)
+        try seedBalance(200, in: context)
+        let redemption = try RewardStoreService.redeem(
+            product,
+            requestKey: "request-cancel",
+            in: context,
+            now: Date(timeIntervalSince1970: 2_000)
+        )
+
+        try RewardStoreService.cancel(
+            redemption,
+            in: context,
+            now: Date(timeIntervalSince1970: 2_100)
+        )
+        try RewardStoreService.cancel(
+            redemption,
+            in: context,
+            now: Date(timeIntervalSince1970: 2_200)
+        )
+
+        #expect(try CoinLedgerService.balance(in: context) == 200)
+        #expect(redemption.status == .cancelled)
+        #expect(redemption.cancelledAt == Date(timeIntervalSince1970: 2_100))
+        let refunds = try context.fetch(FetchDescriptor<CoinTransaction>())
+            .filter { $0.kind == .redemptionRefund }
+        #expect(refunds.count == 1)
+        #expect(refunds.first?.amountCoinUnits == 70)
+        #expect(refunds.first?.sourceID == product.id)
+    }
+
+    @Test func fulfilledRedemptionCannotBeCancelled() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let product = try makeProduct(in: context, price: 70)
+        try seedBalance(200, in: context)
+        let redemption = try RewardStoreService.redeem(
+            product,
+            requestKey: "request-fulfilled",
+            in: context
+        )
+        try RewardStoreService.fulfill(redemption, in: context)
+
+        #expect(throws: RewardRedemptionError.redemptionAlreadyFulfilled) {
+            try RewardStoreService.cancel(redemption, in: context)
+        }
+        #expect(try CoinLedgerService.balance(in: context) == 130)
+        #expect(
+            try context.fetch(FetchDescriptor<CoinTransaction>())
+                .allSatisfy { $0.kind != .redemptionRefund }
+        )
+    }
+
+    @Test func cancellingRestoresAProductThatWasRemovedAfterRedemption() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let product = try makeProduct(in: context, price: 70)
+        let originalProductID = product.id
+        try seedBalance(200, in: context)
+        let redemption = try RewardStoreService.redeem(
+            product,
+            requestKey: "request-restore-missing",
+            in: context
+        )
+        try RewardStoreService.deleteProduct(product, in: context)
+
+        try RewardStoreService.cancel(redemption, in: context)
+
+        let restored = try #require(
+            context.fetch(FetchDescriptor<RewardProduct>()).first
+        )
+        #expect(restored.id == originalProductID)
+        #expect(restored.name == "看一场电影")
+        #expect(restored.priceCoinUnits == 70)
+        #expect(restored.note == "周末兑现")
+        #expect(restored.imageReference == "movie.image")
+        #expect(!restored.isArchived)
+    }
+
+    @Test func hidingHistoryDoesNotRefundOrRestoreTheProduct() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let product = try makeProduct(in: context, price: 70)
+        try seedBalance(200, in: context)
+        let redemption = try RewardStoreService.redeem(
+            product,
+            requestKey: "request-hide",
+            in: context
+        )
+
+        try RewardStoreService.hideFromHistory(
+            redemption,
+            in: context,
+            now: Date(timeIntervalSince1970: 2_300)
+        )
+        try RewardStoreService.hideFromHistory(
+            redemption,
+            in: context,
+            now: Date(timeIntervalSince1970: 2_400)
+        )
+
+        #expect(try CoinLedgerService.balance(in: context) == 130)
+        #expect(redemption.status == .pending)
+        #expect(redemption.historyHiddenAt == Date(timeIntervalSince1970: 2_300))
+        #expect(try context.fetch(FetchDescriptor<RewardRedemption>()).count == 1)
+    }
+
+    @Test func deletingProductKeepsItsRedemptionSnapshot() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let product = try makeProduct(in: context, price: 70)
+        try seedBalance(200, in: context)
+        let redemption = try RewardStoreService.redeem(
+            product,
+            requestKey: "request-delete-product",
+            in: context
+        )
+
+        try RewardStoreService.deleteProduct(product, in: context)
+
+        #expect(try context.fetch(FetchDescriptor<RewardProduct>()).isEmpty)
+        let stored = try #require(
+            context.fetch(FetchDescriptor<RewardRedemption>()).first
+        )
+        #expect(stored.id == redemption.id)
+        #expect(stored.productNameSnapshot == "看一场电影")
+        #expect(stored.priceCoinUnitsSnapshot == 70)
+        #expect(
+            try RewardStoreService.imageReferenceIsInUse(
+                "movie.image",
+                in: context
+            )
+        )
+
+        let unreferenced = try makeProduct(in: context, price: 10)
+        unreferenced.imageReference = "unused.image"
+        try context.save()
+        try RewardStoreService.deleteProduct(unreferenced, in: context)
+        #expect(
+            try !RewardStoreService.imageReferenceIsInUse(
+                "unused.image",
+                in: context
+            )
+        )
+    }
 }
 
 @MainActor
