@@ -6,11 +6,13 @@ enum CoinTransactionKind: String, Codable, Sendable {
     case taskEarned
     case taskRevoked
     case redemptionDebit
+    case redemptionRefund
 }
 
 enum RewardRedemptionStatus: String, Codable, Sendable {
     case pending
     case fulfilled
+    case cancelled
 }
 
 enum RewardValidationError: Error, Equatable, LocalizedError {
@@ -127,6 +129,8 @@ final class RewardRedemption {
     var redeemedAt: Date
     var statusRaw: String
     var fulfilledAt: Date?
+    var cancelledAt: Date?
+    var historyHiddenAt: Date?
 
     init(
         requestKey: String,
@@ -148,6 +152,8 @@ final class RewardRedemption {
         self.redeemedAt = redeemedAt
         statusRaw = status.rawValue
         fulfilledAt = nil
+        cancelledAt = nil
+        historyHiddenAt = nil
     }
 
     var status: RewardRedemptionStatus {

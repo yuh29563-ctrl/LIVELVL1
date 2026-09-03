@@ -41,16 +41,32 @@ struct RewardStoreView: View {
     @State private var message = ""
     @State private var submissionState = RewardRedemptionSubmissionState()
 
+    private var unavailableProductIDs: Set<UUID> {
+        RewardProductVisibility.hiddenProductIDs(
+            redemptions: redemptions.map {
+                RewardRedemptionVisibility(
+                    productID: $0.productID,
+                    status: $0.status,
+                    isHiddenFromHistory: $0.historyHiddenAt != nil
+                )
+            }
+        )
+    }
+
     private var activeProducts: [RewardProduct] {
-        products.filter { !$0.isArchived }
+        products.filter {
+            !$0.isArchived && !unavailableProductIDs.contains($0.id)
+        }
     }
 
     private var archivedProducts: [RewardProduct] {
-        products.filter(\.isArchived)
+        products.filter {
+            $0.isArchived && !unavailableProductIDs.contains($0.id)
+        }
     }
 
-    private var redeemedProductIDs: Set<UUID> {
-        Set(redemptions.compactMap(\.productID))
+    private var visibleRedemptions: [RewardRedemption] {
+        redemptions.filter { $0.historyHiddenAt == nil }
     }
 
     private var balancePresentation: RewardBalancePresentation {
@@ -69,7 +85,7 @@ struct RewardStoreView: View {
                     id: $0.id,
                     priceCoinUnits: $0.priceCoinUnits,
                     isArchived: $0.isArchived,
-                    isRedeemed: redeemedProductIDs.contains($0.id)
+                    isRedeemed: unavailableProductIDs.contains($0.id)
                 )
             },
             balanceCoinUnits: balancePresentation.coinUnits
@@ -77,7 +93,7 @@ struct RewardStoreView: View {
     }
 
     private var pendingRedemptionCount: Int {
-        redemptions.lazy.filter { $0.status == .pending }.count
+        visibleRedemptions.lazy.filter { $0.status == .pending }.count
     }
 
     var body: some View {
@@ -100,7 +116,7 @@ struct RewardStoreView: View {
                             products: activeProducts,
                             balance: balancePresentation,
                             guidanceTarget: guidanceTarget,
-                            redeemedProductIDs: redeemedProductIDs,
+                            redeemedProductIDs: unavailableProductIDs,
                             isSubmitting: submissionState.isSubmitting,
                             onRedeem: requestRedemption,
                             onEdit: edit,
@@ -114,7 +130,7 @@ struct RewardStoreView: View {
                                     products: archivedProducts,
                                     balance: balancePresentation,
                                     guidanceTarget: nil,
-                                    redeemedProductIDs: redeemedProductIDs,
+                                    redeemedProductIDs: unavailableProductIDs,
                                     isSubmitting: submissionState.isSubmitting,
                                     onRedeem: { _ in },
                                     onEdit: edit,
@@ -170,7 +186,7 @@ struct RewardStoreView: View {
                 RewardProductEditor(product: route.product)
             }
             .sheet(isPresented: $isShowingHistory) {
-                RewardRedemptionHistoryView(redemptions: redemptions)
+                RewardRedemptionHistoryView(redemptions: visibleRedemptions)
             }
             .confirmationDialog(
                 "确认兑换？",
@@ -220,7 +236,7 @@ struct RewardStoreView: View {
 
     private func requestRedemption(_ product: RewardProduct) {
         guard balancePresentation.allowsRedemption,
-              !redeemedProductIDs.contains(product.id),
+              !unavailableProductIDs.contains(product.id),
               !submissionState.isSubmitting else { return }
         pendingProduct = product
         isShowingRedemptionConfirmation = true
@@ -812,6 +828,7 @@ private struct RewardProductEditor: View {
     @State private var imageReference: String?
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var errorMessage: String?
+    @State private var isShowingDeleteConfirmation = false
 
     var body: some View {
         NavigationStack {
@@ -850,6 +867,17 @@ private struct RewardProductEditor: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+
+                if product != nil {
+                    Section {
+                        Button("删除奖励", role: .destructive) {
+                            isShowingDeleteConfirmation = true
+                        }
+                        .accessibilityIdentifier("reward-editor.delete")
+                    } footer: {
+                        Text("删除奖励不会删除已有的兑换快照。")
+                    }
+                }
             }
             .navigationTitle(product == nil ? "新建奖励" : "编辑奖励")
             .navigationBarTitleDisplayMode(.inline)
@@ -864,6 +892,15 @@ private struct RewardProductEditor: View {
                 }
             }
             .onAppear(perform: loadProduct)
+            .confirmationDialog(
+                "删除这个奖励？",
+                isPresented: $isShowingDeleteConfirmation
+            ) {
+                Button("删除奖励", role: .destructive, action: deleteProduct)
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("奖励会从主界面移除；已有兑换历史和金币流水保持不变。")
+            }
         }
     }
 
@@ -923,6 +960,29 @@ private struct RewardProductEditor: View {
         }
     }
 
+    private func deleteProduct() {
+        guard let product else { return }
+        let deletedImageReference = product.imageReference
+        do {
+            try RewardStoreService.deleteProduct(product, in: context)
+            if let deletedImageReference,
+               try !RewardStoreService.imageReferenceIsInUse(
+                    deletedImageReference,
+                    in: context
+               ) {
+                try? RewardProductImageStore.remove(
+                    reference: deletedImageReference,
+                    applicationSupportURL: applicationSupportURL()
+                )
+            }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.18)) {
+                dismiss()
+            }
+        } catch {
+            errorMessage = "删除失败，请稍后重试。"
+        }
+    }
+
     private func applicationSupportURL() throws -> URL {
         try FileManager.default.url(
             for: .applicationSupportDirectory,
@@ -936,6 +996,9 @@ private struct RewardProductEditor: View {
 private struct RewardRedemptionHistoryView: View {
     @Environment(\.modelContext) private var context
     let redemptions: [RewardRedemption]
+    @State private var cancellingRedemption: RewardRedemption?
+    @State private var deletingRedemption: RewardRedemption?
+    @State private var errorMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -948,14 +1011,21 @@ private struct RewardRedemptionHistoryView: View {
                     )
                 } else {
                     ForEach(redemptions) { redemption in
+                        let presentation = RewardRedemptionHistoryPresentation(
+                            status: redemption.status
+                        )
                         VStack(alignment: .leading, spacing: 7) {
                             HStack(alignment: .firstTextBaseline) {
                                 Text(redemption.productNameSnapshot)
                                     .font(.headline)
                                 Spacer()
-                                Text(redemption.status == .fulfilled ? "已兑现" : "待兑现")
+                                Text(presentation.statusText)
                                     .font(.subheadline.weight(.medium))
-                                    .foregroundStyle(redemption.status == .fulfilled ? .secondary : TodayVisualTheme.reward)
+                                    .foregroundStyle(
+                                        redemption.status == .pending
+                                            ? TodayVisualTheme.reward
+                                            : .secondary
+                                    )
                             }
                             Text("\(CoinDisplayFormatter.text(forCoinUnits: redemption.priceCoinUnitsSnapshot)) 金币 · \(redemption.redeemedAt.formatted(date: .abbreviated, time: .shortened))")
                                 .font(.subheadline.monospacedDigit())
@@ -965,21 +1035,110 @@ private struct RewardRedemptionHistoryView: View {
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
-                            if redemption.status == .pending {
-                                Button("标记为已兑现") {
-                                    try? RewardStoreService.fulfill(redemption, in: context)
+                            HStack(spacing: 18) {
+                                if presentation.canFulfill {
+                                    Button("标记为已兑现") {
+                                        fulfill(redemption)
+                                    }
+                                    .font(.subheadline.weight(.medium))
+                                }
+                                if presentation.canCancel {
+                                    Button("取消兑换", role: .destructive) {
+                                        cancellingRedemption = redemption
+                                    }
+                                    .font(.subheadline.weight(.medium))
+                                }
+                                Spacer(minLength: 0)
+                                Button("删除记录", role: .destructive) {
+                                    deletingRedemption = redemption
                                 }
                                 .font(.subheadline.weight(.medium))
                             }
+                            .buttonStyle(.borderless)
                         }
                         .padding(.vertical, 4)
                         .accessibilityElement(children: .combine)
-                        .accessibilityLabel("\(redemption.productNameSnapshot)，\(redemption.status == .fulfilled ? "已兑现" : "待兑现")")
+                        .accessibilityLabel(
+                            "\(redemption.productNameSnapshot)，\(presentation.statusText)"
+                        )
                     }
                 }
             }
             .navigationTitle("兑换历史")
             .navigationBarTitleDisplayMode(.inline)
+            .confirmationDialog(
+                "取消这次兑换？",
+                isPresented: Binding(
+                    get: { cancellingRedemption != nil },
+                    set: { if !$0 { cancellingRedemption = nil } }
+                )
+            ) {
+                Button("取消兑换并退币", role: .destructive) {
+                    if let cancellingRedemption {
+                        cancel(cancellingRedemption)
+                    }
+                }
+                Button("返回", role: .cancel) {}
+            } message: {
+                if let cancellingRedemption {
+                    Text("将退回 \(CoinDisplayFormatter.text(forCoinUnits: cancellingRedemption.priceCoinUnitsSnapshot)) 金币，奖励会重新回到主界面。")
+                }
+            }
+            .confirmationDialog(
+                "删除这条历史记录？",
+                isPresented: Binding(
+                    get: { deletingRedemption != nil },
+                    set: { if !$0 { deletingRedemption = nil } }
+                )
+            ) {
+                Button("删除记录", role: .destructive) {
+                    if let deletingRedemption {
+                        hide(deletingRedemption)
+                    }
+                }
+                Button("取消", role: .cancel) {}
+            } message: {
+                Text("记录会从历史中消失，但不会退回金币，也不会让奖励重新出现。")
+            }
+            .alert(
+                "操作失败",
+                isPresented: Binding(
+                    get: { errorMessage != nil },
+                    set: { if !$0 { errorMessage = nil } }
+                )
+            ) {
+                Button("好的") {}
+            } message: {
+                Text(errorMessage ?? "请稍后重试。")
+            }
+        }
+    }
+
+    private func fulfill(_ redemption: RewardRedemption) {
+        do {
+            try RewardStoreService.fulfill(redemption, in: context)
+        } catch {
+            errorMessage = "无法更新兑现状态，请稍后重试。"
+        }
+    }
+
+    private func cancel(_ redemption: RewardRedemption) {
+        defer { cancellingRedemption = nil }
+        do {
+            try RewardStoreService.cancel(redemption, in: context)
+        } catch RewardRedemptionError.redemptionAlreadyFulfilled {
+            errorMessage = "这个奖励已经兑现，不能取消兑换。"
+        } catch {
+            errorMessage = "取消兑换失败，请稍后重试。"
+        }
+    }
+
+    private func hide(_ redemption: RewardRedemption) {
+        defer { deletingRedemption = nil }
+        do {
+            try RewardStoreService.hideFromHistory(redemption, in: context)
+        } catch {
+            errorMessage = "删除记录失败，请稍后重试。"
         }
     }
 }

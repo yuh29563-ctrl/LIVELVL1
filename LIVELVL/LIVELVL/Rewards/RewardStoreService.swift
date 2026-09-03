@@ -5,6 +5,7 @@ enum RewardRedemptionError: LocalizedError, Equatable {
     case insufficientBalance
     case productArchived
     case invalidRequestKey
+    case redemptionAlreadyFulfilled
 
     var errorDescription: String? {
         switch self {
@@ -14,6 +15,8 @@ enum RewardRedemptionError: LocalizedError, Equatable {
             "该奖励已归档"
         case .invalidRequestKey:
             "兑换请求无效"
+        case .redemptionAlreadyFulfilled:
+            "已兑现的奖励不能取消兑换"
         }
     }
 }
@@ -124,10 +127,103 @@ enum RewardStoreService {
         in context: ModelContext,
         now: Date = .now
     ) throws {
-        guard redemption.status != .fulfilled else { return }
+        guard redemption.status == .pending else { return }
         redemption.status = .fulfilled
         redemption.fulfilledAt = now
         try save(context)
+    }
+
+    static func cancel(
+        _ redemption: RewardRedemption,
+        in context: ModelContext,
+        now: Date = .now
+    ) throws {
+        guard redemption.status != .cancelled else { return }
+        guard redemption.status != .fulfilled else {
+            throw RewardRedemptionError.redemptionAlreadyFulfilled
+        }
+
+        let operationKey = "redemption-refund:\(redemption.id.uuidString)"
+        let transactions = try context.fetch(FetchDescriptor<CoinTransaction>())
+        let restoredProductID = try restoreProductIfNeeded(
+            for: redemption,
+            in: context,
+            now: now
+        )
+        if !transactions.contains(where: { $0.operationKey == operationKey }) {
+            context.insert(CoinTransaction(
+                operationKey: operationKey,
+                kind: .redemptionRefund,
+                amountCoinUnits: redemption.priceCoinUnitsSnapshot,
+                requestedCoinUnits: redemption.priceCoinUnitsSnapshot,
+                sourceID: restoredProductID,
+                createdAt: now,
+                note: "取消兑换退回金币"
+            ))
+        }
+        redemption.status = .cancelled
+        redemption.cancelledAt = now
+        try save(context)
+    }
+
+    private static func restoreProductIfNeeded(
+        for redemption: RewardRedemption,
+        in context: ModelContext,
+        now: Date
+    ) throws -> UUID {
+        let products = try context.fetch(FetchDescriptor<RewardProduct>())
+        if let productID = redemption.productID,
+           let product = products.first(where: { $0.id == productID }) {
+            if product.isArchived {
+                product.isArchived = false
+                product.updatedAt = now
+            }
+            return product.id
+        }
+
+        let restored = RewardProduct(
+            name: redemption.productNameSnapshot,
+            priceCoinUnits: redemption.priceCoinUnitsSnapshot,
+            note: redemption.noteSnapshot,
+            imageReference: redemption.imageReferenceSnapshot,
+            createdAt: now
+        )
+        if let productID = redemption.productID {
+            restored.id = productID
+        } else {
+            redemption.productID = restored.id
+        }
+        context.insert(restored)
+        return restored.id
+    }
+
+    static func hideFromHistory(
+        _ redemption: RewardRedemption,
+        in context: ModelContext,
+        now: Date = .now
+    ) throws {
+        guard redemption.historyHiddenAt == nil else { return }
+        redemption.historyHiddenAt = now
+        try save(context)
+    }
+
+    static func deleteProduct(
+        _ product: RewardProduct,
+        in context: ModelContext
+    ) throws {
+        context.delete(product)
+        try save(context)
+    }
+
+    static func imageReferenceIsInUse(
+        _ reference: String,
+        in context: ModelContext
+    ) throws -> Bool {
+        let isUsedByProduct = try context.fetch(FetchDescriptor<RewardProduct>())
+            .contains { $0.imageReference == reference }
+        if isUsedByProduct { return true }
+        return try context.fetch(FetchDescriptor<RewardRedemption>())
+            .contains { $0.imageReferenceSnapshot == reference }
     }
 
     private static func save(_ context: ModelContext) throws {

@@ -462,4 +462,36 @@ struct RewardStorePresentationTests {
         #expect(route.product === product)
         #expect(route.id == .edit(product.id))
     }
+
+    @Test func activeRedemptionsHideProductsWhileCancelledOnesRestoreThem() {
+        let pendingProduct = UUID()
+        let fulfilledProduct = UUID()
+        let cancelledProduct = UUID()
+
+        let hiddenIDs = RewardProductVisibility.hiddenProductIDs(
+            redemptions: [
+                .init(productID: pendingProduct, status: .pending, isHiddenFromHistory: false),
+                .init(productID: fulfilledProduct, status: .fulfilled, isHiddenFromHistory: true),
+                .init(productID: cancelledProduct, status: .cancelled, isHiddenFromHistory: false),
+            ]
+        )
+
+        #expect(hiddenIDs == [pendingProduct, fulfilledProduct])
+    }
+
+    @Test func redemptionHistoryPresentationDistinguishesAllLifecycleStates() {
+        let redeemed = RewardRedemptionHistoryPresentation(status: .pending)
+        let fulfilled = RewardRedemptionHistoryPresentation(status: .fulfilled)
+        let cancelled = RewardRedemptionHistoryPresentation(status: .cancelled)
+
+        #expect(redeemed.statusText == "已兑换")
+        #expect(redeemed.canCancel)
+        #expect(redeemed.canFulfill)
+        #expect(fulfilled.statusText == "已兑现")
+        #expect(!fulfilled.canCancel)
+        #expect(!fulfilled.canFulfill)
+        #expect(cancelled.statusText == "已取消")
+        #expect(!cancelled.canCancel)
+        #expect(!cancelled.canFulfill)
+    }
 }

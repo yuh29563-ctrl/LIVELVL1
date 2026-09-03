@@ -76,6 +76,38 @@ nonisolated enum RewardBalancePresentation: Equatable, Sendable {
     }
 }
 
+nonisolated struct RewardRedemptionVisibility: Equatable, Sendable {
+    let productID: UUID?
+    let status: RewardRedemptionStatus
+    let isHiddenFromHistory: Bool
+}
+
+nonisolated enum RewardProductVisibility {
+    static func hiddenProductIDs(
+        redemptions: [RewardRedemptionVisibility]
+    ) -> Set<UUID> {
+        Set(redemptions.compactMap { redemption in
+            guard redemption.status != .cancelled else { return nil }
+            return redemption.productID
+        })
+    }
+}
+
+nonisolated struct RewardRedemptionHistoryPresentation: Equatable, Sendable {
+    let status: RewardRedemptionStatus
+
+    var statusText: String {
+        switch status {
+        case .pending: "已兑换"
+        case .fulfilled: "已兑现"
+        case .cancelled: "已取消"
+        }
+    }
+
+    var canCancel: Bool { status == .pending }
+    var canFulfill: Bool { status == .pending }
+}
+
 nonisolated struct RewardGuidanceProduct: Equatable, Sendable {
     let id: UUID
     let priceCoinUnits: Int
