@@ -498,4 +498,23 @@ struct RewardStorePresentationTests {
     @Test func successfulRedemptionUsesTheShortConfirmationMessage() {
         #expect(RewardRedemptionFeedback.successMessage == "兑换成功")
     }
+
+    @Test func confirmationSelectionOnlyPresentsAtItsMatchingSource() {
+        let firstRedemptionID = UUID()
+        let secondRedemptionID = UUID()
+        let selectedTarget = RewardConfirmationTarget.deleteRedemption(firstRedemptionID)
+        var selection = RewardConfirmationSelection()
+
+        selection.present(selectedTarget)
+
+        #expect(selection.isPresented(for: selectedTarget))
+        #expect(!selection.isPresented(for: .cancelRedemption(firstRedemptionID)))
+        #expect(!selection.isPresented(for: .deleteRedemption(secondRedemptionID)))
+
+        selection.setPresented(false, for: .cancelRedemption(firstRedemptionID))
+        #expect(selection.isPresented(for: selectedTarget))
+
+        selection.setPresented(false, for: selectedTarget)
+        #expect(!selection.isPresented(for: selectedTarget))
+    }
 }

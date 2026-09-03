@@ -204,6 +204,36 @@ nonisolated enum RewardRedemptionFeedback {
     static let successMessage = "兑换成功"
 }
 
+nonisolated enum RewardConfirmationTarget: Equatable, Sendable {
+    case redeem(UUID)
+    case archive(UUID)
+    case cancelRedemption(UUID)
+    case deleteRedemption(UUID)
+}
+
+nonisolated struct RewardConfirmationSelection: Equatable, Sendable {
+    private(set) var target: RewardConfirmationTarget?
+
+    mutating func present(_ target: RewardConfirmationTarget) {
+        self.target = target
+    }
+
+    func isPresented(for target: RewardConfirmationTarget) -> Bool {
+        self.target == target
+    }
+
+    mutating func setPresented(
+        _ isPresented: Bool,
+        for target: RewardConfirmationTarget
+    ) {
+        if isPresented {
+            present(target)
+        } else if self.target == target {
+            self.target = nil
+        }
+    }
+}
+
 nonisolated enum RewardStoreLayout {
     static let pageTopPadding: CGFloat = 8
     static let balanceTopSpacing: CGFloat = 24
