@@ -659,36 +659,42 @@ private struct RewardProductRail: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(presentation.name)
-                    .font(.title2.weight(.medium))
-                    .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
-                    .fixedSize(horizontal: false, vertical: true)
+            Button(action: onEdit) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(presentation.name)
+                            .font(.title2.weight(.medium))
+                            .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                Text(CoinDisplayFormatter.text(forCoinUnits: presentation.priceCoinUnits))
-                    .font(.system(.title3, design: .rounded, weight: .regular))
-                    .monospacedDigit()
-                    .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
+                        Text(CoinDisplayFormatter.text(forCoinUnits: presentation.priceCoinUnits))
+                            .font(.system(.title3, design: .rounded, weight: .regular))
+                            .monospacedDigit()
+                            .foregroundStyle(canRedeem ? LivingOSTheme.ink : LivingOSTheme.graphite)
 
-                Text(presentation.note.isEmpty ? resolvedStatusText : presentation.note)
-                    .font(.footnote)
-                    .foregroundStyle(LivingOSTheme.graphite)
-                    .lineLimit(2)
+                        Text(presentation.note.isEmpty ? resolvedStatusText : presentation.note)
+                            .font(.footnote)
+                            .foregroundStyle(LivingOSTheme.graphite)
+                            .lineLimit(2)
 
-                if !presentation.note.isEmpty, !presentation.canRedeem {
-                    Text(resolvedStatusText)
-                        .font(.system(.caption2, design: .monospaced, weight: .medium))
-                        .foregroundStyle(LivingOSTheme.graphite)
+                        if !presentation.note.isEmpty, !presentation.canRedeem {
+                            Text(resolvedStatusText)
+                                .font(.system(.caption2, design: .monospaced, weight: .medium))
+                                .foregroundStyle(LivingOSTheme.graphite)
+                        }
+                    }
+
+                    Spacer(minLength: 8)
                 }
+                .contentShape(Rectangle())
             }
-
-            Spacer(minLength: 8)
+            .buttonStyle(.plain)
+            .accessibilityLabel("编辑 \(presentation.name)")
 
             trailingAccessory
         }
         .padding(.vertical, 22)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2, perform: onEdit)
         .contextMenu {
             Button("编辑", action: onEdit)
             if !product.isArchived {
