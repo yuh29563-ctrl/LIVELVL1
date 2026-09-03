@@ -494,4 +494,8 @@ struct RewardStorePresentationTests {
         #expect(!cancelled.canCancel)
         #expect(!cancelled.canFulfill)
     }
+
+    @Test func successfulRedemptionUsesTheShortConfirmationMessage() {
+        #expect(RewardRedemptionFeedback.successMessage == "兑换成功")
+    }
 }

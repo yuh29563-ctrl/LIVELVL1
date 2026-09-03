@@ -269,7 +269,7 @@ struct RewardStoreView: View {
                 requestKey: requestKey,
                 in: context
             )
-            message = "已兑换，记得兑现“\(product.name)”"
+            message = RewardRedemptionFeedback.successMessage
         } catch RewardRedemptionError.insufficientBalance {
             message = "金币余额不足，还需要更多 XP 才能兑换。"
         } catch RewardRedemptionError.productArchived {

@@ -200,6 +200,10 @@ nonisolated struct RewardRedemptionSubmissionState: Equatable, Sendable {
     }
 }
 
+nonisolated enum RewardRedemptionFeedback {
+    static let successMessage = "兑换成功"
+}
+
 nonisolated enum RewardStoreLayout {
     static let pageTopPadding: CGFloat = 8
     static let balanceTopSpacing: CGFloat = 24
