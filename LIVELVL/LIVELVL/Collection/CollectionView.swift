@@ -333,46 +333,57 @@ struct CollectionView: View {
     }
 
     private var archivePageContent: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            archiveHeader
+        ZStack(alignment: .top) {
+            ArchiveSceneLightField()
+                .ignoresSafeArea(edges: .bottom)
 
-            if archiveItems.isEmpty {
-                emptyArchive
-            } else {
-                ArchiveCarouselView(
-                    items: archiveItems,
-                    centeredAwardKey: centeredAwardKeyBinding,
-                    expandedAwardKey: archiveState.expandedAwardKey,
-                    focusedCard: $focusedCard,
-                    onExpand: expand
-                )
-                .padding(.top, 26)
+            VStack(alignment: .leading, spacing: 0) {
+                archiveHeader
+
+                if archiveItems.isEmpty {
+                    emptyArchive
+                } else {
+                    ArchiveCarouselView(
+                        items: archiveItems,
+                        centeredAwardKey: centeredAwardKeyBinding,
+                        expandedAwardKey: archiveState.expandedAwardKey,
+                        focusedCard: $focusedCard,
+                        onExpand: expand
+                    )
+                    .padding(.top, 50)
+                }
+
+                if let errorMessage = seenRetryState.errorMessage {
+                    CollectionSeenRetryView(
+                        message: errorMessage,
+                        isRetrying: seenRetryState.isAttempting,
+                        onRetry: { markUnseenCollectiblesSeen() }
+                    )
+                    .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                }
+
+                Spacer(minLength: RootTabPageLayout.contentBottomPadding)
             }
-
-            if let errorMessage = seenRetryState.errorMessage {
-                CollectionSeenRetryView(
-                    message: errorMessage,
-                    isRetrying: seenRetryState.isAttempting,
-                    onRetry: { markUnseenCollectiblesSeen() }
-                )
-                .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
-            }
-
-            Spacer(minLength: RootTabPageLayout.contentBottomPadding)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
     private var archiveHeader: some View {
-        HStack(alignment: .top, spacing: 16) {
+        let displayIndex = ArchiveCarouselPosition.displayIndex(
+            awardKey: archiveState.centeredAwardKey,
+            awardKeys: orderedAwardKeys
+        )
+
+        return HStack(alignment: .top, spacing: 16) {
             VStack(alignment: .leading, spacing: 5) {
                 Text("Archive")
                     .font(.largeTitle.bold())
                     .tracking(-1.3)
                     .foregroundStyle(LivingOSTheme.ink)
-                Text("\(archiveItems.count) / \(CollectionCatalog.all.count)")
+                Text("\(displayIndex) / \(archiveItems.count)")
                     .font(.system(.caption2, design: .monospaced))
                     .foregroundStyle(LivingOSTheme.graphite)
+                    .accessibilityLabel("第\(displayIndex)张，共\(archiveItems.count)张")
             }
 
             Spacer()

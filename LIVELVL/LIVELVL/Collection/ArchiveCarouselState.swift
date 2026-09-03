@@ -12,28 +12,63 @@ nonisolated struct ArchiveCardTransform: Equatable, Sendable {
         normalizedDistance: CGFloat,
         reduceMotion: Bool
     ) -> Self {
-        guard !reduceMotion else {
-            return Self(
-                scale: 1,
-                opacity: 1,
-                yawDegrees: 0,
-                rollDegrees: 0,
-                verticalOffset: 0
-            )
-        }
         let signedDistance = max(-1, min(1, normalizedDistance))
         let distance = abs(signedDistance)
         let direction: Double = signedDistance < 0 ? -1 : (signedDistance > 0 ? 1 : 0)
         let depthProgress = pow(distance, 0.82)
         let turnProgress = sin(distance * .pi / 2)
-        let travelHeight = 22 * pow(distance, 1.5)
-            - 6.5 * sin(distance * .pi)
+        let travelHeight: CGFloat
+        if reduceMotion || distance == 0 || distance == 1 {
+            travelHeight = 0
+        } else {
+            travelHeight = -10 * sin(distance * .pi)
+        }
         return Self(
             scale: 1 - 0.18 * depthProgress,
-            opacity: 1 - 0.3 * Double(depthProgress),
+            opacity: 1 - 0.28 * Double(depthProgress),
             yawDegrees: direction * -28 * Double(turnProgress),
             rollDegrees: direction * -3 * Double(turnProgress),
             verticalOffset: travelHeight
+        )
+    }
+}
+
+nonisolated struct ArchiveCardProjectionStyle: Equatable, Sendable {
+    let contactWidthRatio: CGFloat
+    let contactHeight: CGFloat
+    let contactOpacity: Double
+    let penumbraWidthRatio: CGFloat
+    let penumbraHeight: CGFloat
+    let penumbraOpacity: Double
+    let castHorizontalOffset: CGFloat
+    let castLength: CGFloat
+    let castOpacity: Double
+
+    static func make(normalizedDistance: CGFloat) -> Self {
+        let signedDistance = max(-1, min(1, normalizedDistance))
+        let distance = abs(signedDistance)
+        return Self(
+            contactWidthRatio: 0.58 + 0.14 * distance,
+            contactHeight: 4 + 2 * distance,
+            contactOpacity: 0.27 - 0.15 * Double(distance),
+            penumbraWidthRatio: 0.86 + 0.08 * distance,
+            penumbraHeight: 14 + 4 * distance,
+            penumbraOpacity: 0.075 - 0.025 * Double(distance),
+            castHorizontalOffset: -34 * signedDistance,
+            castLength: 8 + 46 * distance,
+            castOpacity: 0.02 + 0.035 * Double(distance)
+        )
+    }
+}
+
+nonisolated enum ArchiveArtworkComposition {
+    static func frame(in cardSize: CGSize) -> CGRect {
+        let size = CGSize(width: cardSize.width * 0.86, height: cardSize.height * 0.86)
+        return CGRect(
+            x: (cardSize.width - size.width) / 2,
+            y: (cardSize.height - size.height) / 2,
+            width: size.width,
+            height: size.height
         )
     }
 }
@@ -77,7 +112,31 @@ nonisolated enum ArchiveAccessibilityNavigation {
     }
 }
 
+nonisolated enum ArchiveCarouselPosition {
+    static func displayIndex(awardKey: String?, awardKeys: [String]) -> Int {
+        guard !awardKeys.isEmpty else { return 0 }
+        guard let awardKey,
+              let index = awardKeys.firstIndex(of: awardKey) else {
+            return 1
+        }
+        return index + 1
+    }
+}
+
+nonisolated enum ArchiveCarouselCaptionVisibility {
+    static func opacity(
+        isExpanded: Bool,
+        normalizedDistance: CGFloat
+    ) -> Double {
+        guard !isExpanded else { return 0 }
+        return max(0, 1 - abs(normalizedDistance) * 2.4)
+    }
+}
+
 nonisolated struct ArchiveCarouselLayout: Equatable, Sendable {
+    static let sceneDepth: CGFloat = 260
+    static let captionLineSpacing: CGFloat = 10
+
     let cardSize: CGSize
     let cardSpacing: CGFloat
     let captionHeight: CGFloat
@@ -85,24 +144,37 @@ nonisolated struct ArchiveCarouselLayout: Equatable, Sendable {
     let totalHeight: CGFloat
 
     static func resolvedCaptionHeight(isAccessibilitySize: Bool) -> CGFloat {
-        isAccessibilitySize ? 194 : 150
+        isAccessibilitySize ? 236 : 112
     }
 
     static func usesVerticalPageScroll(isAccessibilitySize: Bool) -> Bool {
         isAccessibilitySize
     }
 
+    static func resolvedTotalHeight(
+        containerWidth: CGFloat,
+        isAccessibilitySize: Bool
+    ) -> CGFloat {
+        let layout = make(containerWidth: containerWidth)
+        let captionContentHeight = layout.cardSize.height
+            + layout.cardCaptionSpacing
+            + resolvedCaptionHeight(isAccessibilitySize: isAccessibilitySize)
+        return max(layout.totalHeight, captionContentHeight)
+    }
+
     static func make(containerWidth: CGFloat) -> Self {
-        let width = min(196, max(192, containerWidth * 12 / 23))
-        let height = width * 1.75
-        let captionHeight: CGFloat = 150
-        let spacing: CGFloat = 16
+        let width = min(248, max(224, containerWidth * 0.64))
+        let height = width * 1.52
+        let captionHeight: CGFloat = 112
+        let spacing: CGFloat = 32
+        let contentHeight = height + spacing + captionHeight
+        let groundHeight = height + sceneDepth
         return Self(
             cardSize: CGSize(width: width, height: height),
             cardSpacing: -8,
             captionHeight: captionHeight,
             cardCaptionSpacing: spacing,
-            totalHeight: height + spacing + captionHeight
+            totalHeight: max(contentHeight, groundHeight)
         )
     }
 }
