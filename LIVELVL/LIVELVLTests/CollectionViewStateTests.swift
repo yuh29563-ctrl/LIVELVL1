@@ -181,49 +181,92 @@ struct CollectionViewStateTests {
         #expect(result == ["center"])
     }
 
-    @Test func archiveCardsTravelOnARestrainedThreeDimensionalArc() {
-        let side = ArchiveCardTransform.make(
-            normalizedDistance: 1,
-            reduceMotion: false
-        )
-        #expect(abs(side.scale - 0.82) < 0.001)
-        #expect(abs(side.opacity - 0.7) < 0.001)
-        #expect(abs(side.yawDegrees + 28) < 0.001)
-        #expect(abs(side.rollDegrees + 3) < 0.001)
-        #expect(abs(side.verticalOffset - 22) < 0.001)
+    @Test func restingArchiveCardsShareOneGroundBaseline() {
+        let center = ArchiveCardTransform.make(normalizedDistance: 0, reduceMotion: false)
+        let left = ArchiveCardTransform.make(normalizedDistance: -1, reduceMotion: false)
+        let right = ArchiveCardTransform.make(normalizedDistance: 1, reduceMotion: false)
 
-        let halfway = ArchiveCardTransform.make(
-            normalizedDistance: 0.5,
-            reduceMotion: false
-        )
-        #expect(halfway.scale > 0.89 && halfway.scale < 0.9)
-        #expect(halfway.opacity > 0.82 && halfway.opacity < 0.84)
-        #expect(halfway.yawDegrees > -20 && halfway.yawDegrees < -19)
-        #expect(halfway.verticalOffset > 1.2 && halfway.verticalOffset < 1.4)
+        #expect(center.verticalOffset == 0)
+        #expect(left.verticalOffset == 0)
+        #expect(right.verticalOffset == 0)
+    }
 
-        let nearCenter = ArchiveCardTransform.make(
-            normalizedDistance: 0.25,
-            reduceMotion: false
-        )
-        #expect(nearCenter.verticalOffset > -1.9 && nearCenter.verticalOffset < -1.8)
-
-        let mirrored = ArchiveCardTransform.make(
+    @Test func archiveCardsLiftTenPointsBetweenRestingPositions() {
+        let leftHalfway = ArchiveCardTransform.make(
             normalizedDistance: -0.5,
             reduceMotion: false
         )
-        #expect(mirrored.yawDegrees == -halfway.yawDegrees)
-        #expect(mirrored.rollDegrees == -halfway.rollDegrees)
-        #expect(mirrored.verticalOffset == halfway.verticalOffset)
+        let rightHalfway = ArchiveCardTransform.make(
+            normalizedDistance: 0.5,
+            reduceMotion: false
+        )
 
+        #expect(abs(leftHalfway.verticalOffset + 10) < 0.001)
+        #expect(abs(rightHalfway.verticalOffset + 10) < 0.001)
+    }
+
+    @Test func archiveSidesKeepMirroredYawRollAndStaticDepth() {
+        let left = ArchiveCardTransform.make(normalizedDistance: -1, reduceMotion: false)
+        let right = ArchiveCardTransform.make(normalizedDistance: 1, reduceMotion: false)
+
+        #expect(abs(left.scale - 0.82) < 0.001)
+        #expect(abs(right.scale - 0.82) < 0.001)
+        #expect(abs(left.opacity - 0.72) < 0.001)
+        #expect(abs(right.opacity - 0.72) < 0.001)
+        #expect(left.yawDegrees == -right.yawDegrees)
+        #expect(left.rollDegrees == -right.rollDegrees)
+        #expect(abs(left.yawDegrees - 28) < 0.001)
+        #expect(abs(right.yawDegrees + 28) < 0.001)
+        #expect(abs(left.rollDegrees - 3) < 0.001)
+        #expect(abs(right.rollDegrees + 3) < 0.001)
+    }
+
+    @Test func reducedMotionRemovesLiftButKeepsStableSpatialDepth() {
+        let ordinary = ArchiveCardTransform.make(
+            normalizedDistance: -0.5,
+            reduceMotion: false
+        )
         let reduced = ArchiveCardTransform.make(
-            normalizedDistance: -1,
+            normalizedDistance: -0.5,
             reduceMotion: true
         )
-        #expect(reduced.yawDegrees == 0)
-        #expect(reduced.rollDegrees == 0)
+
         #expect(reduced.verticalOffset == 0)
-        #expect(reduced.scale == 1)
-        #expect(reduced.opacity == 1)
+        #expect(reduced.scale == ordinary.scale)
+        #expect(reduced.opacity == ordinary.opacity)
+        #expect(reduced.yawDegrees == ordinary.yawDegrees)
+        #expect(reduced.rollDegrees == ordinary.rollDegrees)
+    }
+
+    @Test func archiveProjectionAnchorsTheCenterAndMirrorsSideCasts() {
+        let center = ArchiveCardProjectionStyle.make(normalizedDistance: 0)
+        let left = ArchiveCardProjectionStyle.make(normalizedDistance: -1)
+        let right = ArchiveCardProjectionStyle.make(normalizedDistance: 1)
+
+        #expect(abs(center.contactWidthRatio - 0.58) < 0.001)
+        #expect(abs(center.contactOpacity - 0.27) < 0.001)
+        #expect(abs(center.penumbraWidthRatio - 0.86) < 0.001)
+        #expect(abs(center.penumbraOpacity - 0.075) < 0.001)
+        #expect(abs(center.castLength - 8) < 0.001)
+        #expect(center.castHorizontalOffset == 0)
+
+        #expect(center.contactWidthRatio < left.contactWidthRatio)
+        #expect(center.contactOpacity > left.contactOpacity)
+        #expect(abs(left.castHorizontalOffset + right.castHorizontalOffset) < 0.001)
+        #expect(left.castHorizontalOffset > 0)
+        #expect(right.castHorizontalOffset < 0)
+        #expect(abs(left.castLength - 54) < 0.001)
+        #expect(abs(right.castLength - 54) < 0.001)
+    }
+
+    @Test func archiveArtworkOccupiesMostOfTheCardWithoutChangingItsRatio() {
+        let cardSize = CGSize(width: 240, height: 364.8)
+        let frame = ArchiveArtworkComposition.frame(in: cardSize)
+
+        #expect(abs(frame.width / cardSize.width - 0.86) < 0.001)
+        #expect(abs(frame.height / cardSize.height - 0.86) < 0.001)
+        #expect(abs(frame.midX - cardSize.width / 2) < 0.001)
+        #expect(abs(frame.midY - cardSize.height / 2) < 0.001)
     }
 
     @Test func archiveArrivalOnlyCompletesWhileItIsActuallyVisible() {
@@ -292,22 +335,35 @@ struct CollectionViewStateTests {
         #expect(frame.minY > 112)
     }
 
-    @Test func archiveCarouselMatchesTheApprovedIPhone17ProCardAndCaptionScale() {
-        // iOS 26's tab container proposes 340 pt inside the 368 pt screen.
-        // The visual spec is screen-relative, so the card must not shrink with
-        // that system content margin.
-        let layout = ArchiveCarouselLayout.make(containerWidth: 340)
+    @Test func archiveCarouselUsesTheApprovedResponsiveCardScale() {
+        let compact = ArchiveCarouselLayout.make(containerWidth: 340)
+        let iPhone17Pro = ArchiveCarouselLayout.make(containerWidth: 374)
 
-        #expect(abs(layout.cardSize.width - 192) < 0.01)
-        #expect(abs(layout.cardSize.height - 336) < 0.01)
-        #expect(abs(layout.cardSpacing - -8) < 0.01)
-        #expect(abs(layout.captionHeight - 150) < 0.01)
-        #expect(abs(layout.totalHeight - 502) < 0.01)
+        #expect(abs(compact.cardSize.width - 224) < 0.01)
+        #expect((0.62...0.66).contains(compact.cardSize.width / 340))
+        #expect(abs(compact.cardSize.height / compact.cardSize.width - 1.52) < 0.001)
+        #expect(abs(compact.cardCaptionSpacing - 32) < 0.01)
+        #expect(abs(compact.captionHeight - 112) < 0.01)
+        #expect(abs(ArchiveCarouselLayout.captionLineSpacing - 10) < 0.01)
+        #expect(abs(compact.totalHeight - 600.48) < 0.01)
+
+        #expect(abs(iPhone17Pro.cardSize.width - 239.36) < 0.01)
+        #expect((0.62...0.66).contains(iPhone17Pro.cardSize.width / 374))
+        #expect((224...248).contains(iPhone17Pro.cardSize.width))
+        #expect(abs(iPhone17Pro.cardSize.height / iPhone17Pro.cardSize.width - 1.52) < 0.001)
     }
 
     @Test func archiveCaptionExpandsAtAccessibilitySizesWithoutChangingTheCard() {
-        #expect(ArchiveCarouselLayout.resolvedCaptionHeight(isAccessibilitySize: false) == 150)
-        #expect(ArchiveCarouselLayout.resolvedCaptionHeight(isAccessibilitySize: true) == 194)
+        #expect(ArchiveCarouselLayout.resolvedCaptionHeight(isAccessibilitySize: false) == 112)
+        #expect(ArchiveCarouselLayout.resolvedCaptionHeight(isAccessibilitySize: true) == 236)
+        #expect(abs(ArchiveCarouselLayout.resolvedTotalHeight(
+            containerWidth: 340,
+            isAccessibilitySize: false
+        ) - 600.48) < 0.01)
+        #expect(abs(ArchiveCarouselLayout.resolvedTotalHeight(
+            containerWidth: 340,
+            isAccessibilitySize: true
+        ) - 608.48) < 0.01)
         #expect(!ArchiveCarouselLayout.usesVerticalPageScroll(isAccessibilitySize: false))
         #expect(ArchiveCarouselLayout.usesVerticalPageScroll(isAccessibilitySize: true))
     }
@@ -329,6 +385,34 @@ struct CollectionViewStateTests {
         #expect(caption.kindTitle == "成熟卡")
         #expect(caption.levelText == "LV 12")
         #expect(caption.acquiredText == "获得于 08 / 26")
+    }
+
+    @Test func archiveHeaderShowsTheCenteredPositionWithinOwnedCards() {
+        let keys = ["ordinary.sprout", "ordinary.hare", "ordinary.tortoise"]
+
+        #expect(ArchiveCarouselPosition.displayIndex(
+            awardKey: "ordinary.hare",
+            awardKeys: keys
+        ) == 2)
+        #expect(ArchiveCarouselPosition.displayIndex(
+            awardKey: nil,
+            awardKeys: keys
+        ) == 1)
+        #expect(ArchiveCarouselPosition.displayIndex(
+            awardKey: nil,
+            awardKeys: []
+        ) == 0)
+    }
+
+    @Test func expandedArchiveHidesCarouselCaptionsBehindTheDetailCard() {
+        #expect(ArchiveCarouselCaptionVisibility.opacity(
+            isExpanded: false,
+            normalizedDistance: 0
+        ) == 1)
+        #expect(ArchiveCarouselCaptionVisibility.opacity(
+            isExpanded: true,
+            normalizedDistance: 0
+        ) == 0)
     }
 
     @Test func archiveAccessibilityDescribesPositionAndNewState() {

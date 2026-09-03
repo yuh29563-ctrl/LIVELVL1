@@ -143,30 +143,36 @@ struct ArchiveCardView: View {
     let count: Int
 
     var body: some View {
-        ZStack {
-            ArchiveOrganismArtwork(identifier: definition.id)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 34)
+        GeometryReader { geometry in
+            let cardSize = geometry.size
+            let artworkFrame = ArchiveArtworkComposition.frame(in: cardSize)
 
-            VStack {
-                HStack {
-                    Image(systemName: "viewfinder")
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(LivingOSTheme.ink.opacity(0.8))
-                        .frame(width: 44, height: 44)
-                        .accessibilityHidden(true)
+            ZStack {
+                ArchiveOrganismArtwork(identifier: definition.id)
+                    .frame(width: artworkFrame.width, height: artworkFrame.height)
+                    .position(x: artworkFrame.midX, y: artworkFrame.midY)
+                    .blendMode(.multiply)
 
-                    Spacer()
-
-                    if collectible.isUnseen {
-                        Circle()
-                            .fill(LivingOSTheme.signal)
-                            .frame(width: 6, height: 6)
-                            .padding(19)
+                VStack {
+                    HStack {
+                        Image(systemName: "viewfinder")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(LivingOSTheme.ink.opacity(0.8))
+                            .frame(width: 44, height: 44)
                             .accessibilityHidden(true)
+
+                        Spacer()
+
+                        if collectible.isUnseen {
+                            Circle()
+                                .fill(LivingOSTheme.signal)
+                                .frame(width: 6, height: 6)
+                                .padding(19)
+                                .accessibilityHidden(true)
+                        }
                     }
+                    Spacer()
                 }
-                Spacer()
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -174,20 +180,66 @@ struct ArchiveCardView: View {
             RoundedRectangle(cornerRadius: LivingOSMetrics.archiveCardCornerRadius, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.white.opacity(0.84), LivingOSTheme.mist.opacity(0.56)],
+                        stops: [
+                            .init(color: Color.white.opacity(0.90), location: 0),
+                            .init(color: LivingOSTheme.mist.opacity(0.52), location: 0.58),
+                            .init(color: Color.white.opacity(0.72), location: 1)
+                        ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
                 .overlay {
                     RoundedRectangle(cornerRadius: LivingOSMetrics.archiveCardCornerRadius, style: .continuous)
-                        .stroke(Color.white.opacity(0.96), lineWidth: 1)
+                        .stroke(
+                            LinearGradient(
+                                stops: [
+                                    .init(color: Color.white.opacity(0.98), location: 0),
+                                    .init(color: Color.white.opacity(0.54), location: 0.44),
+                                    .init(color: LivingOSTheme.graphite.opacity(0.13), location: 0.84),
+                                    .init(color: Color.white.opacity(0.76), location: 1)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            ),
+                            lineWidth: 1.15
+                        )
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: LivingOSMetrics.archiveCardCornerRadius, style: .continuous)
+                        .inset(by: 1.2)
+                        .stroke(
+                            LinearGradient(
+                                colors: [
+                                    Color.white.opacity(0.30),
+                                    Color.clear,
+                                    Color.black.opacity(0.035)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            ),
+                            lineWidth: 0.6
+                        )
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: LivingOSMetrics.archiveCardCornerRadius, style: .continuous)
+                        .fill(
+                            LinearGradient(
+                                stops: [
+                                    .init(color: Color.clear, location: 0.76),
+                                    .init(color: LivingOSTheme.graphite.opacity(0.018), location: 0.92),
+                                    .init(color: LivingOSTheme.ink.opacity(0.095), location: 1)
+                                ],
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
+                        .blendMode(.multiply)
                 }
         }
         .clipShape(
             RoundedRectangle(cornerRadius: LivingOSMetrics.archiveCardCornerRadius, style: .continuous)
         )
-        .shadow(color: Color.black.opacity(0.12), radius: 18, y: 10)
         .contentShape(
             RoundedRectangle(cornerRadius: LivingOSMetrics.archiveCardCornerRadius, style: .continuous)
         )
@@ -206,29 +258,23 @@ struct ArchiveCardView: View {
 }
 
 struct ArchiveOrganismArtwork: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.scenePhase) private var scenePhase
-    @State private var isVisible = false
     let identifier: String
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 24.0, paused: pausesTimeline)) { timeline in
-            let phase = reduceMotion
-                ? 0.23
-                : timeline.date.timeIntervalSinceReferenceDate / 8.5
-            let samples = ArchiveOrganismGeometry.samples(
-                identifier: identifier,
-                count: 260,
-                phase: phase,
-                reduceMotion: reduceMotion
-            )
-            let arms = ArchiveOrganismGeometry.arms(
-                identifier: identifier,
-                phase: phase,
-                reduceMotion: reduceMotion
-            )
+        let phase = 0.23
+        let samples = ArchiveOrganismGeometry.samples(
+            identifier: identifier,
+            count: 340,
+            phase: phase,
+            reduceMotion: true
+        )
+        let arms = ArchiveOrganismGeometry.arms(
+            identifier: identifier,
+            phase: phase,
+            reduceMotion: true
+        )
 
-            Canvas { context, size in
+        Canvas { context, size in
                 for (armIndex, arm) in arms.enumerated() {
                     guard let first = arm.points.first else { continue }
                     var path = Path()
@@ -294,19 +340,9 @@ struct ArchiveOrganismArtwork: View {
                     )
                     context.fill(Path(ellipseIn: hole), with: .color(Color.white.opacity(0.94)))
                 }
-            }
         }
-        .onAppear { isVisible = true }
-        .onDisappear { isVisible = false }
+        .drawingGroup(opaque: false, colorMode: .extendedLinear)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
-    }
-
-    private var pausesTimeline: Bool {
-        LivingOSAnimationActivity.isPaused(
-            reduceMotion: reduceMotion,
-            isVisible: isVisible,
-            isSceneActive: scenePhase == .active
-        )
     }
 }
