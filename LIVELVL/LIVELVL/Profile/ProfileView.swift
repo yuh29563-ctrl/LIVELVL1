@@ -2,15 +2,9 @@ import SwiftData
 import SwiftUI
 
 struct ProfileView: View {
-    @Query private var items: [Item]
     @Query private var completions: [Completion]
     @Query private var progressItems: [Progress]
-    @Query private var profiles: [DimensionProfile]
-    @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
-    private var snapshots: [StateSnapshot]
     @Environment(\.calendar) private var calendar
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .body) private var statusFieldHeight: CGFloat = 310
 
 #if DEBUG
     @Environment(\.modelContext) private var modelContext
@@ -48,30 +42,26 @@ struct ProfileView: View {
     private var profileContent: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    YouIdentityHeader(level: level)
+                VStack(alignment: .leading, spacing: 22) {
+                    YouIdentityCard(
+                        presentation: identityPresentation,
+                        level: level,
+                        currentLevelXP: currentLevelXP,
+                        requiredLevelXP: requiredLevelXP,
+                        progress: levelProgress
+                    )
 
-                    YouPageTitle()
-                        .padding(.top, 26)
-
-                    Text("个人操作系统 · 诊断中")
-                        .font(.body)
-                        .foregroundStyle(LivingOSTheme.graphite)
-                        .padding(.top, 2)
-
-                    YouStateHeadline(score: overallDisplayScore)
-                        .padding(.top, 28)
-
-                    YouStateField(nodes: dimensionNodes)
-                        .frame(height: statusFieldHeight)
-                        .padding(.top, dynamicTypeSize.isAccessibilitySize ? 38 : 0)
-
-                    WeeklyStateTimelineView(
-                        days: weeklyDays,
+                    YouLiveTableView(
+                        completions: completions,
                         now: .now,
                         calendar: timelineCalendar
                     )
-                    .padding(.top, 10)
+
+                    YouXPTrendView(
+                        completions: completions,
+                        now: .now,
+                        calendar: timelineCalendar
+                    )
 
                     Group {
 #if DEBUG
@@ -80,13 +70,12 @@ struct ProfileView: View {
                         YouSettingsRows()
 #endif
                     }
-                    .padding(.top, 26)
 
-                    Text("LIVELVL · LOCAL FIRST")
+                    Text(YouAppMetadata.footer)
                         .font(.system(size: 10, weight: .medium, design: .monospaced))
                         .tracking(1.4)
                         .foregroundStyle(LivingOSTheme.graphite.opacity(0.72))
-                        .padding(.top, 24)
+                        .frame(maxWidth: .infinity, alignment: .center)
                 }
                 .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
                 .padding(.top, 18)
@@ -101,47 +90,32 @@ struct ProfileView: View {
         progressItems.first?.level ?? 0
     }
 
-    private var currentSummary: LifeStateSummary? {
-        guard let snapshot = snapshots.first else { return nil }
-        let itemByID = items.reduce(into: [UUID: Item]()) { result, item in
-            result[item.id] = item
-        }
-        let activities = completions.compactMap {
-            $0.stateActivity(fallbackItem: itemByID[$0.itemID])
-        }
-        return LifeStateSummaryBuilder.build(
-            profiles: profiles,
-            snapshot: snapshot,
-            activities: activities,
-            now: .now,
-            calendar: calendar
-        )
+    private var totalXP: Int {
+        max(0, progressItems.first?.totalXP ?? 0)
     }
 
-    private var overallDisplayScore: Int {
-        LifeStateDisplayScale.percentage(from: currentSummary?.overallScore ?? 5)
+    private var currentLevelXP: Int {
+        GrowthEngine.xpInCurrentLevel(for: totalXP)
     }
 
-    private var dimensionNodes: [LifeFieldNodePresentation] {
-        guard let currentSummary else {
-            return LifeFieldNodePresentation.make(
-                official: .neutral,
-                projected: .neutral
-            )
-        }
-        return LifeFieldNodePresentation.make(summary: currentSummary)
+    private var requiredLevelXP: Int {
+        GrowthEngine.xpNeededForNextLevel(for: totalXP)
     }
 
-    private var weeklyDays: [WeeklyStateDay] {
-        WeeklyStateTimelineBuilder.build(
-            completions: completions,
-            weekContaining: .now,
-            calendar: timelineCalendar
-        )
+    private var levelProgress: Double {
+        GrowthEngine.progressToNextLevel(for: totalXP)
     }
 
     private var timelineCalendar: Calendar {
         YouTimelineCalendar.resolved(from: calendar)
+    }
+
+    private var identityPresentation: YouIdentityPresentation {
+#if DEBUG
+        .development
+#else
+        .localOnly
+#endif
     }
 }
 
