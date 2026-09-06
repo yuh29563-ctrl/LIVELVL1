@@ -116,6 +116,7 @@ struct TodayView: View {
     @State private var feedbackSequenceID: UUID?
     @State private var levelUpFeedback: Int?
     @State private var rewardFlow = CompletionRewardFlowState()
+    @State private var isShowingJournal = false
 
     private var progress: Progress { progressItems.first ?? Progress() }
     private var rewardFeedback: TaskRewardFeedback? { growthPresentation.feedback }
@@ -211,6 +212,9 @@ struct TodayView: View {
                             .fill(LivingOSTheme.mist)
                             .frame(height: 0.5)
 
+                        TodayJournalEntryView(onOpen: { isShowingJournal = true })
+                            .padding(.vertical, 16)
+
                         if activeItems.isEmpty {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("今天还没有任务")
@@ -254,6 +258,9 @@ struct TodayView: View {
                 }
             }
             .background(LivingOSTheme.canvas)
+            .fullScreenCover(isPresented: $isShowingJournal) {
+                JournalLiquidArchiveView(onClose: { isShowingJournal = false })
+            }
             .sheet(isPresented: $showAdd) { TaskEditorView() }
             .sheet(item: $selectedTask, onDismiss: presentArchiveUndoIfNeeded) { item in
                 TaskEditorView(

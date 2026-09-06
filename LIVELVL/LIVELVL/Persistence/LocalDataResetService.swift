@@ -36,6 +36,9 @@ enum LocalDataResetService {
             for model in try context.fetch(FetchDescriptor<DimensionProfile>()) {
                 context.delete(model)
             }
+            for model in try context.fetch(FetchDescriptor<JournalEntry>()) {
+                context.delete(model)
+            }
             if let mediaModels = try? context.fetch(FetchDescriptor<UserCardMedia>()) {
                 for model in mediaModels {
                     context.delete(model)

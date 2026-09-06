@@ -19,6 +19,32 @@ struct LocalDataResetServiceTests {
         }
     }
 
+    @Test func resetDeletesJournalEntries() throws {
+        let container = try ModelContainer(
+            for: Schema([JournalEntry.self]),
+            configurations: .init(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+        context.insert(JournalEntry(
+            dayKey: "2026-09-06|Asia/Shanghai",
+            dayStart: Date(timeIntervalSince1970: 0),
+            timeZoneIdentifier: "Asia/Shanghai",
+            title: "今天",
+            body: "应该被清除",
+            state: .draft,
+            now: Date(timeIntervalSince1970: 0)
+        ))
+        try context.save()
+
+        try LocalDataResetService.reset(
+            context: context,
+            fileManager: .default,
+            applicationSupportURL: FileManager.default.temporaryDirectory
+        )
+
+        #expect(try context.fetch(FetchDescriptor<JournalEntry>()).isEmpty)
+    }
+
     @Test func resetDeletesRewardLedgerProductsRedemptionsAndImages() throws {
         let schema = Schema([
             CoinTransaction.self,
