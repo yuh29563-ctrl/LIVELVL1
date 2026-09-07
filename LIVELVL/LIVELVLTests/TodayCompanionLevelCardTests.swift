@@ -89,6 +89,15 @@ struct TodayCompanionLevelCardTests {
         #expect(LifeCoreReadabilityTreatment.progressTrackOpacity < 0.70)
     }
 
+    @Test func expandedCardCenterMatchesTheSixDimensionVisualCore() {
+        let fieldSize = CGSize(width: 368, height: 360)
+
+        #expect(
+            LifeCorePlacement.expandedCenter(in: fieldSize)
+                == CGPoint(x: 184, y: 162)
+        )
+    }
+
     @Test func compactDockNeverOverlapsOrCompressesTheLifeField() {
         let expanded = LifeCoreDockLayout.metrics(
             displayMode: .expanded,

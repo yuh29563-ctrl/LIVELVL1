@@ -168,6 +168,12 @@ nonisolated enum LifeCoreDockLayout {
     }
 }
 
+nonisolated enum LifeCorePlacement {
+    static func expandedCenter(in fieldSize: CGSize) -> CGPoint {
+        LifeFieldLayout.point(for: LifeFieldLayout.visualCore, in: fieldSize)
+    }
+}
+
 struct LifeCoreWidgetPresentation: Equatable, Sendable {
     static let showsMediaControlsOnMainSurface = false
     static let allowsOpeningLegacyDetail = false
@@ -463,6 +469,8 @@ struct TodayLifeFieldSection: View {
             let coreHeight = coreWidth * LifeCoreDockLayout.coreAspectRatio(
                 isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
             )
+            let fieldSize = CGSize(width: proxy.size.width, height: layout.fieldHeight)
+            let expandedCoreCenter = LifeCorePlacement.expandedCenter(in: fieldSize)
 
             VStack(spacing: layout.spacing) {
                 if composition.showsCompactDock, let dockAccessibility = accessibility.dock {
@@ -511,10 +519,12 @@ struct TodayLifeFieldSection: View {
                             artworkNamespace: coreArtworkNamespace
                         )
                         .frame(width: coreWidth, height: coreHeight)
+                        .position(expandedCoreCenter)
                         .transition(coreTransition)
                         .zIndex(LifeFieldLayerOrder.expandedCore)
 
                         LifeCoreCollapseButton(action: toggleCoreDisplayMode)
+                            .position(expandedCoreCenter)
                             .offset(
                                 x: coreWidth / 2 - LifeCoreCollapseLayout.minimumTapDimension / 2,
                                 y: -coreHeight / 2 + LifeCoreCollapseLayout.minimumTapDimension / 2
