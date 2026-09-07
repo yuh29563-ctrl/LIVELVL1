@@ -110,13 +110,14 @@ extension CompanionStage {
 }
 
 nonisolated struct LifeCoreDockMetrics: Equatable, Sendable {
+    let topInset: CGFloat
     let dockHeight: CGFloat
     let spacing: CGFloat
     let fieldOriginY: CGFloat
     let fieldHeight: CGFloat
     let sectionHeight: CGFloat
 
-    var dockRange: Range<CGFloat> { 0..<dockHeight }
+    var dockRange: Range<CGFloat> { topInset..<(topInset + dockHeight) }
     var fieldRange: Range<CGFloat> { fieldOriginY..<(fieldOriginY + fieldHeight) }
 }
 
@@ -125,7 +126,9 @@ nonisolated enum LifeCoreDockLayout {
     private static let accessibilityFieldHeight: CGFloat = 590
     private static let regularDockHeight: CGFloat = 44
     private static let accessibilityDockHeight: CGFloat = 64
-    private static let regularDockSpacing: CGFloat = 20
+    private static let regularTopInset: CGFloat = 16
+    private static let accessibilityTopInset: CGFloat = 20
+    private static let regularDockSpacing: CGFloat = 36
     private static let accessibilityDockSpacing: CGFloat = 36
 
     static func coreAspectRatio(isAccessibilitySize: Bool) -> CGFloat {
@@ -146,12 +149,16 @@ nonisolated enum LifeCoreDockLayout {
         let dockHeight = displayMode == .compact
             ? (isAccessibilitySize ? accessibilityDockHeight : regularDockHeight)
             : 0
+        let topInset = displayMode == .compact
+            ? (isAccessibilitySize ? accessibilityTopInset : regularTopInset)
+            : 0
         let spacing = displayMode == .compact
             ? (isAccessibilitySize ? accessibilityDockSpacing : regularDockSpacing)
             : 0
-        let fieldOriginY = dockHeight + spacing
+        let fieldOriginY = topInset + dockHeight + spacing
 
         return LifeCoreDockMetrics(
+            topInset: topInset,
             dockHeight: dockHeight,
             spacing: spacing,
             fieldOriginY: fieldOriginY,
@@ -524,6 +531,7 @@ struct TodayLifeFieldSection: View {
                 }
                 .frame(height: layout.fieldHeight)
             }
+            .padding(.top, layout.topInset)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .animation(sectionAnimation, value: coreDisplayMode)
             .dynamicTypeSize(.large ... .accessibility2)

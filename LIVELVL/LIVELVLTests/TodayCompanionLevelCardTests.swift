@@ -30,15 +30,17 @@ struct TodayCompanionLevelCardTests {
         )
 
         #expect(regular.dockHeight == 44)
-        #expect(regular.spacing == 20)
+        #expect(regular.topInset == 16)
+        #expect(regular.spacing == 36)
         #expect(regular.fieldHeight == 360)
-        #expect(regular.fieldOriginY == 64)
-        #expect(regular.sectionHeight == 424)
+        #expect(regular.fieldOriginY == 96)
+        #expect(regular.sectionHeight == 456)
         #expect(accessibility.dockHeight == 64)
+        #expect(accessibility.topInset == 20)
         #expect(accessibility.spacing == 36)
         #expect(accessibility.fieldHeight == 590)
-        #expect(accessibility.fieldOriginY == 100)
-        #expect(accessibility.sectionHeight == 690)
+        #expect(accessibility.fieldOriginY == 120)
+        #expect(accessibility.sectionHeight == 710)
         #expect(LifeCoreCollapseLayout.minimumTapDimension >= 44)
         #expect(LifeCoreCollapseLayout.centerCoreTapDimension >= 44)
         #expect(
@@ -101,7 +103,18 @@ struct TodayCompanionLevelCardTests {
         #expect(expanded.fieldOriginY == 0)
         #expect(expanded.fieldHeight == compact.fieldHeight)
         #expect(expanded.sectionHeight == expanded.fieldHeight)
+        #expect(compact.dockRange.lowerBound >= 16)
         #expect(compact.dockRange.upperBound <= compact.fieldRange.lowerBound)
+
+        let fieldSize = CGSize(width: 368, height: compact.fieldHeight)
+        let healthNodeY = LifeFieldLayout.point(for: .health, in: fieldSize).y
+        let conservativeAboveLabelExtent: CGFloat = 44
+        let minimumVisualGap: CGFloat = 12
+        let healthLabelTop = compact.fieldRange.lowerBound
+            + healthNodeY
+            - conservativeAboveLabelExtent
+
+        #expect(healthLabelTop - compact.dockRange.upperBound >= minimumVisualGap)
     }
 
     @Test func compactLifeCoreAnnouncesItsStateAndExpandAction() {
