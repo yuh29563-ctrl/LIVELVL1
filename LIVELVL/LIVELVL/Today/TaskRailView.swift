@@ -2,6 +2,7 @@ import SwiftUI
 
 enum TaskRailMetrics {
     static let minimumActionHitTarget: CGFloat = 44
+    static let minimumRowHeight: CGFloat = 62
 }
 
 struct TaskEditorPresentation: Equatable {
@@ -87,6 +88,7 @@ struct TaskRailPresentation: Equatable, Sendable {
     var xpText: String? {
         rewardXP.map { "+\($0) XP" }
     }
+    var displayedXPText: String { xpText ?? "\(baseXP) XP" }
     var accessibilityLabel: String {
         "\(title)，\(dimensionTitle)，\(baseXP) XP，\(isCompleted ? "已完成" : "未完成")"
     }
@@ -133,22 +135,32 @@ struct TaskRailView: View {
 
             Button(action: onEdit) {
                 HStack(spacing: 10) {
-                    Text(presentation.title)
-                        .font(.system(LivingOSTypography.taskTitle, weight: .regular))
-                        .foregroundStyle(LivingOSTheme.ink)
-                        .lineLimit(2)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(presentation.title)
+                            .font(.system(LivingOSTypography.taskTitle, weight: .medium))
+                            .foregroundStyle(LivingOSTheme.ink)
+                            .lineLimit(2)
+
+                        Text(presentation.dimensionTitle)
+                            .font(.caption)
+                            .foregroundStyle(LivingOSTheme.graphite)
+                    }
 
                     Spacer(minLength: 8)
 
                     HStack(spacing: 7) {
-                        if let xpText = presentation.xpText {
-                            Text(xpText)
-                                .font(.subheadline.weight(.medium))
-                                .foregroundStyle(LivingOSTheme.ink)
-                                .contentTransition(.numericText())
+                        Text(presentation.displayedXPText)
+                            .font(.system(.subheadline, design: .monospaced, weight: .medium))
+                            .foregroundStyle(
+                                presentation.isRewarding
+                                    ? TodayVisualTheme.growthAccent
+                                    : LivingOSTheme.ink
+                            )
+                            .contentTransition(.numericText())
 
+                        if presentation.isRewarding {
                             Circle()
-                                .fill(LivingOSTheme.signal)
+                                .fill(TodayVisualTheme.growthAccent)
                                 .frame(width: 6, height: 6)
                                 .opacity(rewardOpacity)
                                 .offset(y: rewardOffset)
@@ -161,7 +173,7 @@ struct TaskRailView: View {
                             .accessibilityHidden(true)
                     }
                 }
-                .frame(minHeight: 58)
+                .frame(minHeight: TaskRailMetrics.minimumRowHeight)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
@@ -185,5 +197,26 @@ struct TaskRailView: View {
                 rewardOffset = reduceMotion ? 0 : -4
             }
         }
+    }
+}
+
+struct TodayTaskSectionHeader: View {
+    let presentation: TodayTaskSummaryPresentation
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(presentation.title)
+                .font(.title3.weight(.semibold))
+                .foregroundStyle(LivingOSTheme.ink)
+
+            Spacer(minLength: 8)
+
+            Text(presentation.progressText)
+                .font(.system(.caption, design: .monospaced, weight: .medium))
+                .foregroundStyle(LivingOSTheme.graphite)
+                .contentTransition(.numericText())
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("今日任务，已完成 \(presentation.completedCount) 项，共 \(presentation.itemCount) 项")
     }
 }

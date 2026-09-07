@@ -6,7 +6,7 @@ enum LifeCoreArtworkStyle: Equatable, Sendable {
 
 enum TodaySurfaceContract {
     static let showsAssessmentControl = false
-    static let showsTaskSectionTitle = false
+    static let showsTaskSectionTitle = true
 }
 
 nonisolated enum LifeCoreDisplayMode: Equatable, Sendable {
@@ -121,12 +121,20 @@ nonisolated struct LifeCoreDockMetrics: Equatable, Sendable {
 }
 
 nonisolated enum LifeCoreDockLayout {
-    private static let regularFieldHeight: CGFloat = 492
+    private static let regularFieldHeight: CGFloat = 360
     private static let accessibilityFieldHeight: CGFloat = 590
     private static let regularDockHeight: CGFloat = 44
     private static let accessibilityDockHeight: CGFloat = 64
-    private static let regularDockSpacing: CGFloat = 28
+    private static let regularDockSpacing: CGFloat = 20
     private static let accessibilityDockSpacing: CGFloat = 36
+
+    static func coreAspectRatio(isAccessibilitySize: Bool) -> CGFloat {
+        isAccessibilitySize ? 1.94 : 1.72
+    }
+
+    static func artworkHeight(isAccessibilitySize: Bool) -> CGFloat {
+        isAccessibilitySize ? 146 : 104
+    }
 
     static func metrics(
         displayMode: LifeCoreDisplayMode,
@@ -266,6 +274,7 @@ nonisolated enum LifeCoreParticleGeometry {
 
 struct LifeCoreWidget: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var pulseScale = 1.0
 
     let presentation: LifeCoreWidgetPresentation
@@ -342,18 +351,18 @@ struct LifeCoreWidget: View {
             RoundedRectangle(cornerRadius: presentation.cornerRadius, style: .continuous)
                 .fill(
                     LinearGradient(
-                        colors: [Color.white.opacity(0.82), LivingOSTheme.mist.opacity(0.72)],
+                        colors: [Color.white.opacity(0.97), LivingOSTheme.surface.opacity(0.95)],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
                 )
                 .overlay {
                     RoundedRectangle(cornerRadius: presentation.cornerRadius, style: .continuous)
-                        .stroke(Color.white.opacity(0.95), lineWidth: 1)
+                        .stroke(LivingOSTheme.mist.opacity(0.72), lineWidth: 0.7)
                 }
         }
         .clipShape(RoundedRectangle(cornerRadius: presentation.cornerRadius, style: .continuous))
-        .shadow(color: Color.black.opacity(0.12), radius: 16, y: 8)
+        .shadow(color: Color.black.opacity(0.10), radius: 14, y: 7)
         .scaleEffect(pulseScale)
         .overlay(alignment: .topTrailing) {
             if isRewarding {
@@ -397,7 +406,11 @@ struct LifeCoreWidget: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 146)
+        .frame(
+            height: LifeCoreDockLayout.artworkHeight(
+                isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+            )
+        )
 
         if let artworkNamespace, !reduceMotion {
             content
@@ -440,7 +453,9 @@ struct TodayLifeFieldSection: View {
 
         GeometryReader { proxy in
             let coreWidth = resolvedCoreWidth(containerWidth: proxy.size.width)
-            let coreHeight = coreWidth * 1.94
+            let coreHeight = coreWidth * LifeCoreDockLayout.coreAspectRatio(
+                isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
+            )
 
             VStack(spacing: layout.spacing) {
                 if composition.showsCompactDock, let dockAccessibility = accessibility.dock {

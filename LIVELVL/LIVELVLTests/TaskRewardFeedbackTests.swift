@@ -4,6 +4,35 @@ import Testing
 
 @MainActor
 struct TaskRewardFeedbackTests {
+    @Test func todayHeaderBuildsStableBrandAndLocalizedDateCopy() throws {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.locale = Locale(identifier: "zh_CN")
+        calendar.timeZone = try #require(TimeZone(identifier: "Asia/Shanghai"))
+        let date = try #require(calendar.date(from: DateComponents(
+            year: 2026,
+            month: 9,
+            day: 7
+        )))
+
+        let presentation = TodayHeaderPresentation(
+            itemCount: 2,
+            now: date,
+            calendar: calendar
+        )
+
+        #expect(presentation.eyebrow == "LIVELVL")
+        #expect(presentation.dateText == "9月7日 · 星期一")
+    }
+
+    @Test func taskSummaryClampsCompletedCountToItsRealItemCount() {
+        let overfilled = TodayTaskSummaryPresentation(completedCount: 9, itemCount: 2)
+        let empty = TodayTaskSummaryPresentation(completedCount: -1, itemCount: -4)
+
+        #expect(overfilled.title == "今日任务")
+        #expect(overfilled.progressText == "2 / 2")
+        #expect(empty.progressText == "0 / 0")
+    }
+
     @Test(arguments: [0, 1, 12])
     func todayHeaderAlwaysPresentsTheAddTaskAction(itemCount: Int) {
         let presentation = TodayHeaderPresentation(itemCount: itemCount)

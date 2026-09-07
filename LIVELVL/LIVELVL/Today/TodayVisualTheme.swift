@@ -8,11 +8,16 @@ enum TodayVisualTheme {
     static let reward = LivingOSTheme.ink
     static let rewardSoft = LivingOSTheme.mist
     static let pageBackground = LivingOSTheme.canvas
+    static let growthAccent = Color(
+        red: 20.0 / 255.0,
+        green: 132.0 / 255.0,
+        blue: 136.0 / 255.0
+    )
 }
 
 nonisolated enum TodayLayout {
     static func headerOffset(isAccessibilitySize: Bool) -> CGFloat {
-        isAccessibilitySize ? 0 : -28
+        0
     }
 }
 

@@ -9,7 +9,7 @@ struct LivingOSDesignSystemTests {
         #expect(LivingOSMetrics.coreWidth(containerWidth: 1_024) == 180)
         #expect(LivingOSMetrics.resolvedPageTitleSize(56) == 56)
         #expect(LivingOSMetrics.resolvedPageTitleSize(120) == 72)
-        #expect(TodayLayout.headerOffset(isAccessibilitySize: false) == -28)
+        #expect(TodayLayout.headerOffset(isAccessibilitySize: false) == 0)
         #expect(TodayLayout.headerOffset(isAccessibilitySize: true) == 0)
     }
 

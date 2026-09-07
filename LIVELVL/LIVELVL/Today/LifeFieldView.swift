@@ -22,8 +22,8 @@ nonisolated enum LifeFieldLayerOrder {
 
 nonisolated enum LifeFieldLayout {
     static let visualCore = CGPoint(x: 0.50, y: 0.45)
-    private static let horizontalRadius = 0.36
     private static let verticalRadius = 0.39
+    private static let horizontalRadius = verticalRadius * CGFloat(3).squareRoot() / 2
 
     static func anchor(for dimension: LifeDimension) -> CGPoint {
         switch dimension {
@@ -76,7 +76,15 @@ nonisolated enum LifeFieldLayout {
     }
 
     static func point(for normalized: CGPoint, in size: CGSize) -> CGPoint {
-        return CGPoint(x: normalized.x * size.width, y: normalized.y * size.height)
+        let scale = min(size.width, size.height)
+        let center = CGPoint(
+            x: visualCore.x * size.width,
+            y: visualCore.y * size.height
+        )
+        return CGPoint(
+            x: center.x + (normalized.x - visualCore.x) * scale,
+            y: center.y + (normalized.y - visualCore.y) * scale
+        )
     }
 
     static func labelPlacement(for dimension: LifeDimension) -> LifeFieldLabelPlacement {
@@ -194,7 +202,7 @@ nonisolated struct LifeFieldParticleLinkSample: Equatable, Sendable {
 }
 
 nonisolated enum LifeFieldRadialLinkPresentation {
-    private static let opacityMultiplier = 0.62
+    private static let opacityMultiplier = 0.36
 
     static var targets: [LifeDimension: CGPoint] {
         Dictionary(
@@ -350,7 +358,7 @@ struct LifeFieldView: View {
                 }
             }
         }
-        .frame(minHeight: 470, idealHeight: 520, maxHeight: 560)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onChange(of: nodes.map(\.dimension)) { _, dimensions in
             selection.reconcile(available: Set(dimensions))
         }
@@ -410,7 +418,7 @@ struct LifeFieldBackdrop<CenterContent: View>: View {
 
             ZStack {
                 LivingDotField(columns: 34, rows: 45)
-                    .opacity(0.72)
+                    .opacity(0.34)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 14)
                     .zIndex(LifeFieldLayerOrder.backdropDots)
@@ -448,7 +456,7 @@ struct LifeFieldBackdrop<CenterContent: View>: View {
                 .zIndex(LifeFieldLayerOrder.dynamicEdges)
             }
         }
-        .frame(minHeight: 470, idealHeight: 520, maxHeight: 560)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -614,14 +622,14 @@ private struct LifeFieldProjectedMarker: View {
         ZStack {
             Circle()
                 .stroke(
-                    LivingOSTheme.graphite.opacity(0.52),
+                    TodayVisualTheme.growthAccent.opacity(0.78),
                     style: StrokeStyle(lineWidth: 1, dash: [2.5, 2.5])
                 )
                 .frame(width: 20, height: 20)
 
             if isRewardTarget {
                 Circle()
-                    .stroke(LivingOSTheme.signal.opacity(0.78), lineWidth: 1)
+                    .stroke(TodayVisualTheme.growthAccent.opacity(0.78), lineWidth: 1)
                     .frame(width: 28, height: 28)
                     .scaleEffect(reduceMotion ? 1 : 1.22)
                     .opacity(reduceMotion ? 0.65 : 0.18)
@@ -660,9 +668,10 @@ private struct LifeFieldEdgeParticles: View {
             Canvas { context, size in
                 for sample in samples {
                     let diameter = sample.diameter
+                    let point = LifeFieldLayout.point(for: sample.position, in: size)
                     let rect = CGRect(
-                        x: sample.position.x * size.width - diameter / 2,
-                        y: sample.position.y * size.height - diameter / 2,
+                        x: point.x - diameter / 2,
+                        y: point.y - diameter / 2,
                         width: diameter,
                         height: diameter
                     )
@@ -709,9 +718,10 @@ private struct LifeFieldParticleLinks: View {
             Canvas { context, size in
                 for sample in samples {
                     let diameter = sample.diameter
+                    let point = LifeFieldLayout.point(for: sample.position, in: size)
                     let rect = CGRect(
-                        x: sample.position.x * size.width - diameter / 2,
-                        y: sample.position.y * size.height - diameter / 2,
+                        x: point.x - diameter / 2,
+                        y: point.y - diameter / 2,
                         width: diameter,
                         height: diameter
                     )

@@ -124,6 +124,12 @@ struct TodayView: View {
     private var headerPresentation: TodayHeaderPresentation {
         TodayHeaderPresentation(itemCount: activeItems.count)
     }
+    private var taskSummaryPresentation: TodayTaskSummaryPresentation {
+        TodayTaskSummaryPresentation(
+            completedCount: activeItems.filter(isCompleted).count,
+            itemCount: activeItems.count
+        )
+    }
 
     private var activeCompanion: (definition: CollectibleDefinition, stage: CompanionStage) {
         guard let collectionProgress = collectionProgressItems.first else {
@@ -163,7 +169,11 @@ struct TodayView: View {
     var body: some View {
         ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    LivingOSPageHeader(title: "Today") {
+                    LivingOSPageHeader(
+                        eyebrow: headerPresentation.eyebrow,
+                        title: "Today",
+                        metadata: headerPresentation.dateText
+                    ) {
                         if headerPresentation.showsAddTaskAction {
                             TodayHeaderAddTaskButton(
                                 presentation: headerPresentation,
@@ -209,11 +219,15 @@ struct TodayView: View {
 
                     VStack(alignment: .leading, spacing: 0) {
                         Rectangle()
-                            .fill(LivingOSTheme.mist)
+                            .fill(LivingOSTheme.mist.opacity(0.72))
                             .frame(height: 0.5)
 
                         TodayJournalEntryView(onOpen: { isShowingJournal = true })
-                            .padding(.vertical, 16)
+                            .padding(.top, 20)
+
+                        TodayTaskSectionHeader(presentation: taskSummaryPresentation)
+                            .padding(.top, 24)
+                            .padding(.bottom, 8)
 
                         if activeItems.isEmpty {
                             VStack(alignment: .leading, spacing: 6) {
@@ -243,6 +257,7 @@ struct TodayView: View {
                             )
                             .todayGrowthAnchor(.task(item.id))
                         }
+
                     }
                     .contextMenu {
                         Button("新建任务", systemImage: "plus") { showAdd = true }
@@ -366,13 +381,21 @@ struct TodayView: View {
                     .map { LifeFieldLayout.anchors(for: $0).projected }
             } ?? LifeFieldLayout.anchor(for: feedback.dimension)
             let start = CGPoint(x: taskFrame.maxX - 42, y: taskFrame.midY)
+            let dimensionOffset = LifeFieldLayout.point(
+                for: dimensionAnchor,
+                in: fieldFrame.size
+            )
+            let coreOffset = LifeFieldLayout.point(
+                for: LifeFieldLayout.visualCore,
+                in: fieldFrame.size
+            )
             let dimension = CGPoint(
-                x: fieldFrame.minX + dimensionAnchor.x * fieldFrame.width,
-                y: fieldFrame.minY + dimensionAnchor.y * fieldFrame.height
+                x: fieldFrame.minX + dimensionOffset.x,
+                y: fieldFrame.minY + dimensionOffset.y
             )
             let core = CGPoint(
-                x: fieldFrame.minX + LifeFieldLayout.visualCore.x * fieldFrame.width,
-                y: fieldFrame.minY + LifeFieldLayout.visualCore.y * fieldFrame.height
+                x: fieldFrame.minX + coreOffset.x,
+                y: fieldFrame.minY + coreOffset.y
             )
 
             XPFlowOverlay(

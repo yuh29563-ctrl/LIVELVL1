@@ -30,10 +30,10 @@ struct TodayCompanionLevelCardTests {
         )
 
         #expect(regular.dockHeight == 44)
-        #expect(regular.spacing == 28)
-        #expect(regular.fieldHeight == 492)
-        #expect(regular.fieldOriginY == 72)
-        #expect(regular.sectionHeight == 564)
+        #expect(regular.spacing == 20)
+        #expect(regular.fieldHeight == 360)
+        #expect(regular.fieldOriginY == 64)
+        #expect(regular.sectionHeight == 424)
         #expect(accessibility.dockHeight == 64)
         #expect(accessibility.spacing == 36)
         #expect(accessibility.fieldHeight == 590)
@@ -47,6 +47,10 @@ struct TodayCompanionLevelCardTests {
         #expect(
             LifeCoreCollapseLayout.collapsedCoreDimension(isAccessibilitySize: true) == 120
         )
+        #expect(LifeCoreDockLayout.coreAspectRatio(isAccessibilitySize: false) == 1.72)
+        #expect(LifeCoreDockLayout.coreAspectRatio(isAccessibilitySize: true) == 1.94)
+        #expect(LifeCoreDockLayout.artworkHeight(isAccessibilitySize: false) == 104)
+        #expect(LifeCoreDockLayout.artworkHeight(isAccessibilitySize: true) == 146)
     }
 
     @Test func compactCompositionRendersDockAndClearCenterTargetWithoutArtwork() {
@@ -243,7 +247,7 @@ struct TodayCompanionLevelCardTests {
         #expect(!LifeCoreWidgetPresentation.allowsOpeningLegacyDetail)
         #expect(LifeCoreWidgetPresentation.artworkStyle == .pointCloudOrb)
         #expect(!TodaySurfaceContract.showsAssessmentControl)
-        #expect(!TodaySurfaceContract.showsTaskSectionTitle)
+        #expect(TodaySurfaceContract.showsTaskSectionTitle)
     }
 
     @Test func coreParticlesDanceNormallyAndFreezeForReduceMotion() {
@@ -345,6 +349,7 @@ struct TodayCompanionLevelCardTests {
         #expect(presentation.title == "跑步 30 分钟")
         #expect(presentation.dimensionTitle == "健康")
         #expect(presentation.xpText == "+20 XP")
+        #expect(presentation.displayedXPText == "+20 XP")
         #expect(presentation.isCompleted)
         #expect(presentation.isRewarding)
     }
@@ -365,6 +370,7 @@ struct TodayCompanionLevelCardTests {
         )
 
         #expect(presentation.xpText == nil)
+        #expect(presentation.displayedXPText == "10 XP")
         #expect(!presentation.isRewarding)
         #expect(presentation.completionAccessibilityLabel == "完成 阅读 20 分钟")
         #expect(presentation.editAccessibilityLabel == "编辑 阅读 20 分钟")

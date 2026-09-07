@@ -35,11 +35,11 @@ struct LifeFieldPresentationTests {
     @Test func approvedSixPointLayoutKeepsSemanticDomainsAtReferenceAnchors() {
         let expected: [LifeDimension: CGPoint] = [
             .health: CGPoint(x: 0.50, y: 0.06),
-            .learning: CGPoint(x: 0.86, y: 0.255),
-            .finance: CGPoint(x: 0.86, y: 0.645),
+            .learning: CGPoint(x: 0.837749907475931, y: 0.255),
+            .finance: CGPoint(x: 0.837749907475931, y: 0.645),
             .relationships: CGPoint(x: 0.50, y: 0.84),
-            .career: CGPoint(x: 0.14, y: 0.645),
-            .interests: CGPoint(x: 0.14, y: 0.255)
+            .career: CGPoint(x: 0.162250092524069, y: 0.645),
+            .interests: CGPoint(x: 0.162250092524069, y: 0.255)
         ]
         for dimension in LifeDimension.allCases {
             let anchor = LifeFieldLayout.anchor(for: dimension)
@@ -62,6 +62,19 @@ struct LifeFieldPresentationTests {
             LifeFieldEdge(start: .career, end: .interests),
             LifeFieldEdge(start: .interests, end: .health),
         ])
+    }
+
+    @Test func displayedOuterFieldIsARegularHexagonInTheTodayLayout() {
+        let size = CGSize(width: 368, height: 360)
+        let points = LifeFieldEdge.ordered.map {
+            LifeFieldLayout.point(for: $0.start, in: size)
+        }
+        let sideLengths = zip(points, points.dropFirst() + [points[0]]).map {
+            hypot($0.x - $1.x, $0.y - $1.y)
+        }
+
+        let reference = try! #require(sideLengths.first)
+        #expect(sideLengths.allSatisfy { abs($0 - reference) < 0.01 })
     }
 
     @Test func edgeSegmentsFollowDynamicOfficialPointsInsteadOfTheVisualCore() {
@@ -172,10 +185,9 @@ struct LifeFieldPresentationTests {
             LifeFieldLayout.anchor(for: .learning, score: -25)
                 == CGPoint(x: 0.50, y: 0.45)
         )
-        #expect(
-            LifeFieldLayout.anchor(for: .learning, score: 125)
-                == CGPoint(x: 0.86, y: 0.255)
-        )
+        let maximum = LifeFieldLayout.anchor(for: .learning, score: 125)
+        #expect(abs(maximum.x - 0.837749907475931) < 0.000_001)
+        #expect(abs(maximum.y - 0.255) < 0.000_001)
     }
 
     @Test func radialLinksLayerBetweenBackdropAndDynamicFieldGeometry() {
@@ -269,14 +281,14 @@ struct LifeFieldPresentationTests {
     }
 
     @Test func referenceHexagonVerticesMapToTheApprovedIPhoneField() {
-        let size = CGSize(width: 368, height: 492)
+        let size = CGSize(width: 368, height: 360)
         let expected: [LifeDimension: CGPoint] = [
-            .health: CGPoint(x: 184.00, y: 29.52),
-            .learning: CGPoint(x: 316.48, y: 125.46),
-            .finance: CGPoint(x: 316.48, y: 317.34),
-            .relationships: CGPoint(x: 184.00, y: 413.28),
-            .career: CGPoint(x: 51.52, y: 317.34),
-            .interests: CGPoint(x: 51.52, y: 125.46)
+            .health: CGPoint(x: 184.00, y: 21.60),
+            .learning: CGPoint(x: 305.59, y: 91.80),
+            .finance: CGPoint(x: 305.59, y: 232.20),
+            .relationships: CGPoint(x: 184.00, y: 302.40),
+            .career: CGPoint(x: 62.41, y: 232.20),
+            .interests: CGPoint(x: 62.41, y: 91.80)
         ]
 
         for dimension in LifeDimension.allCases {
@@ -322,9 +334,9 @@ struct LifeFieldPresentationTests {
     }
 
     @Test func radialParticleColorTreatmentIsQuieterWithoutChangingSamples() {
-        #expect(LifeFieldRadialLinkPresentation.renderedOpacity(for: 0.5) == 0.31)
+        #expect(LifeFieldRadialLinkPresentation.renderedOpacity(for: 0.5) == 0.18)
         #expect(LifeFieldRadialLinkPresentation.renderedOpacity(for: 0) == 0)
-        #expect(LifeFieldRadialLinkPresentation.renderedOpacity(for: 1) == 0.62)
+        #expect(LifeFieldRadialLinkPresentation.renderedOpacity(for: 1) == 0.36)
     }
 
     @Test func particleLinksTerminateAtDynamicOfficialNodePositions() {

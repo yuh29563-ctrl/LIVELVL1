@@ -2,9 +2,21 @@ import SwiftUI
 
 nonisolated struct TodayHeaderPresentation: Equatable, Sendable {
     let itemCount: Int
+    let eyebrow: String
+    let dateText: String
 
-    init(itemCount: Int) {
+    init(
+        itemCount: Int,
+        now: Date = .now,
+        calendar: Calendar = .autoupdatingCurrent
+    ) {
         self.itemCount = max(0, itemCount)
+        eyebrow = "LIVELVL"
+
+        let components = calendar.dateComponents([.month, .day, .weekday], from: now)
+        let weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"]
+        let weekdayIndex = min(7, max(1, components.weekday ?? 1)) - 1
+        dateText = "\(components.month ?? 1)月\(components.day ?? 1)日 · \(weekdays[weekdayIndex])"
     }
 
     var showsAddTaskAction: Bool { true }
@@ -14,6 +26,20 @@ nonisolated struct TodayHeaderPresentation: Equatable, Sendable {
     func actionTopPadding(isAccessibilitySize: Bool) -> CGFloat {
         isAccessibilitySize ? 20 : 11
     }
+}
+
+nonisolated struct TodayTaskSummaryPresentation: Equatable, Sendable {
+    let completedCount: Int
+    let itemCount: Int
+
+    init(completedCount: Int, itemCount: Int) {
+        let resolvedItemCount = max(0, itemCount)
+        self.itemCount = resolvedItemCount
+        self.completedCount = min(resolvedItemCount, max(0, completedCount))
+    }
+
+    var title: String { "今日任务" }
+    var progressText: String { "\(completedCount) / \(itemCount)" }
 }
 
 struct TodayHeaderAddTaskButton: View {
@@ -28,11 +54,20 @@ struct TodayHeaderAddTaskButton: View {
     var body: some View {
         Button(action: activate) {
             Image(systemName: "plus")
-                .font(.system(size: 23, weight: .light))
+                .font(.system(size: 21, weight: .regular))
                 .frame(
                     minWidth: presentation.minimumTapDimension,
                     minHeight: presentation.minimumTapDimension
                 )
+                .background {
+                    Circle()
+                        .fill(Color.white.opacity(0.88))
+                        .overlay {
+                            Circle()
+                                .stroke(LivingOSTheme.mist.opacity(0.8), lineWidth: 0.7)
+                        }
+                        .shadow(color: .black.opacity(0.055), radius: 9, y: 4)
+                }
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

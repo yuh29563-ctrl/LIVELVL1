@@ -70,7 +70,7 @@ struct TodayJournalEntryView: View {
                     .offset(x: 1560, y: 120)
 
                 Circle()
-                    .fill(Color(red: 1, green: 0.32, blue: 0.27))
+                    .fill(TodayVisualTheme.growthAccent)
                     .frame(width: 20, height: 20)
                     .overlay {
                         Circle().stroke(.white.opacity(0.2), lineWidth: 2)
@@ -139,12 +139,12 @@ private struct JournalCardSurface: View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         shape
             .fill(LinearGradient(colors: [
-                Color(red: 0.952, green: 0.956, blue: 0.964),
-                Color(red: 0.940, green: 0.944, blue: 0.955),
-                Color(red: 0.953, green: 0.956, blue: 0.967),
+                Color.white.opacity(0.98),
+                LivingOSTheme.surface,
+                Color.white.opacity(0.96),
             ], startPoint: .topLeading, endPoint: .bottomTrailing))
-            .shadow(color: .black.opacity(0.09), radius: cornerRadius * 0.48,
-                    x: 0, y: cornerRadius * 0.36)
+            .shadow(color: .black.opacity(0.065), radius: cornerRadius * 0.42,
+                    x: 0, y: cornerRadius * 0.28)
             .shadow(color: .black.opacity(0.025), radius: cornerRadius * 0.12,
                     x: 0, y: cornerRadius * 0.10)
             .overlay {
