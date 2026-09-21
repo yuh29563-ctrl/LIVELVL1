@@ -26,6 +26,12 @@ private struct ArchiveArrivalTaskID: Hashable {
     let isSceneActive: Bool
 }
 
+private struct TarotDayRefreshTaskID: Hashable {
+    let dayIdentifier: String
+    let isSceneActive: Bool
+    let scheduleRevision: Int
+}
+
 struct CollectionSeenVisibilityState: Equatable, Sendable {
     private var centeredAwardKey: String?
 
@@ -136,6 +142,7 @@ struct CollectionView: View {
     ])
     private var ownedCollectibles: [OwnedCollectible]
     @Query private var collectionProgress: [CollectionProgress]
+    @Query private var tarotDailyStates: [TarotDailyState]
 
     @State private var archiveState = ArchiveCarouselState()
     @State private var arrivingAwardKey: String?
@@ -143,6 +150,9 @@ struct CollectionView: View {
     @State private var arrivalSequenceID: UUID?
     @State private var seenRetryState = CollectionSeenRetryState()
     @State private var seenVisibility = CollectionSeenVisibilityState()
+    @State private var isShowingTarot = false
+    @State private var tarotDayClock: TarotDayClock
+    @State private var tarotDayScheduleRevision = 0
     @AccessibilityFocusState private var focusedCard: CollectionCardFocusTarget?
 
     private let isCollectionSelected: Bool
@@ -153,6 +163,8 @@ struct CollectionView: View {
     init(
         isCollectionSelected: Bool = true,
         isObscured: Bool = false,
+        initiallyShowsTarot: Bool = false,
+        tarotDayClock: TarotDayClock? = nil,
         arrivalState: Binding<ArchiveArrivalPresentationState> = .constant(
             ArchiveArrivalPresentationState()
         ),
@@ -160,6 +172,8 @@ struct CollectionView: View {
     ) {
         self.isCollectionSelected = isCollectionSelected
         self.isObscured = isObscured
+        _isShowingTarot = State(initialValue: initiallyShowsTarot)
+        _tarotDayClock = State(initialValue: tarotDayClock ?? TarotDayClock())
         _arrivalState = arrivalState
         self.onMarkedSeen = onMarkedSeen
     }
@@ -221,6 +235,33 @@ struct CollectionView: View {
         return (definition, progress.activeStage)
     }
 
+    private var tarotEntryPresentation: ArchiveTarotEntryPresentation {
+        guard let state = tarotDailyStates.first(where: {
+            $0.singletonKey == "tarot.daily"
+                && $0.dayIdentifier == tarotDayClock.dayIdentifier
+        }) else {
+            return ArchiveTarotEntryPresentation(status: .ready)
+        }
+        guard let selectedIndex = state.selectedIndex else {
+            return ArchiveTarotEntryPresentation(status: .choosing)
+        }
+        guard state.candidateCardIDs.indices.contains(selectedIndex),
+              state.candidateOrientations.indices.contains(selectedIndex),
+              let definition = TarotCatalog.definition(
+                id: state.candidateCardIDs[selectedIndex]
+              ) else {
+            return ArchiveTarotEntryPresentation(status: .choosing)
+        }
+        return ArchiveTarotEntryPresentation(
+            status: .completed(
+                cardName: definition.name,
+                englishName: definition.englishName,
+                orientation: state.candidateOrientations[selectedIndex].title,
+                artworkAssetName: definition.artworkAssetName
+            )
+        )
+    }
+
     var body: some View {
         ZStack {
             NavigationStack {
@@ -238,6 +279,9 @@ struct CollectionView: View {
                 }
                 .background(LivingOSTheme.canvas)
                 .toolbar(.hidden, for: .navigationBar)
+            }
+            .fullScreenCover(isPresented: $isShowingTarot) {
+                TarotDailyView(dayClock: tarotDayClock)
             }
             .accessibilityHidden(expandedItem != nil)
 
@@ -294,6 +338,23 @@ struct CollectionView: View {
             presentPendingArrival()
             markVisibleCollectiblesSeen()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
+            refreshTarotDay(reschedule: true)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in
+            refreshTarotDay(reschedule: true)
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .NSSystemClockDidChange)) { _ in
+            refreshTarotDay(reschedule: true)
+        }
+        .task(id: TarotDayRefreshTaskID(
+            dayIdentifier: tarotDayClock.dayIdentifier,
+            isSceneActive: scenePhase == .active,
+            scheduleRevision: tarotDayScheduleRevision
+        )) {
+            guard scenePhase == .active else { return }
+            await tarotDayClock.waitUntilNextDay()
+        }
         .task(id: ArchiveArrivalTaskID(
             sequenceID: arrivalSequenceID,
             isCollectionSelected: isCollectionSelected,
@@ -341,16 +402,18 @@ struct CollectionView: View {
                 archiveHeader
 
                 if archiveItems.isEmpty {
-                    emptyArchive
+                    emptyArchiveContent
                 } else {
                     ArchiveCarouselView(
                         items: archiveItems,
                         centeredAwardKey: centeredAwardKeyBinding,
                         expandedAwardKey: archiveState.expandedAwardKey,
                         focusedCard: $focusedCard,
-                        onExpand: expand
+                        tarotPresentation: tarotEntryPresentation,
+                        onExpand: expand,
+                        onOpenTarot: { isShowingTarot = true }
                     )
-                    .padding(.top, 50)
+                    .padding(.top, ArchiveCarouselLayout.pageTopPadding)
                 }
 
                 if let errorMessage = seenRetryState.errorMessage {
@@ -432,6 +495,22 @@ struct CollectionView: View {
         .accessibilityElement(children: .combine)
     }
 
+    private var emptyArchiveContent: some View {
+        VStack(spacing: 0) {
+            emptyArchive
+
+            Spacer(minLength: 24)
+
+            ArchiveTarotEntry(
+                presentation: tarotEntryPresentation,
+                action: { isShowingTarot = true }
+            )
+            .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+            .padding(.bottom, ArchiveCarouselLayout.drawPreviewBottomInset)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
     private func expand(_ awardKey: String) {
         archiveState.center(awardKey)
         focusedCard = nil
@@ -481,6 +560,13 @@ struct CollectionView: View {
         guard !reduceMotion else { return }
         withAnimation(.easeOut(duration: 0.72)) {
             arrivalTraceProgress = 1
+        }
+    }
+
+    private func refreshTarotDay(reschedule: Bool) {
+        tarotDayClock.refresh()
+        if reschedule {
+            tarotDayScheduleRevision &+= 1
         }
     }
 
@@ -594,5 +680,8 @@ private struct CollectionSeenRetryView: View {
 
 #Preview("Empty Archive") {
     CollectionView()
-        .modelContainer(for: [CollectionProgress.self, OwnedCollectible.self], inMemory: true)
+        .modelContainer(
+            for: [CollectionProgress.self, OwnedCollectible.self, TarotDailyState.self],
+            inMemory: true
+        )
 }

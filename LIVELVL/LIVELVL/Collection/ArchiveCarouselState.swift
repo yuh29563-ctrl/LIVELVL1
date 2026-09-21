@@ -133,9 +133,74 @@ nonisolated enum ArchiveCarouselCaptionVisibility {
     }
 }
 
+nonisolated enum ArchiveTarotEntryStatus: Equatable, Sendable {
+    case ready
+    case choosing
+    case completed(
+        cardName: String,
+        englishName: String,
+        orientation: String,
+        artworkAssetName: String
+    )
+}
+
+nonisolated struct ArchiveTarotEntryPresentation: Equatable, Sendable {
+    let status: ArchiveTarotEntryStatus
+
+    var title: String {
+        switch status {
+        case .ready, .choosing:
+            "今日塔罗"
+        case let .completed(cardName, englishName, _, _):
+            "\(cardName) · \(englishName)"
+        }
+    }
+
+    var detail: String {
+        switch status {
+        case .ready:
+            "今天尚未抽取 · 免费一次"
+        case .choosing:
+            "牌阵已准备 · 选择尚未完成"
+        case let .completed(_, _, orientation, _):
+            "\(orientation) · 点击再次查看今日解析"
+        }
+    }
+
+    var artworkAssetName: String? {
+        guard case let .completed(_, _, _, artworkAssetName) = status else { return nil }
+        return artworkAssetName
+    }
+
+    var actionTitle: String {
+        switch status {
+        case .ready: "抽一张"
+        case .choosing: "继续"
+        case .completed: "查看"
+        }
+    }
+
+    var accessibilityLabel: String {
+        switch status {
+        case .ready:
+            "今日塔罗，今天尚未抽取，免费一次，抽一张"
+        case .choosing:
+            "今日塔罗，牌阵已准备，选择尚未完成，继续"
+        case let .completed(cardName, _, orientation, _):
+            "今日塔罗，\(cardName)，\(orientation)，查看今日解读"
+        }
+    }
+}
+
 nonisolated struct ArchiveCarouselLayout: Equatable, Sendable {
     static let sceneDepth: CGFloat = 260
     static let captionLineSpacing: CGFloat = 10
+    static let pageTopPadding: CGFloat = 34
+    static let cardContentVerticalOffset: CGFloat = -16
+    static let drawPreviewHeight: CGFloat = 84
+    static let drawPreviewCornerRadius: CGFloat = 22
+    static let drawPreviewBottomInset: CGFloat = 24
+    static let drawPreviewAccessibilityReserve: CGFloat = 108
 
     let cardSize: CGSize
     let cardSpacing: CGFloat
@@ -159,7 +224,10 @@ nonisolated struct ArchiveCarouselLayout: Equatable, Sendable {
         let captionContentHeight = layout.cardSize.height
             + layout.cardCaptionSpacing
             + resolvedCaptionHeight(isAccessibilitySize: isAccessibilitySize)
-        return max(layout.totalHeight, captionContentHeight)
+        let drawPreviewReserve = isAccessibilitySize
+            ? drawPreviewAccessibilityReserve
+            : 0
+        return max(layout.totalHeight, captionContentHeight + drawPreviewReserve)
     }
 
     static func make(containerWidth: CGFloat) -> Self {

@@ -45,6 +45,28 @@ struct LocalDataResetServiceTests {
         #expect(try context.fetch(FetchDescriptor<JournalEntry>()).isEmpty)
     }
 
+    @Test func resetDeletesTheDailyTarotState() throws {
+        let container = try ModelContainer(
+            for: Schema([TarotDailyState.self]),
+            configurations: .init(isStoredInMemoryOnly: true)
+        )
+        let context = container.mainContext
+        context.insert(TarotDailyState(
+            dayIdentifier: "2026-09-16",
+            candidateCardIDs: Array(TarotCatalog.cardIDs.prefix(3)),
+            candidateOrientations: [.upright, .reversed, .upright]
+        ))
+        try context.save()
+
+        try LocalDataResetService.reset(
+            context: context,
+            fileManager: .default,
+            applicationSupportURL: FileManager.default.temporaryDirectory
+        )
+
+        #expect(try context.fetch(FetchDescriptor<TarotDailyState>()).isEmpty)
+    }
+
     @Test func resetDeletesRewardLedgerProductsRedemptionsAndImages() throws {
         let schema = Schema([
             CoinTransaction.self,

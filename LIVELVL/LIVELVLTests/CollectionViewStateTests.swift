@@ -363,7 +363,7 @@ struct CollectionViewStateTests {
         #expect(abs(ArchiveCarouselLayout.resolvedTotalHeight(
             containerWidth: 340,
             isAccessibilitySize: true
-        ) - 608.48) < 0.01)
+        ) - 716.48) < 0.01)
         #expect(!ArchiveCarouselLayout.usesVerticalPageScroll(isAccessibilitySize: false))
         #expect(ArchiveCarouselLayout.usesVerticalPageScroll(isAccessibilitySize: true))
     }
@@ -385,6 +385,51 @@ struct CollectionViewStateTests {
         #expect(caption.kindTitle == "成熟卡")
         #expect(caption.levelText == "LV 12")
         #expect(caption.acquiredText == "获得于 08 / 26")
+    }
+
+    @Test func archiveTarotEntryDescribesReadyChoosingAndCompletedStates() {
+        let ready = ArchiveTarotEntryPresentation(status: .ready)
+        let choosing = ArchiveTarotEntryPresentation(status: .choosing)
+        let completed = ArchiveTarotEntryPresentation(
+            status: .completed(
+                cardName: "星星",
+                englishName: "THE STAR",
+                orientation: "正位",
+                artworkAssetName: "TarotRWS17"
+            )
+        )
+
+        #expect(ready.detail == "今天尚未抽取 · 免费一次")
+        #expect(ready.actionTitle == "抽一张")
+        #expect(choosing.detail == "牌阵已准备 · 选择尚未完成")
+        #expect(choosing.actionTitle == "继续")
+        #expect(completed.title == "星星 · THE STAR")
+        #expect(completed.detail == "正位 · 点击再次查看今日解析")
+        #expect(completed.actionTitle == "查看")
+        #expect(completed.artworkAssetName == "TarotRWS17")
+        #expect(completed.accessibilityLabel == "今日塔罗，星星，正位，查看今日解读")
+    }
+
+    @Test func archiveCardContentClearsDrawPreviewAtStandardSizes() {
+        let layout = ArchiveCarouselLayout.make(containerWidth: 368)
+        let captionEnd = layout.cardSize.height
+            + layout.cardCaptionSpacing
+            + layout.captionHeight
+            + ArchiveCarouselLayout.cardContentVerticalOffset
+        let captionDrawerGap = layout.totalHeight
+            - ArchiveCarouselLayout.drawPreviewBottomInset
+            - ArchiveCarouselLayout.drawPreviewHeight
+            - captionEnd
+
+        #expect(captionDrawerGap >= 24)
+    }
+
+    @Test func archivePageKeepsCarouselAboveTheTabBarAtStandardHeight() {
+        #expect(ArchiveCarouselLayout.pageTopPadding == 34)
+    }
+
+    @Test func archiveDrawPreviewUsesOneCornerRadius() {
+        #expect(ArchiveCarouselLayout.drawPreviewCornerRadius == 22)
     }
 
     @Test func archiveHeaderShowsTheCenteredPositionWithinOwnedCards() {

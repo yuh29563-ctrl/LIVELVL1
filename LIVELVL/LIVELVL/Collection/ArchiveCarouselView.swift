@@ -16,7 +16,9 @@ struct ArchiveCarouselView: View {
     @Binding var centeredAwardKey: String?
     let expandedAwardKey: String?
     @AccessibilityFocusState.Binding var focusedCard: CollectionCardFocusTarget?
+    let tarotPresentation: ArchiveTarotEntryPresentation
     let onExpand: (String) -> Void
+    let onOpenTarot: () -> Void
 
     var body: some View {
         ArchiveCarouselContainerLayout(
@@ -33,7 +35,7 @@ struct ArchiveCarouselView: View {
                     isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
                 )
 
-                ZStack(alignment: .top) {
+                ZStack(alignment: .bottom) {
                     ScrollView(.horizontal) {
                         LazyHStack(spacing: layout.cardSpacing) {
                             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
@@ -152,6 +154,16 @@ struct ArchiveCarouselView: View {
                     .scrollTargetBehavior(.viewAligned(limitBehavior: .always))
                     .scrollPosition(id: $centeredAwardKey, anchor: .center)
                     .animation(centeringAnimation, value: centeredAwardKey)
+                    .offset(y: ArchiveCarouselLayout.cardContentVerticalOffset)
+
+                    ArchiveTarotEntry(
+                        presentation: tarotPresentation,
+                        action: onOpenTarot
+                    )
+                    .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                    .padding(.bottom, ArchiveCarouselLayout.drawPreviewBottomInset)
+                    .opacity(expandedAwardKey == nil ? 1 : 0)
+                    .accessibilityHidden(expandedAwardKey != nil)
                 }
             }
         }
@@ -180,6 +192,93 @@ struct ArchiveCarouselView: View {
             centeredAwardKey = destination.awardKey
         }
         focusedCard = destination.focusTarget
+    }
+}
+
+struct ArchiveTarotEntry: View {
+    let presentation: ArchiveTarotEntryPresentation
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                ArchiveTarotThumbnail(assetName: presentation.artworkAssetName)
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(presentation.title)
+                        .font(.system(.subheadline, design: .serif, weight: .semibold))
+                        .foregroundStyle(LivingOSTheme.ink)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.76)
+                    Text(presentation.detail)
+                        .font(.system(.caption2, design: .monospaced))
+                        .foregroundStyle(LivingOSTheme.graphite)
+                        .lineLimit(2)
+                }
+
+                Spacer(minLength: 8)
+
+                Image(systemName: "chevron.right")
+                    .font(.subheadline.weight(.bold))
+                .foregroundStyle(LivingOSTheme.ink)
+            }
+            .padding(.horizontal, 18)
+            .frame(minHeight: ArchiveCarouselLayout.drawPreviewHeight)
+            .background {
+                RoundedRectangle(
+                    cornerRadius: ArchiveCarouselLayout.drawPreviewCornerRadius,
+                    style: .continuous
+                )
+                .fill(Color.white.opacity(0.66))
+                .overlay {
+                    RoundedRectangle(
+                        cornerRadius: ArchiveCarouselLayout.drawPreviewCornerRadius,
+                        style: .continuous
+                    )
+                    .stroke(Color.white.opacity(0.88), lineWidth: 0.8)
+                }
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .shadow(color: Color.black.opacity(0.045), radius: 18, y: -5)
+        .accessibilityElement(children: .ignore)
+        .accessibilityIdentifier("collection-tarot-entry")
+        .accessibilityLabel(presentation.accessibilityLabel)
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
+private struct ArchiveTarotThumbnail: View {
+    let assetName: String?
+
+    var body: some View {
+        Group {
+            if let assetName {
+                Image(assetName)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 34, height: 57)
+                    .shadow(color: .black.opacity(0.16), radius: 5, y: 3)
+            } else {
+                ZStack {
+                    cardBack
+                        .rotationEffect(.degrees(-7))
+                        .offset(x: -4, y: 1)
+
+                    cardBack
+                        .rotationEffect(.degrees(3))
+                        .offset(x: 3, y: -1)
+                }
+            }
+        }
+        .frame(width: 43, height: 58)
+        .accessibilityHidden(true)
+    }
+
+    private var cardBack: some View {
+        TarotCardBackView()
+            .frame(width: 34, height: 52)
     }
 }
 
