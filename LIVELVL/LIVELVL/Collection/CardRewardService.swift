@@ -42,41 +42,72 @@ enum CardRewardService {
         now: Date,
         calendar: Calendar
     ) throws {
+        do {
+            try stageCompletion(
+                progress: progress,
+                previousLevel: previousLevel,
+                completions: completions,
+                in: context,
+                now: now,
+                calendar: calendar
+            )
+            if context.hasChanges { try context.save() }
+        } catch {
+            context.rollback()
+            throw error
+        }
+    }
+
+    static func stageCompletion(
+        progress: Progress,
+        previousLevel: Int,
+        completions: [Completion],
+        in context: ModelContext,
+        now: Date,
+        calendar: Calendar
+    ) throws {
         let collectionProgress = try progressWithoutSaving(in: context)
         let previousHighestLevel = collectionProgress.highestLevel
-        collectionProgress.highestLevel = max(previousHighestLevel, progress.level)
+        if progress.level > previousHighestLevel {
+            collectionProgress.highestLevel = progress.level
+        }
 
         let pending = try context.fetch(FetchDescriptor<PendingCardReward>())
         let owned = try context.fetch(FetchDescriptor<OwnedCollectible>())
         var awardedKeys = Set(pending.map(\.awardKey) + owned.map(\.awardKey))
+        var ownedOrdinaryIDs = Set(owned.filter { $0.kind == .ordinaryMature }.map(\.collectibleID))
         let delay = progress.level > previousLevel ? 1.6 : 0.8
         let eligibleAt = now.addingTimeInterval(delay)
 
         if collectionProgress.highestLevel > previousHighestLevel {
             for level in (previousHighestLevel + 1)...collectionProgress.highestLevel {
-                switch CompanionProgressionEngine.event(forReachedLevel: level) {
-                case let .active(index, stage):
-                    if collectionProgress.activeOrdinaryIndex == index {
-                        collectionProgress.activeStage = stage
-                    }
-
-                case let .matured(index, _, maturityLevel):
-                    let awardKey = "ordinary.level.\(maturityLevel)"
-                    guard !awardedKeys.contains(awardKey),
-                          let collectible = CollectionCatalog.ordinary(at: index) else {
-                        continue
-                    }
-                    context.insert(PendingCardReward(
-                        awardKey: awardKey,
-                        collectibleID: collectible.id,
-                        kind: .ordinaryMature,
-                        reason: "达到 Lv.\(maturityLevel)，陪伴成熟",
-                        maturityLevel: maturityLevel,
-                        triggeredAt: now,
-                        eligibleAt: eligibleAt
-                    ))
-                    awardedKeys.insert(awardKey)
-                }
+                guard let index = CollectionCatalog.ordinary.firstIndex(where: {
+                    !ownedOrdinaryIDs.contains($0.id)
+                }), let collectible = CollectionCatalog.ordinary(at: index) else { continue }
+                guard case let .matured(_, _, maturityLevel) = CompanionProgressionEngine.event(
+                    forReachedLevel: level, nextOrdinaryIndex: index
+                ) else { continue }
+                let awardKey = "ordinary.level.\(maturityLevel)"
+                guard !awardedKeys.contains(awardKey) else { continue }
+                let reason = "达到 Lv.\(maturityLevel)，陪伴成熟"
+                context.insert(OwnedCollectible(
+                    awardKey: awardKey,
+                    collectibleID: collectible.id,
+                    kind: .ordinaryMature,
+                    reason: reason,
+                    acquiredAt: now
+                ))
+                context.insert(PendingCardReward(
+                    awardKey: awardKey,
+                    collectibleID: collectible.id,
+                    kind: .ordinaryMature,
+                    reason: reason,
+                    maturityLevel: maturityLevel,
+                    triggeredAt: now,
+                    eligibleAt: eligibleAt
+                ))
+                ownedOrdinaryIDs.insert(collectible.id)
+                awardedKeys.insert(awardKey)
             }
         }
 
@@ -110,12 +141,6 @@ enum CardRewardService {
             awardedKeys.insert(award.awardKey)
         }
 
-        do {
-            try context.save()
-        } catch {
-            context.rollback()
-            throw error
-        }
     }
 
     static func reconcile(
@@ -177,17 +202,36 @@ enum CardRewardService {
         }
     }
 
+    static func acknowledgeAlreadyOwnedOrdinaryRewards(
+        in context: ModelContext,
+        now: Date
+    ) throws -> Set<String> {
+        let ownedKeys = Set(
+            try context.fetch(FetchDescriptor<OwnedCollectible>()).map(\.awardKey)
+        )
+        let rewards = ordered(try context.fetch(FetchDescriptor<PendingCardReward>()))
+            .filter { $0.kind == .ordinaryMature && ownedKeys.contains($0.awardKey) }
+        guard !rewards.isEmpty else { return [] }
+        let progress = try ensureProgress(in: context)
+        var acknowledged: Set<String> = []
+        for reward in rewards {
+            try claim(reward, progress: progress, in: context, now: now)
+            acknowledged.insert(reward.awardKey)
+        }
+        return acknowledged
+    }
+
     static func claim(
         _ reward: PendingCardReward,
         progress: CollectionProgress,
         in context: ModelContext,
         now: Date
     ) throws {
-        guard reward.eligibleAt <= now else { return }
-
         let ownedKeys = Set(
             try context.fetch(FetchDescriptor<OwnedCollectible>()).map(\.awardKey)
         )
+        guard reward.eligibleAt <= now ||
+              (reward.kind == .ordinaryMature && ownedKeys.contains(reward.awardKey)) else { return }
         if !ownedKeys.contains(reward.awardKey) {
             context.insert(OwnedCollectible(
                 awardKey: reward.awardKey,
@@ -204,24 +248,11 @@ enum CardRewardService {
                 progress.lastProcessedMaturityLevel,
                 maturityLevel
             )
-            if case let .matured(maturedIndex, nextIndex, _) =
-                CompanionProgressionEngine.event(forReachedLevel: maturityLevel) {
-                if CollectionCatalog.ordinary(at: nextIndex) != nil {
-                    progress.activeOrdinaryIndex = nextIndex
-                    progress.activeStage = .juvenile
-                    reconcileStage(
-                        for: nextIndex,
-                        after: maturityLevel,
-                        through: progress.highestLevel,
-                        progress: progress
-                    )
-                } else {
-                    progress.activeOrdinaryIndex = min(
-                        maturedIndex,
-                        CollectionCatalog.ordinary.count - 1
-                    )
-                    progress.activeStage = .mature
-                }
+            if let maturedIndex = CollectionCatalog.ordinary.firstIndex(where: {
+                $0.id == reward.collectibleID
+            }) {
+                progress.activeOrdinaryIndex = maturedIndex + 1
+                progress.activeStage = .juvenile
             }
         }
 
@@ -266,26 +297,4 @@ enum CardRewardService {
         return progress
     }
 
-    private static func reconcileStage(
-        for ordinaryIndex: Int,
-        after maturityLevel: Int,
-        through highestLevel: Int,
-        progress: CollectionProgress
-    ) {
-        guard highestLevel > maturityLevel else { return }
-
-        for level in (maturityLevel + 1)...highestLevel {
-            switch CompanionProgressionEngine.event(forReachedLevel: level) {
-            case let .active(index, stage) where index == ordinaryIndex:
-                progress.activeStage = stage
-            case let .matured(index, _, _) where index == ordinaryIndex:
-                return
-            case let .active(index, _) where index > ordinaryIndex,
-                 let .matured(index, _, _) where index > ordinaryIndex:
-                return
-            default:
-                continue
-            }
-        }
-    }
 }

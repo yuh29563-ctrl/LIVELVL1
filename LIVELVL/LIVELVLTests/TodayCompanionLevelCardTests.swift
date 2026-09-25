@@ -129,7 +129,7 @@ struct TodayCompanionLevelCardTests {
     @Test func compactLifeCoreAnnouncesItsStateAndExpandAction() {
         let presentation = LifeCoreWidgetPresentation(
             definition: CollectionCatalog.ordinary[1],
-            stage: .stageTwo,
+            stage: .juvenile,
             level: 2,
             currentXP: 80,
             requiredXP: 2_000,
@@ -138,7 +138,7 @@ struct TodayCompanionLevelCardTests {
 
         #expect(
             presentation.compactAccessibilityLabel
-                == "成长卡已折叠，正在陪伴，月兔，成长中，等级 2"
+                == "成长卡已折叠，正在陪伴，月兔，幼体，等级 2"
         )
         #expect(presentation.compactAccessibilityHint == "轻点展开成长卡")
         #expect(presentation.compactAccessibilityIdentifier == "today-life-core-expand")
@@ -148,7 +148,7 @@ struct TodayCompanionLevelCardTests {
     @Test func compactDockIsTheOnlyAccessibleExpansionAction() {
         let presentation = makePresentation(
             definition: CollectionCatalog.ordinary[1],
-            stage: .stageTwo
+            stage: .juvenile
         )
         let compact = LifeCoreAccessibilityComposition(
             displayMode: .compact,
@@ -172,7 +172,7 @@ struct TodayCompanionLevelCardTests {
     @Test func lifeCoreDescribesTheActiveCompanionInsteadOfAFixedMascot() {
         let presentation = LifeCoreWidgetPresentation(
             definition: CollectionCatalog.ordinary[1],
-            stage: .stageTwo,
+            stage: .juvenile,
             level: 2,
             currentXP: 80,
             requiredXP: 2_000,
@@ -180,51 +180,36 @@ struct TodayCompanionLevelCardTests {
         )
 
         #expect(presentation.companionName == "月兔")
-        #expect(presentation.stageTitle == "成长中")
-        #expect(presentation.accessibilityLabel == "正在陪伴，月兔，成长中，等级 2")
+        #expect(presentation.stageTitle == "幼体")
+        #expect(presentation.accessibilityLabel == "正在陪伴，月兔，幼体，等级 2")
         #expect(presentation.accessibilityValue == "当前 80，共需 2000，还差 1920 XP")
     }
 
-    @Test func lifeCoreRequestsTheCurrentAndNextStageForTheSameCompanion() {
+    @Test func lifeCoreNeverPreloadsAnIntermediateOrAdultArtworkWhileShowingTheJuvenile() {
         let definition = CollectionCatalog.ordinary[0]
         let juvenile = makePresentation(definition: definition, stage: .juvenile)
-        let stageTwo = makePresentation(definition: definition, stage: .stageTwo)
-        let stageThree = makePresentation(definition: definition, stage: .stageThree)
-        let mature = makePresentation(definition: definition, stage: .mature)
 
         #expect(
             juvenile.artworkRequest.current
                 == .init(collectibleID: "ordinary.sprout", stage: .juvenile)
         )
-        #expect(
-            juvenile.artworkRequest.next
-                == .init(collectibleID: "ordinary.sprout", stage: .stageTwo)
-        )
-        #expect(
-            stageTwo.artworkRequest.next
-                == .init(collectibleID: "ordinary.sprout", stage: .stageThree)
-        )
-        #expect(
-            stageThree.artworkRequest.next
-                == .init(collectibleID: "ordinary.sprout", stage: .mature)
-        )
-        #expect(mature.artworkRequest.next == nil)
+        #expect(juvenile.artworkRequest.next == nil)
     }
 
     @Test func lifeCoreArtworkIdentityChangesWithoutChangingLevelOrXP() {
         let sprout = makePresentation(
             definition: CollectionCatalog.ordinary[0],
-            stage: .stageTwo
+            stage: .juvenile
         )
         let hare = makePresentation(
             definition: CollectionCatalog.ordinary[1],
-            stage: .stageTwo
+            stage: .juvenile
         )
 
         #expect(sprout.artworkRequest.current != hare.artworkRequest.current)
         #expect(
             hare.artworkRequest.current
-                == .init(collectibleID: "ordinary.hare", stage: .stageTwo)
+                == .init(collectibleID: "ordinary.hare", stage: .juvenile)
         )
         #expect(sprout.level == hare.level)
         #expect(sprout.currentXP == hare.currentXP)
@@ -236,7 +221,7 @@ struct TodayCompanionLevelCardTests {
     @Test func lifeCoreUsesApprovedWidgetMetricsAndStableProgress() {
         let presentation = LifeCoreWidgetPresentation(
             definition: CollectionCatalog.ordinary[1],
-            stage: .stageTwo,
+            stage: .juvenile,
             level: 2,
             currentXP: 80,
             requiredXP: 2_000,
@@ -247,20 +232,20 @@ struct TodayCompanionLevelCardTests {
         #expect(presentation.progress == 0.04)
         #expect(presentation.levelText == "LV 2")
         #expect(presentation.xpText == "80 / 2000 XP")
-        #expect(presentation.remainingText == "下一形态 1920 XP")
+        #expect(presentation.remainingText == "成熟还差 1920 XP")
     }
 
     @Test func lifeCoreProvidesAShortRemainingXPLabelWhenLargeTextCannotFit() {
         let presentation = LifeCoreWidgetPresentation(
             definition: CollectionCatalog.ordinary[1],
-            stage: .stageTwo,
+            stage: .juvenile,
             level: 2,
             currentXP: 80,
             requiredXP: 2_000,
             remainingXP: 1_920
         )
 
-        #expect(presentation.remainingText == "下一形态 1920 XP")
+        #expect(presentation.remainingText == "成熟还差 1920 XP")
         #expect(presentation.compactRemainingText == "还差 1920 XP")
     }
 
@@ -350,7 +335,7 @@ struct TodayCompanionLevelCardTests {
 
         #expect(zeroRequirement.progress == 0)
         #expect(overfilled.progress == 1)
-        #expect(overfilled.remainingText == "下一形态 0 XP")
+        #expect(overfilled.remainingText == "成熟还差 0 XP")
     }
 
     @Test func taskRailKeepsRealTaskIdentityAndReward() {

@@ -11,6 +11,9 @@ struct TaskRewardCoordinatorTests {
             Progress.self,
             Completion.self,
             CoinTransaction.self,
+            CollectionProgress.self,
+            OwnedCollectible.self,
+            PendingCardReward.self,
         ])
         return try ModelContainer(
             for: schema,

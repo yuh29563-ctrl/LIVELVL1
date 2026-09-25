@@ -141,7 +141,6 @@ struct CollectionView: View {
         SortDescriptor(\OwnedCollectible.awardKey)
     ])
     private var ownedCollectibles: [OwnedCollectible]
-    @Query private var collectionProgress: [CollectionProgress]
     @Query private var tarotDailyStates: [TarotDailyState]
 
     @State private var archiveState = ArchiveCarouselState()
@@ -225,14 +224,6 @@ struct CollectionView: View {
 
     private var unseenAwardKeys: Set<String> {
         Set(ownedCollectibles.lazy.filter(\.isUnseen).map(\.awardKey))
-    }
-
-    private var activeCompanion: (CollectibleDefinition, CompanionStage) {
-        guard let progress = collectionProgress.first,
-              let definition = CollectionCatalog.ordinary(at: progress.activeOrdinaryIndex) else {
-            return (CollectionCatalog.ordinary[0], .juvenile)
-        }
-        return (definition, progress.activeStage)
     }
 
     private var tarotEntryPresentation: ArchiveTarotEntryPresentation {
@@ -468,9 +459,10 @@ struct CollectionView: View {
 
     private var emptyArchive: some View {
         VStack(spacing: 18) {
-            ArchiveOrganismArtwork(identifier: activeCompanion.0.id)
-                .frame(width: 180, height: 260)
-                .padding(16)
+            Image(systemName: "square.stack.3d.up")
+                .font(.system(size: 58, weight: .ultraLight))
+                .foregroundStyle(LivingOSTheme.graphite)
+                .frame(width: 180, height: 220)
                 .background(
                     LinearGradient(
                         colors: [Color.white.opacity(0.86), LivingOSTheme.mist.opacity(0.58)],
@@ -484,9 +476,9 @@ struct CollectionView: View {
                 )
                 .shadow(color: Color.black.opacity(0.1), radius: 18, y: 10)
 
-            Text("第一张卡正在成长")
+            Text("首张成熟卡尚未获得")
                 .font(.system(.subheadline, design: .monospaced, weight: .medium))
-            Text("\(activeCompanion.0.name) · \(activeCompanion.1.todayTitle)")
+            Text("完成任务并升级，成熟卡会来到这里。")
                 .font(.footnote)
                 .foregroundStyle(LivingOSTheme.graphite)
         }

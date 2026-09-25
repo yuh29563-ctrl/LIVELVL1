@@ -62,9 +62,18 @@ enum TaskRewardCoordinator {
             nominalXP: allowance.nominalXP
         )
         do {
+            let priorCompletions = try writer.fetch(FetchDescriptor<Completion>())
             writer.insert(completion)
             storedProgress.totalXP += completion.xp
             try CoinLedgerService.insertTaskAward(completion: completion, in: writer, now: now)
+            try CardRewardService.stageCompletion(
+                progress: storedProgress,
+                previousLevel: GrowthEngine.level(for: storedProgress.totalXP - completion.xp),
+                completions: priorCompletions + [completion],
+                in: writer,
+                now: now,
+                calendar: calendar
+            )
             try writer.save()
         } catch {
             writer.rollback()

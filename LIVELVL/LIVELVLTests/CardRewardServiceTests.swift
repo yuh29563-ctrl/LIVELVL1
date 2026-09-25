@@ -50,8 +50,10 @@ struct CardRewardServiceTests {
 
         let fetchedProgress = try context.fetch(FetchDescriptor<CollectionProgress>())
         let pending = try context.fetch(FetchDescriptor<PendingCardReward>())
+        let owned = try context.fetch(FetchDescriptor<OwnedCollectible>())
         #expect(fetchedProgress.first === collectionProgress)
         #expect(pending.map(\.awardKey) == ["ordinary.level.1"])
+        #expect(owned.map(\.awardKey) == ["ordinary.level.1"])
     }
 
     @Test func levelOneMaturityKeepsTheJuvenileCompanionUntilClaim() throws {
@@ -82,22 +84,28 @@ struct CardRewardServiceTests {
         )
     }
 
-    @Test func levelFourMaturityKeepsTheThirdStageCompanionUntilClaim() throws {
+    @Test func levelTwoMaturityKeepsTheSecondJuvenileUntilAcknowledgment() throws {
         let container = try makeContainer()
         let context = container.mainContext
-        let progress = Progress(totalXP: 6_200)
+        let progress = Progress(totalXP: 2_200)
         context.insert(progress)
         context.insert(CollectionProgress(
-            highestLevel: 3,
+            highestLevel: 1,
             activeOrdinaryIndex: 1,
-            activeStage: .stageThree,
+            activeStage: .juvenile,
             lastProcessedMaturityLevel: 1
+        ))
+        context.insert(OwnedCollectible(
+            awardKey: "ordinary.level.1",
+            collectibleID: "ordinary.sprout",
+            kind: .ordinaryMature,
+            reason: "达到 Lv.1，陪伴成熟"
         ))
         try context.save()
 
         try CardRewardService.processCompletion(
             progress: progress,
-            previousLevel: 3,
+            previousLevel: 1,
             completions: [],
             in: context,
             now: Date(timeIntervalSince1970: 1_200),
@@ -108,11 +116,13 @@ struct CardRewardServiceTests {
             context.fetch(FetchDescriptor<CollectionProgress>()).first
         )
         #expect(collectionProgress.activeOrdinaryIndex == 1)
-        #expect(collectionProgress.activeStage == .stageThree)
+        #expect(collectionProgress.activeStage == .juvenile)
         #expect(
             try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey)
-                == ["ordinary.level.4"]
+                == ["ordinary.level.2"]
         )
+        #expect(try context.fetch(FetchDescriptor<OwnedCollectible>())
+            .contains { $0.awardKey == "ordinary.level.2" && $0.collectibleID == "ordinary.hare" })
     }
 
     @Test func ordinaryRewardsSortBeforeHiddenRewardsAtTheSameTime() throws {
@@ -183,7 +193,7 @@ struct CardRewardServiceTests {
         #expect(fetchedProgress.first?.lastProcessedMaturityLevel == 1)
     }
 
-    @Test func claimingAfterReachingLevelTwoRestoresTheDeferredStage() throws {
+    @Test func claimingAfterReachingLevelTwoShowsTheNextJuvenile() throws {
         let container = try makeContainer()
         let context = container.mainContext
         let progress = Progress(totalXP: 200)
@@ -228,10 +238,12 @@ struct CardRewardServiceTests {
         let fetchedProgress = try context.fetch(FetchDescriptor<CollectionProgress>())
         #expect(fetchedProgress.first?.highestLevel == 2)
         #expect(fetchedProgress.first?.activeOrdinaryIndex == 1)
-        #expect(fetchedProgress.first?.activeStage == .stageTwo)
+        #expect(fetchedProgress.first?.activeStage == .juvenile)
+        #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey)
+            == ["ordinary.level.2"])
     }
 
-    @Test func delayedLevelOneClaimStopsAtTheLastNonmatureStageBeforeLevelFour() throws {
+    @Test func delayedLevelOneAcknowledgmentKeepsLaterMaturedAdultsQueued() throws {
         let container = try makeContainer()
         let context = container.mainContext
         let progress = Progress(totalXP: 6_200)
@@ -265,11 +277,55 @@ struct CardRewardServiceTests {
 
         #expect(collectionProgress.highestLevel == 4)
         #expect(collectionProgress.activeOrdinaryIndex == 1)
-        #expect(collectionProgress.activeStage == .stageThree)
+        #expect(collectionProgress.activeStage == .juvenile)
         #expect(
-            try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey)
-                == ["ordinary.level.4"]
+            Set(try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey))
+                == ["ordinary.level.2", "ordinary.level.3"]
         )
+    }
+
+    @Test func exhaustedCatalogShowsNoOldJuvenileAndDoesNotCreateBacklog() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let progress = Progress(totalXP: 6_200)
+        context.insert(progress)
+        try context.save()
+        let now = Date(timeIntervalSince1970: 3_500)
+
+        try CardRewardService.processCompletion(
+            progress: progress,
+            previousLevel: 0,
+            completions: [],
+            in: context,
+            now: now,
+            calendar: Calendar(identifier: .gregorian)
+        )
+        let collection = try #require(context.fetch(FetchDescriptor<CollectionProgress>()).first)
+        let owned = try context.fetch(FetchDescriptor<OwnedCollectible>())
+        #expect(Set(owned.map(\.awardKey)) == [
+            "ordinary.level.1", "ordinary.level.2", "ordinary.level.3"
+        ])
+        #expect(Set(owned.map(\.collectibleID)) == Set(CollectionCatalog.ordinary.map(\.id)))
+
+        for reward in CardRewardService.ordered(try context.fetch(FetchDescriptor<PendingCardReward>())) {
+            try CardRewardService.claim(reward, progress: collection, in: context, now: now)
+        }
+        #expect(collection.activeOrdinaryIndex == CollectionCatalog.ordinary.count)
+        #expect(CollectionCatalog.ordinary(at: collection.activeOrdinaryIndex) == nil)
+
+        progress.totalXP = 8_200
+        try context.save()
+        try CardRewardService.processCompletion(
+            progress: progress,
+            previousLevel: 4,
+            completions: [],
+            in: context,
+            now: now.addingTimeInterval(100),
+            calendar: Calendar(identifier: .gregorian)
+        )
+        #expect(collection.highestLevel == 5)
+        #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<OwnedCollectible>()).count == 3)
     }
 
     @Test func loweringXPCannotRegressHighestLevelOrDuplicateOriginalReward() throws {
@@ -305,7 +361,7 @@ struct CardRewardServiceTests {
         let owned = try context.fetch(FetchDescriptor<OwnedCollectible>())
         #expect(fetchedProgress.first?.highestLevel == 1)
         #expect(pending.map(\.awardKey) == ["ordinary.level.1"])
-        #expect(owned.isEmpty)
+        #expect(owned.map(\.awardKey) == ["ordinary.level.1"])
     }
 
     @Test func rewardProcessingFailureSuppressesSuccessUntilRetrySucceeds() {

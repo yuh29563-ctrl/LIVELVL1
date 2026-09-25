@@ -154,13 +154,11 @@ struct TodayView: View {
         )
     }
 
-    private var activeCompanion: (definition: CollectibleDefinition, stage: CompanionStage) {
+    private var activeCompanion: CollectibleDefinition? {
         guard let collectionProgress = collectionProgressItems.first else {
-            return (CollectionCatalog.ordinary[0], .juvenile)
+            return CollectionCatalog.ordinary.first
         }
-        let definition = CollectionCatalog.ordinary(at: collectionProgress.activeOrdinaryIndex)
-            ?? CollectionCatalog.ordinary[0]
-        return (definition, collectionProgress.activeStage)
+        return CollectionCatalog.ordinary(at: collectionProgress.activeOrdinaryIndex)
     }
 
     private var currentSummary: LifeStateSummary? {
@@ -175,13 +173,13 @@ struct TodayView: View {
         )
     }
 
-    private var lifeCorePresentation: LifeCoreWidgetPresentation {
-        let companion = activeCompanion
+    private var lifeCorePresentation: LifeCoreWidgetPresentation? {
+        guard let companion = activeCompanion else { return nil }
         let currentXP = GrowthEngine.xpInCurrentLevel(for: progress.totalXP)
         let requiredXP = GrowthEngine.xpNeededForNextLevel(for: progress.totalXP)
         return LifeCoreWidgetPresentation(
-            definition: companion.definition,
-            stage: companion.stage,
+            definition: companion,
+            stage: .juvenile,
             level: progress.level,
             currentXP: currentXP,
             requiredXP: requiredXP,
