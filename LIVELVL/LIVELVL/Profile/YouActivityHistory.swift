@@ -60,6 +60,8 @@ nonisolated struct YouDailyActivity: Identifiable, Equatable, Sendable {
     let completedCount: Int
     let isFuture: Bool
 
+    var hasActivity: Bool { completedCount > 0 }
+
     var intensity: YouXPIntensity {
         YouXPIntensity(xp: xp)
     }

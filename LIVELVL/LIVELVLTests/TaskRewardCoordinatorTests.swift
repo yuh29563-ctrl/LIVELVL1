@@ -43,7 +43,7 @@ struct TaskRewardCoordinatorTests {
             progress: progress,
             in: context,
             now: Date(timeIntervalSince1970: 1_000)
-        )
+        ).completion
 
         #expect(completion.itemID == item.id)
         #expect(progress.totalXP == 80)
@@ -75,7 +75,7 @@ struct TaskRewardCoordinatorTests {
             progress: progress,
             in: context,
             now: Date(timeIntervalSince1970: 1_100)
-        )
+        ).completion
         try TaskRewardCoordinator.revoke(
             completion: completion,
             progress: progress,

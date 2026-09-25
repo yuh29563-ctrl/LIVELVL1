@@ -43,7 +43,7 @@ struct YouLiveTableView: View {
     }
 
     private var hasActivity: Bool {
-        days.contains { $0.xp > 0 }
+        days.contains { $0.hasActivity }
     }
 
     var body: some View {
