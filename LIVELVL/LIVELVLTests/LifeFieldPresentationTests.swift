@@ -436,7 +436,7 @@ struct LifeFieldPresentationTests {
         #expect(learning.projectedDisplayValue == 74)
         #expect(
             learning.accessibilityValue
-                == "当前 70，预测 74，来自 阅读 20 分钟，距下次评估 3 天"
+                == "当前 74，自测基线 70，行动加成 +4，来自 阅读 20 分钟，距下次评估 3 天"
         )
     }
 

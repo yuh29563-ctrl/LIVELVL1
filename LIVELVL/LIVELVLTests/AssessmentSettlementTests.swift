@@ -16,21 +16,21 @@ struct AssessmentSettlementTests {
         let result = AssessmentSettlement.makeResult(
             mode: .initial,
             entries: entries,
-            actionScores: .neutral,
+            actionScores: LifeStateValues(repeating: 0),
             assessedAt: date
         )
         #expect(result.officialScores == LifeStateValues(repeating: 8.0))
-        #expect(result.baselineActionScores == .neutral)
+        #expect(result.baselineActionScores == LifeStateValues(repeating: 0))
     }
 
     @Test func weeklyAssessmentBlendsSelfAndAction() {
         let result = AssessmentSettlement.makeResult(
             mode: .weekly,
             entries: entries,
-            actionScores: LifeStateValues(repeating: 7.0),
+            actionScores: LifeStateValues(repeating: 0.8),
             assessedAt: date
         )
-        #expect(result.officialScores == LifeStateValues(repeating: 7.6))
+        #expect(result.officialScores == LifeStateValues(repeating: 8.8))
     }
 
     @Test func entriesAreClampedToSupportedRanges() {

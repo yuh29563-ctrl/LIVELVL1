@@ -8,7 +8,7 @@ enum RadarGeometry {
     ) -> [CGPoint] {
         LifeDimension.allCases.enumerated().map { index, dimension in
             let angle = -CGFloat.pi / 2 + CGFloat(index) * CGFloat.pi / 3
-            let normalized = CGFloat(min(10.0, max(1.0, values[dimension])) / 10.0)
+            let normalized = CGFloat(min(10.0, max(0.0, values[dimension])) / 10.0)
             return CGPoint(
                 x: center.x + cos(angle) * radius * normalized,
                 y: center.y + sin(angle) * radius * normalized

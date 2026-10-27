@@ -327,7 +327,7 @@ struct LifeFieldView: View {
                             isRewardTarget: isRewardTarget,
                             reduceMotion: reduceMotion
                         )
-                        .position(LifeFieldLayout.point(for: anchors.projected, in: size))
+                        .position(LifeFieldLayout.point(for: anchors.official, in: size))
                         .animation(
                             reduceMotion ? nil : .spring(response: 0.42, dampingFraction: 0.82),
                             value: node.projectedDisplayValue
@@ -338,10 +338,10 @@ struct LifeFieldView: View {
                         isSelected: isSelected,
                         action: { activate(node) }
                     )
-                    .position(LifeFieldLayout.point(for: anchors.official, in: size))
+                    .position(LifeFieldLayout.point(for: anchors.projected, in: size))
                     .animation(
                         reduceMotion ? nil : .spring(response: 0.42, dampingFraction: 0.82),
-                        value: node.displayValue
+                        value: node.projectedDisplayValue
                     )
 
                     LifeFieldNodeLabel(
@@ -407,7 +407,7 @@ struct LifeFieldBackdrop<CenterContent: View>: View {
     private var officialTargets: [LifeDimension: CGPoint] {
         Dictionary(
             uniqueKeysWithValues: nodes.map { node in
-                (node.dimension, LifeFieldLayout.anchors(for: node).official)
+                (node.dimension, LifeFieldLayout.anchors(for: node).projected)
             }
         )
     }
@@ -482,8 +482,9 @@ private struct LifeFieldNodeLabel: View {
 
                 if isSelected && showsInlineDetail {
                     VStack(spacing: 2) {
-                        Text("NEXT \(value.projectedDisplayValue)  \(signedDelta)")
+                        Text("自测 \(value.displayValue) · 行动 \(signedDelta)")
                             .foregroundStyle(value.delta == 0 ? LivingOSTheme.graphite : LivingOSTheme.ink)
+                        Text(value.actionText)
                         Text(value.sourceText)
                         Text(value.assessmentText)
                     }
@@ -518,7 +519,7 @@ private struct LifeFieldNodeLabel: View {
         VStack(spacing: 0) {
             Text(value.title)
                 .font(.system(LivingOSTypography.lifeNodeTitle, weight: .medium))
-            Text(value.displayValue, format: .number)
+            Text(value.projectedDisplayValue, format: .number)
                 .font(.system(.caption, design: .monospaced, weight: .regular))
                 .foregroundStyle(LivingOSTheme.graphite)
         }
@@ -539,14 +540,15 @@ struct LifeFieldDimensionDetailSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     HStack(spacing: 28) {
-                        metric(title: "当前", value: value.displayValue)
-                        metric(title: "预测", value: value.projectedDisplayValue)
-                        metric(title: "变化", text: signedDelta)
+                        metric(title: "自测", value: value.displayValue)
+                        metric(title: "当前", value: value.projectedDisplayValue)
+                        metric(title: "行动加成", text: signedDelta)
                     }
 
                     Divider()
 
                     VStack(alignment: .leading, spacing: 14) {
+                        Text(value.actionText)
                         Text(value.sourceText)
                         Text(value.assessmentText)
                     }

@@ -116,7 +116,7 @@ struct YouSettingsRows: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             NavigationLink { StateAssessmentView(mode: .weekly) } label: {
-                YouSettingsRow(icon: "waveform.path.ecg", title: "每周评估")
+                YouSettingsRow(icon: "waveform.path.ecg", title: "十五日状态自测")
             }
             separator(after: 0)
             NavigationLink { LocalDataPrivacyView() } label: {
@@ -190,7 +190,7 @@ struct YouFAQView: View {
         ("为什么折线图从 0–600 开始？", "600 XP 是便于比较的默认显示范围，不是每日获取上限。单日超过 600 时，纵轴会自动扩展并保留真实值。"),
         ("周、月、年趋势如何计算？", "周和月按天汇总，年按月汇总；一周固定从周一开始，当前周期不会绘制未来日期。"),
         ("撤销任务后会怎样？", "对应完成记录被移除后，LIVE 表和趋势会随真实记录一起减少。"),
-        ("每周评估是什么？", "每周评估用于更新人生状态。它与 XP 活动历史相互独立，You 页的改版不会删除评估或历史数据。"),
+        ("十五日状态自测是什么？", "每十五个自然日可用六维各十题更新自测基线。当前状态由自测基线加上最近十五天的行动加成，每维最多加 10 分。到期可跳过提醒，之后仍可补测；XP 封顶不影响有效行动日。"),
         ("数据会同步到其他设备吗？", "当前不会。此版本仍为本地数据模式；账户、加密同步与恢复会在独立阶段实现。")
     ]
 
@@ -228,7 +228,7 @@ struct YouAboutView: View {
         YouInformationPage(title: "关于 LIVELVL", sections: [
             ("把成长变成可见的生活记录", "LIVELVL 是一套个人成长操作系统：用行动获得经验，用长期记录看见时间如何累积。"),
             ("这个版本", "版本 \(YouAppMetadata.version)（\(YouAppMetadata.build)）"),
-            ("当前阶段", "You 页面提供本地身份预览、LIVE 活动表、XP 趋势、每周评估与基础信息入口。账户与同步尚未开放。")
+            ("当前阶段", "You 页面提供本地身份预览、LIVE 活动表、XP 趋势、十五日状态自测与基础信息入口。账户与同步尚未开放。")
         ])
     }
 }

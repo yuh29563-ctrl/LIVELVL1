@@ -37,7 +37,7 @@ struct LifeStateSummaryTests {
         )
 
         #expect(summary.official.learning == 6.0)
-        #expect(summary.projected.learning == 6.3)
+        #expect(abs(summary.projected.learning - (6 + 1.0 / 7.0)) < 0.00001)
         #expect(summary.highlightedChange?.dimension == .learning)
         #expect(summary.highlightedChange?.sourceTitle == "阅读 30 分钟")
     }
@@ -73,14 +73,14 @@ struct LifeStateSummaryTests {
         let snapshot = StateSnapshot(
             scores: .neutral,
             actionScores: .neutral,
-            assessedAt: date(13, hour: 13)
+            assessedAt: date(5, hour: 13)
         )
 
         let summary = LifeStateSummaryBuilder.build(
             profiles: [],
             snapshot: snapshot,
             activities: [],
-            now: date(20, hour: 12),
+            now: date(19, hour: 12),
             calendar: calendar
         )
 
@@ -92,7 +92,7 @@ struct LifeStateSummaryTests {
         let snapshot = StateSnapshot(
             scores: .neutral,
             actionScores: .neutral,
-            assessedAt: date(13, hour: 12)
+            assessedAt: date(5, hour: 12)
         )
 
         let summary = LifeStateSummaryBuilder.build(
@@ -105,5 +105,21 @@ struct LifeStateSummaryTests {
 
         #expect(summary.daysUntilAssessment == 0)
         #expect(summary.isAssessmentDue)
+    }
+
+    @Test func newSnapshotBaselineSurvivesActionExpiryAndIsNeverCompounded() throws {
+        let snapshot = StateSnapshot(scores: LifeStateValues(repeating: 7.3),
+            actionScores: LifeStateValues(repeating: 0.8), assessedAt: date(20, hour: 12))
+        snapshot.selfRatingsData = try JSONEncoder().encode(LifeStateValues(repeating: 6.5))
+        let record = DimensionActivityRecord(dimension: .health, taskTitle: "旧训练",
+            date: date(6, hour: 12), xp: 0)
+        let first = LifeStateSummaryBuilder.build(profiles: [], snapshot: snapshot,
+            activities: [record], now: date(20, hour: 12), calendar: calendar)
+        #expect(abs(first.projected.health - (6.5 + 1.0 / 7)) < 0.00001)
+        let expired = LifeStateSummaryBuilder.build(profiles: [], snapshot: snapshot,
+            activities: [record], now: date(21, hour: 12), calendar: calendar)
+        #expect(expired.projected.health == 6.5)
+        #expect(expired.dimensions.first?.sourceTitle == nil)
+        #expect(snapshot.scores.health == 7.3)
     }
 }

@@ -21,9 +21,12 @@ struct LifeFieldNodePresentation: Identifiable, Equatable, Sendable {
     let delta: Int
     let sourceText: String
     let assessmentText: String
+    var actionText: String = ""
 
     var accessibilityValue: String {
-        "当前 \(displayValue)，预测 \(projectedDisplayValue)，\(sourceText)，\(assessmentText)"
+        ["当前 \(projectedDisplayValue)", "自测基线 \(displayValue)",
+         "行动加成 +\(max(0, delta))", actionText, sourceText, assessmentText]
+            .filter { !$0.isEmpty }.joined(separator: "，")
     }
 
     static func make(
@@ -51,13 +54,17 @@ struct LifeFieldNodePresentation: Identifiable, Equatable, Sendable {
 
         return LifeDimension.allCases.map { dimension in
             let detail = summaries[dimension]
-            return make(
+            var node = make(
                 dimension: dimension,
                 official: detail?.officialScore ?? summary.official[dimension],
                 projected: detail?.projectedScore ?? summary.projected[dimension],
                 sourceTitle: detail?.sourceTitle,
                 assessmentText: assessmentText
             )
+            if let detail, detail.targetDays > 0 {
+                node.actionText = "十五天行动 \(detail.actionDays)/\(detail.targetDays) 天"
+            }
+            return node
         }
     }
 

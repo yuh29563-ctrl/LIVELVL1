@@ -82,6 +82,8 @@ struct DailyTaskXPTests {
         var state = TodayGrowthPresentationState()
         state.begin(feedback)
         state.advance()
+        #expect(state.phase == .dimension(.learning))
+        state.advance()
         #expect(state.phase == .idle)
         #expect(state.feedback == nil)
     }

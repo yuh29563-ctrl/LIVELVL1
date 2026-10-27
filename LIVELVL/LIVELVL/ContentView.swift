@@ -126,6 +126,8 @@ struct TodayView: View {
     @State private var taskDayCalendar = Calendar.current
     @State private var taskDayRevision = 0
     @State private var completionNotice: String?
+    @State private var stateCompletionNotice: String?
+    @State private var assessmentMode: AssessmentMode?
 
     private var progress: Progress { progressItems.first ?? Progress() }
     private var rewardFeedback: TaskRewardFeedback? { growthPresentation.feedback }
@@ -164,14 +166,21 @@ struct TodayView: View {
     }
 
     private var currentSummary: LifeStateSummary? {
+        stateSummary(completionRecords: completions, now: taskDayNow, calendar: taskDayCalendar)
+    }
+
+    private func stateSummary(
+        completionRecords: [Completion], now: Date, calendar: Calendar
+    ) -> LifeStateSummary? {
         guard let snapshot = snapshots.first else { return nil }
         let itemByID = Dictionary(uniqueKeysWithValues: items.map { ($0.id, $0) })
-        let activities = completions.compactMap { $0.stateActivity(fallbackItem: itemByID[$0.itemID]) }
+        let activities = completionRecords.compactMap { $0.stateActivity(fallbackItem: itemByID[$0.itemID]) }
         return LifeStateSummaryBuilder.build(
             profiles: profiles,
             snapshot: snapshot,
             activities: activities,
-            now: .now
+            now: now,
+            calendar: calendar
         )
     }
 
@@ -238,6 +247,13 @@ struct TodayView: View {
                             growthPhase: growthPresentation.phase,
                             levelUpFeedback: levelUpFeedback
                         )
+                        LifeStateStatusCard(
+                            summary: currentSummary,
+                            onAssessment: { assessmentMode = .weekly },
+                            onSkip: skipAssessmentReminder
+                        )
+                        .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                        .padding(.bottom, 20)
                     }
 
                     VStack(alignment: .leading, spacing: 0) {
@@ -271,6 +287,13 @@ struct TodayView: View {
                                 .foregroundStyle(LivingOSTheme.ink)
                                 .fixedSize(horizontal: false, vertical: true)
                                 .padding(.bottom, 8)
+                        }
+                        if let stateCompletionNotice {
+                            Text(stateCompletionNotice)
+                                .font(.subheadline)
+                                .foregroundStyle(LivingOSTheme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.bottom, 12)
                         }
 
                         if activeItems.isEmpty {
@@ -322,6 +345,7 @@ struct TodayView: View {
                 JournalLiquidArchiveView(onClose: { isShowingJournal = false })
             }
             .sheet(isPresented: $showAdd) { TaskEditorView() }
+            .sheet(item: $assessmentMode) { mode in StateAssessmentView(mode: mode) }
             .sheet(item: $selectedTask, onDismiss: presentArchiveUndoIfNeeded) { item in
                 TaskEditorView(
                     item: item,
@@ -506,6 +530,7 @@ struct TodayView: View {
             }
             cancelGrowthPresentation()
             completionNotice = nil
+            stateCompletionNotice = nil
             message = "已取消完成，扣回 \(revokedXP) XP"
             showMessage = true
         } else {
@@ -520,6 +545,9 @@ struct TodayView: View {
         let levelBefore = progress.level
         let now = Date.now
         let calendar = Calendar.current
+        let beforeState = stateSummary(
+            completionRecords: (try? context.fetch(FetchDescriptor<Completion>())) ?? completions,
+            now: now, calendar: calendar)
         let result: TaskCompletionResult
         do {
             result = try TaskRewardCoordinator.complete(
@@ -538,6 +566,15 @@ struct TodayView: View {
         }
         refreshTaskDay()
         let levelAfter = progress.level
+        if result.wasCreated,
+           let records = try? context.fetch(FetchDescriptor<Completion>()),
+           let before = beforeState?.dimensions.first(where: { $0.dimension == item.dimension }),
+           let after = stateSummary(completionRecords: records, now: now, calendar: calendar)?
+                .dimensions.first(where: { $0.dimension == item.dimension }) {
+            let text = LifeStateActionFeedback(before: before, after: after).text
+            stateCompletionNotice = text
+            UIAccessibility.post(notification: .announcement, argument: text)
+        }
 
         do {
             try CardRewardService.reconcilePersistedRewards(
@@ -582,6 +619,7 @@ struct TodayView: View {
         if !calendar.isDate(taskDayNow, inSameDayAs: now) || calendar.timeZone != taskDayCalendar.timeZone {
             cancelGrowthPresentation()
             completionNotice = nil
+            stateCompletionNotice = nil
         }
         taskDayNow = now
         taskDayCalendar = calendar
@@ -596,6 +634,16 @@ struct TodayView: View {
 
     private func retryRewardProcessing() {
         reconcilePersistedRewards(showSuccessMessage: true)
+    }
+
+    private func skipAssessmentReminder() {
+        do {
+            try StateAssessmentStore.skipReminder(in: context)
+            refreshTaskDay()
+        } catch {
+            message = "跳过提醒暂未保存，请重试。"
+            showMessage = true
+        }
     }
 
     private func reconcilePersistedRewards(showSuccessMessage: Bool = false) {

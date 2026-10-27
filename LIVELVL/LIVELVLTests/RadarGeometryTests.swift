@@ -4,6 +4,12 @@ import Testing
 
 @MainActor
 struct RadarGeometryTests {
+    @Test func zeroStateMapsToTheCenterWithoutAnInventedMinimum() {
+        let center = CGPoint(x: 50, y: 50)
+        let points = RadarGeometry.points(values: LifeStateValues(repeating: 0),
+            center: center, radius: 40)
+        #expect(points.allSatisfy { $0 == center })
+    }
     @Test func sixFullValuesProduceARealHexagonStartingAtTop() {
         let points = RadarGeometry.points(
             values: LifeStateValues(repeating: 10.0),

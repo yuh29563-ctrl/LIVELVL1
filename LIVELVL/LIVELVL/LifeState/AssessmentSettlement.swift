@@ -33,15 +33,13 @@ enum AssessmentSettlement {
                 ?? AssessmentEntry(dimension: dimension, rating: 5.0, weeklyTarget: 3)
             return AssessmentEntry(
                 dimension: dimension,
-                rating: LifeStateEngine.rounded(min(10.0, max(1.0, source.rating))),
+                rating: min(10.0, max(0.0, source.rating)),
                 weeklyTarget: min(7, max(1, source.weeklyTarget))
             )
         }
         var official = LifeStateValues.neutral
         for entry in normalized {
-            official[entry.dimension] = mode == .initial
-                ? entry.rating
-                : LifeStateEngine.settledScore(
+            official[entry.dimension] = LifeStateEngine.settledScore(
                     selfRating: entry.rating,
                     actionScore: actionScores[entry.dimension]
                 )

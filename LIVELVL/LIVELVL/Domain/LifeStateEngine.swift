@@ -1,6 +1,6 @@
 import Foundation
 
-struct LifeStateValues: Equatable, Sendable {
+struct LifeStateValues: Equatable, Codable, Sendable {
     var health: Double
     var learning: Double
     var career: Double
@@ -74,39 +74,23 @@ enum LifeStateEngine {
         now: Date,
         calendar: Calendar = .current
     ) -> Double {
-        let today = calendar.startOfDay(for: now)
-        let windowStart = calendar.date(byAdding: .day, value: -14, to: today)!
-        let eligible = activities
-            .filter { $0.date >= windowStart && $0.date <= now }
-            .sorted { $0.date < $1.date }
-        let grouped = Dictionary(grouping: eligible) { calendar.startOfDay(for: $0.date) }
+        min(1, Double(actionDays(activities: activities, now: now, calendar: calendar))
+            / Double(targetDays(weeklyTarget: weeklyTarget)))
+    }
 
-        var countedCompletions = 0
-        var countedXP = 0
-        for dayActivities in grouped.values {
-            let firstTwo = Array(dayActivities.prefix(2))
-            countedCompletions += firstTwo.count
-            countedXP += min(80, firstTwo.reduce(0) { $0 + max(0, $1.xp) })
-        }
+    static func actionDays(activities: [StateActivity], now: Date, calendar: Calendar = .current) -> Int {
+        guard let start = calendar.date(byAdding: .day, value: -14,
+                                        to: calendar.startOfDay(for: now)) else { return 0 }
+        return Set(activities.filter { $0.date >= start && $0.date <= now }
+            .map { calendar.startOfDay(for: $0.date) }).count
+    }
 
-        let targetCount = Double(min(7, max(1, weeklyTarget))) * 15.0 / 7.0
-        let consistency = min(1.0, Double(countedCompletions) / targetCount)
-        let intensity = min(1.0, Double(countedXP) / (targetCount * 40.0))
-        return rounded(5.0 + 5.0 * (consistency * 0.6 + intensity * 0.4))
+    static func targetDays(weeklyTarget: Int) -> Int {
+        Int(ceil(Double(min(7, max(1, weeklyTarget))) * 15 / 7))
     }
 
     static func settledScore(selfRating: Double, actionScore: Double) -> Double {
-        rounded(min(10.0, max(1.0, selfRating * 0.6 + actionScore * 0.4)))
-    }
-
-    static func projectedScore(
-        officialScore: Double,
-        baselineActionScore: Double,
-        currentActionScore: Double
-    ) -> Double {
-        rounded(min(10.0, max(1.0,
-            officialScore + (currentActionScore - baselineActionScore) * 0.4
-        )))
+        min(10, max(0, selfRating) + min(1, max(0, actionScore)))
     }
 
     static func isAssessmentDue(
@@ -114,7 +98,8 @@ enum LifeStateEngine {
         now: Date,
         calendar: Calendar = .current
     ) -> Bool {
-        guard let dueDate = calendar.date(byAdding: .day, value: 7, to: lastAssessedAt) else {
+        guard let dueDate = calendar.date(byAdding: .day, value: 15,
+                                         to: calendar.startOfDay(for: lastAssessedAt)) else {
             return false
         }
         return now >= dueDate
@@ -125,10 +110,21 @@ enum LifeStateEngine {
         now: Date,
         calendar: Calendar = .current
     ) -> Int {
-        guard let dueDate = calendar.date(byAdding: .day, value: 7, to: lastAssessedAt),
+        guard let dueDate = calendar.date(byAdding: .day, value: 15,
+                                         to: calendar.startOfDay(for: lastAssessedAt)),
               now < dueDate else { return 0 }
         let start = calendar.startOfDay(for: now)
         let dueDay = calendar.startOfDay(for: dueDate)
         return max(1, calendar.dateComponents([.day], from: start, to: dueDay).day ?? 1)
+    }
+
+    static func shouldRemind(
+        lastAssessedAt: Date, skippedAt: Date?, now: Date, calendar: Calendar = .current
+    ) -> Bool {
+        guard isAssessmentDue(lastAssessedAt: lastAssessedAt, now: now, calendar: calendar) else {
+            return false
+        }
+        guard let skippedAt else { return true }
+        return isAssessmentDue(lastAssessedAt: skippedAt, now: now, calendar: calendar)
     }
 }

@@ -19,7 +19,7 @@ struct LifeStateCard: View {
                     Text("你的最近 15 天")
                         .font(.headline)
                         .foregroundStyle(Color.white.opacity(0.68))
-                    Text("综合状态 \(summary.overallScore, format: .number.precision(.fractionLength(1)))")
+                    Text("综合状态 \(summary.overallScore * 10, format: .number.precision(.fractionLength(1)))")
                         .font(.title2.bold().monospacedDigit())
                         .foregroundStyle(pulse == nil ? Color.white : TodayVisualTheme.reward)
                         .animation(.easeInOut(duration: 0.2), value: pulse?.id)
@@ -34,9 +34,9 @@ struct LifeStateCard: View {
                 .frame(height: radarHeight)
 
                 HStack(spacing: 22) {
-                    legendItem(title: "正式状态", color: .white, dashed: false)
+                    legendItem(title: "自测基线", color: .white, dashed: false)
                     legendItem(
-                        title: "行动预估",
+                        title: "当前状态",
                         color: Color.white.opacity(0.62),
                         dashed: true
                     )
@@ -57,7 +57,7 @@ struct LifeStateCard: View {
                     )
 
                 if summary.isAssessmentDue {
-                    Button("更新本周状态", action: onAssessment)
+                    Button("更新状态", action: onAssessment)
                         .buttonStyle(.bordered)
                         .tint(.white)
                 } else {
@@ -75,9 +75,9 @@ struct LifeStateCard: View {
     private var annotation: some View {
         if let change = summary.highlightedChange {
             let sign = change.delta > 0 ? "+" : ""
-            Text("\(change.dimension.title)预计 \(sign)\(change.delta, format: .number.precision(.fractionLength(1)))，来自「\(change.sourceTitle ?? "最近行动")」，待下次自测确认。")
+            Text("\(change.dimension.title)行动加成 \(sign)\(change.delta * 10, format: .number.precision(.fractionLength(1)))，来自「\(change.sourceTitle ?? "最近行动")」。")
         } else {
-            Text("完成现实行动后，这里会显示待结算的状态变化。")
+            Text("当前状态由自测基线与最近十五天行动加成组成，每维最多加 10 分。")
         }
     }
 

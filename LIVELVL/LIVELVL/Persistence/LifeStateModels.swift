@@ -36,6 +36,10 @@ final class StateSnapshot {
     var financeAction: Double
     var relationshipsAction: Double
     var interestsAction: Double
+    var assessmentVersion: Int? = nil
+    var selfRatingsData: Data? = nil
+    var assessmentAnswersData: Data? = nil
+    var reminderSkippedAt: Date? = nil
 
     init(scores: LifeStateValues, actionScores: LifeStateValues, assessedAt: Date) {
         self.assessedAt = assessedAt
@@ -63,5 +67,15 @@ final class StateSnapshot {
         LifeStateValues(health: healthAction, learning: learningAction, career: careerAction,
                         finance: financeAction, relationships: relationshipsAction,
                         interests: interestsAction)
+    }
+
+    var selfRatings: LifeStateValues? {
+        guard let selfRatingsData else { return nil }
+        return try? JSONDecoder().decode(LifeStateValues.self, from: selfRatingsData)
+    }
+
+    var recordedAnswers: [String: AssessmentAnswer]? {
+        guard let assessmentAnswersData else { return nil }
+        return try? JSONDecoder().decode([String: AssessmentAnswer].self, from: assessmentAnswersData)
     }
 }
