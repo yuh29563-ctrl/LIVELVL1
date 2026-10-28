@@ -10,7 +10,8 @@ import SwiftData
 
 @main
 struct LIVELVLApp: App {
-    var sharedModelContainer: ModelContainer = {
+    // Lazy initialization keeps the standalone design preview away from the user's store.
+    static let sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Item.self, Progress.self, Completion.self,
             DimensionProfile.self, StateSnapshot.self,
@@ -31,8 +32,15 @@ struct LIVELVLApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+#if DEBUG
+            if ProcessInfo.processInfo.arguments.contains("--assessment-intro-preview") {
+                AssessmentIntroductionPreview()
+            } else {
+                ContentView().modelContainer(Self.sharedModelContainer)
+            }
+#else
+            ContentView().modelContainer(Self.sharedModelContainer)
+#endif
         }
-        .modelContainer(sharedModelContainer)
     }
 }

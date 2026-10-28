@@ -159,7 +159,7 @@ struct StateAssessmentView: View {
     }
 }
 
-private struct AssessmentQuestionCard: View {
+struct AssessmentQuestionCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     let number: Int
     let question: AssessmentQuestion
@@ -186,14 +186,14 @@ private struct AssessmentQuestionCard: View {
             else {
                 ViewThatFits(in: .horizontal) {
                     VStack(spacing: 8) {
-                        HStack(spacing: 0) {
+                        AssessmentChoiceRowLayout {
                             ForEach(gradedAnswers) { choice in
+                                let diameter = AssessmentChoiceGeometry.diameters[choice.rawValue]
                                 Button { select(choice) } label: {
                                     Circle()
                                         .fill(answer == choice ? Color.indigo : Color.clear)
                                         .overlay(Circle().stroke(Color.indigo.opacity(0.7), lineWidth: 1.5))
-                                        .frame(width: choice == .neutral ? 18 : 26,
-                                               height: choice == .neutral ? 18 : 26)
+                                        .frame(width: diameter, height: diameter)
                                         .frame(width: 44, height: 44)
                                         .contentShape(Rectangle())
                                 }
