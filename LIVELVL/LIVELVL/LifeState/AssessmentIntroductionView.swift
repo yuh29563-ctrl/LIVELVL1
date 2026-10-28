@@ -1,4 +1,3 @@
-#if DEBUG
 import SwiftUI
 
 // Layered composition and entrance adapted from OnboardMate, Copyright (c) 2024 Kirlos Yousef.
@@ -178,4 +177,3 @@ private struct AssessmentIntroductionDiagram: View {
 #Preview("减少动态效果") {
     AssessmentIntroductionView(previewReduceMotion: true, onStart: {})
 }
-#endif

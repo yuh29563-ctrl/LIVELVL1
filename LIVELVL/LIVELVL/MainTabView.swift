@@ -327,6 +327,7 @@ struct MainTabView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query private var pendingRewards: [PendingCardReward]
     @Query private var ownedCollectibles: [OwnedCollectible]
+    @Query(sort: \StateSnapshot.assessedAt, order: .reverse) private var stateSnapshots: [StateSnapshot]
     @State private var selectedTab: AppTab = .today
     @State private var attention = CollectionAttentionState()
     @State private var presentation = CardRewardPresentationState()
@@ -476,6 +477,9 @@ struct MainTabView: View {
             if presentation.reconcile(liveAwardKeys: liveAwardKeys) {
                 handoff.recordDismissalCompletion(at: .now)
             }
+        }
+        .onChange(of: stateSnapshots.first?.persistentModelID) { _, newSnapshot in
+            if newSnapshot != nil { selectedTab = .today }
         }
     }
 

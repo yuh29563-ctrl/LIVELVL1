@@ -6,35 +6,45 @@ struct StateAssessmentView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @AccessibilityFocusState(for: .voiceOver) private var sectionHeadingFocused: Bool
     @Query private var profiles: [DimensionProfile]
     @Query(sort: \StateSnapshot.assessedAt, order: .reverse) private var snapshots: [StateSnapshot]
-    @State private var answers: [String: AssessmentAnswer] = [:]
-    @State private var weeklyTargets: [LifeDimension: Int] = [:]
-    @State private var pageIndex = 0
+    @State private var session = StateAssessmentSession()
     @State private var now = Date.now
     @State private var initialized = false
     @State private var isSaving = false
     @State private var saveError: String?
 
-    private var dimension: LifeDimension { LifeDimension.allCases[pageIndex] }
+    private var dimension: LifeDimension { session.dimension }
     private var questions: [AssessmentQuestion] { AssessmentQuestionnaire.questions(for: dimension) }
     private var canUpdate: Bool {
         guard let latest = snapshots.first else { return true }
         return LifeStateEngine.isAssessmentDue(lastAssessedAt: latest.assessedAt, now: now)
     }
     private var isPageComplete: Bool {
-        (try? AssessmentQuestionnaire.rating(for: dimension, answers: answers)) != nil
+        session.isPageComplete
     }
 
     var body: some View {
         NavigationStack {
             Group {
-                if canUpdate { questionnaire }
-                else { waitingContent }
+                if session.phase == .completed {
+                    ProgressView("六维状态已更新")
+                } else if !canUpdate {
+                    waitingContent
+                } else if session.phase == .introduction {
+                    AssessmentIntroductionView { session.start() }
+                } else {
+                    questionnaire
+                }
             }
             .background(LivingOSTheme.canvas)
-            .navigationTitle(mode == .initial ? "初次状态自测" : "十五日状态自测")
+            .animation(reduceMotion ? nil : .easeOut(duration: 0.22), value: session.phase)
+            .navigationTitle(session.phase == .introduction && canUpdate ? "" : mode == .initial ? "初次状态自测" : "十五日状态自测")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar(session.phase == .introduction && mode == .initial && canUpdate ? .hidden : .visible,
+                for: .navigationBar)
             .toolbar {
                 if mode != .initial {
                     ToolbarItem(placement: .cancellationAction) {
@@ -51,7 +61,7 @@ struct StateAssessmentView: View {
         .onAppear {
             refreshDate()
             guard !initialized else { return }
-            weeklyTargets = Dictionary(uniqueKeysWithValues: profiles.map { ($0.dimension, $0.weeklyTarget) })
+            session.weeklyTargets = Dictionary(uniqueKeysWithValues: profiles.map { ($0.dimension, $0.weeklyTarget) })
             initialized = true
         }
         .onChange(of: scenePhase) { _, value in if value == .active { refreshDate() } }
@@ -74,11 +84,12 @@ struct StateAssessmentView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("第 \(pageIndex + 1)/6 组 · \(answers.count)/60 题已作答")
+                        Text("第 \(session.pageIndex + 1)/6 组 · \(session.answers.count)/60 题已作答")
                             .font(.subheadline).foregroundStyle(.secondary)
-                        ProgressView(value: Double(answers.count), total: 60)
+                        ProgressView(value: Double(session.answers.count), total: 60)
                         Text(dimension == .career ? "事业／主要活动" : dimension.title)
                             .font(.title.bold()).accessibilityAddTraits(.isHeader)
+                            .accessibilityFocused($sectionHeadingFocused)
                         Text("请按近两周的整体体验作答；写明“目前”的题目按当前状况判断。答案没有对错。")
                             .font(.subheadline).foregroundStyle(.secondary)
                         if dimension == .career {
@@ -88,19 +99,19 @@ struct StateAssessmentView: View {
                     }
                     .id("assessment-top")
                     ForEach(Array(questions.enumerated()), id: \.element.id) { index, question in
-                        AssessmentQuestionCard(number: index + 1, question: question, answer: answers[question.id]) {
-                            answers[question.id] = $0
+                        AssessmentQuestionCard(number: index + 1, question: question, answer: session.answers[question.id]) {
+                            session.answers[question.id] = $0
                         }
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         Stepper(value: Binding(
-                            get: { weeklyTargets[dimension] ?? 3 },
-                            set: { weeklyTargets[dimension] = $0 }
+                            get: { session.weeklyTargets[dimension] ?? 3 },
+                            set: { session.weeklyTargets[dimension] = $0 }
                         ), in: 1...7) {
-                            Text("每周行动目标：\(weeklyTargets[dimension] ?? 3) 天")
+                            Text("每周行动目标：\(session.weeklyTargets[dimension] ?? 3) 天")
                                 .fixedSize(horizontal: false, vertical: true)
                         }
-                        Text("十五天目标 \(LifeStateEngine.targetDays(weeklyTarget: weeklyTargets[dimension] ?? 3)) 天；同一天完成多项任务只记一个行动日，最多加 10 分。")
+                        Text("十五天目标 \(LifeStateEngine.targetDays(weeklyTarget: session.weeklyTargets[dimension] ?? 3)) 天；同一天完成多项任务只记一个行动日，最多加 10 分。")
                             .font(.footnote).foregroundStyle(.secondary)
                     }
                     .padding()
@@ -112,19 +123,23 @@ struct StateAssessmentView: View {
             }
             .safeAreaInset(edge: .bottom) {
                 HStack(spacing: 16) {
-                    Button("上一组") { pageIndex -= 1 }
-                        .buttonStyle(.bordered).disabled(pageIndex == 0 || isSaving)
+                    Button("上一组") { session.back() }
+                        .buttonStyle(.bordered).disabled(session.pageIndex == 0 || isSaving)
                     Spacer()
-                    Button(pageIndex == 5 ? "保存状态" : "下一组") {
-                        if pageIndex == 5 { save() } else { pageIndex += 1 }
-                    }
+                    Button(session.pageIndex == 5 ? "更新六维状态" : "下一组", action: advance)
                     .buttonStyle(.borderedProminent)
                     .disabled(!isPageComplete || isSaving)
                 }
                 .padding()
                 .background(.regularMaterial)
             }
-            .onChange(of: pageIndex) { _, _ in proxy.scrollTo("assessment-top", anchor: .top) }
+            .onChange(of: session.pageIndex) { _, _ in proxy.scrollTo("assessment-top", anchor: .top) }
+            .task(id: session.pageIndex) {
+                sectionHeadingFocused = false
+                do { try await Task.sleep(for: .milliseconds(250)) }
+                catch { return }
+                sectionHeadingFocused = true
+            }
         }
     }
 
@@ -148,13 +163,13 @@ struct StateAssessmentView: View {
     }
 
     private func refreshDate() { now = .now }
-    private func save() {
+    private func advance() {
         guard !isSaving else { return }
         isSaving = true
         defer { isSaving = false }
         do {
-            try StateAssessmentStore.submit(answers: answers, weeklyTargets: weeklyTargets, in: context)
-            if mode != .initial { dismiss() }
+            let didSave = try session.advance(in: context)
+            if didSave && mode != .initial { dismiss() }
         } catch { saveError = error.localizedDescription }
     }
 }

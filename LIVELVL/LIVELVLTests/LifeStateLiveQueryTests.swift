@@ -7,6 +7,46 @@ import UIKit
 
 @MainActor
 struct LifeStateLiveQueryTests {
+    @Test func firstAssessmentReplacesIntroductionWithTodayWithoutRestart() async throws {
+        let container = try fullContainer()
+        let host = UIHostingController(rootView: ContentView().modelContainer(container))
+        let scene = try #require(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previous = scene.windows.first { $0.isKeyWindow }
+        let window = UIWindow(windowScene: scene)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true; window.rootViewController = nil; previous?.makeKeyAndVisible() }
+        #expect(await waitUntil { host.view.window != nil })
+        #expect(tabController(in: host) == nil)
+        let session = StateAssessmentSession()
+        session.start()
+        session.answers = Dictionary(uniqueKeysWithValues: AssessmentQuestionnaire.questions.map { ($0.id, AssessmentAnswer.neutral) })
+        for _ in 0..<6 { try session.advance(in: container.mainContext) }
+        #expect(await waitUntil { self.tabController(in: host)?.selectedIndex == 0 })
+    }
+
+    @Test func successfulAssessmentFromProfileReturnsToToday() async throws {
+        let container = try fullContainer()
+        let context = container.mainContext
+        let oldDate = try #require(Calendar.current.date(byAdding: .day, value: -16, to: .now))
+        context.insert(StateSnapshot(scores: .neutral, actionScores: .neutral, assessedAt: oldDate))
+        try context.save()
+        let host = UIHostingController(rootView: MainTabView(debugInitialTab: .profile).modelContainer(container))
+        let scene = try #require(UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
+        let previous = scene.windows.first { $0.isKeyWindow }
+        let window = UIWindow(windowScene: scene)
+        window.rootViewController = host
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true; window.rootViewController = nil; previous?.makeKeyAndVisible() }
+        #expect(await waitUntil { self.tabController(in: host)?.selectedIndex == 3 })
+        let session = StateAssessmentSession()
+        session.start()
+        session.answers = Dictionary(uniqueKeysWithValues: AssessmentQuestionnaire.questions.map { ($0.id, AssessmentAnswer.neutral) })
+        for _ in 0..<6 { try session.advance(in: context) }
+        #expect(session.phase == .completed)
+        #expect(await waitUntil { self.tabController(in: host)?.selectedIndex == 0 })
+    }
+
     @Test func submissionAndSkipRefreshVisibleStateWithoutRestart() async throws {
         let container = try ModelContainer(for: Schema([
             Item.self, Completion.self, DimensionProfile.self, StateSnapshot.self
@@ -40,8 +80,15 @@ struct LifeStateLiveQueryTests {
         #expect(await waitUntil { observed?.snapshotCount == 1 && observed?.selfRating == 6 })
         try StateAssessmentStore.skipReminder(in: context, now: now, calendar: calendar)
         #expect(await waitUntil { observed?.skippedAt == now })
-        let answers = Dictionary(uniqueKeysWithValues: AssessmentQuestionnaire.questions.map { ($0.id, AssessmentAnswer.neutral) })
-        try StateAssessmentStore.submit(answers: answers, weeklyTargets: [:], in: context, now: now, calendar: calendar)
+        let session = StateAssessmentSession()
+        session.start()
+        for (index, dimension) in LifeDimension.allCases.enumerated() {
+            for question in AssessmentQuestionnaire.questions(for: dimension) {
+                session.answers[question.id] = .neutral
+            }
+            #expect(try session.advance(in: context, now: now, calendar: calendar) == (index == 5))
+        }
+        #expect(session.phase == .completed)
         #expect(await waitUntil { observed?.snapshotCount == 2 && observed?.selfRating == 5 })
         #expect(observed?.skippedAt == nil)
         #expect(abs((observed?.currentHealth ?? 0) - (5 + 1.0 / 7)) < 0.00001)
@@ -53,6 +100,22 @@ struct LifeStateLiveQueryTests {
             try? await Task.sleep(for: .milliseconds(20))
         }
         return condition()
+    }
+
+    private func tabController(in controller: UIViewController) -> UITabBarController? {
+        if let tab = controller as? UITabBarController { return tab }
+        for child in controller.children {
+            if let tab = tabController(in: child) { return tab }
+        }
+        return nil
+    }
+
+    private func fullContainer() throws -> ModelContainer {
+        try ModelContainer(for: Schema([
+            Item.self, Progress.self, Completion.self, DimensionProfile.self, StateSnapshot.self,
+            CollectionProgress.self, OwnedCollectible.self, PendingCardReward.self, UserCardMedia.self,
+            CoinTransaction.self, RewardProduct.self, RewardRedemption.self, JournalEntry.self, TarotDailyState.self
+        ]), configurations: .init(isStoredInMemoryOnly: true))
     }
 }
 

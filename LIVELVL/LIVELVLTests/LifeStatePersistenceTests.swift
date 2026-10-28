@@ -157,12 +157,28 @@ struct LifeStatePersistenceTests {
         }
         let readonly = try container(url, allowsSave: false)
         let context = readonly.mainContext
+        let session = StateAssessmentSession()
+        session.start()
+        session.answers = answers
+        session.weeklyTargets = [.health: 6]
+        for _ in 0..<5 { try session.advance(in: context, now: date(20), calendar: calendar) }
         #expect(throws: (any Error).self) {
-            try StateAssessmentStore.submit(answers: answers, weeklyTargets: [:],
-                in: context, now: date(20), calendar: calendar)
+            try session.advance(in: context, now: date(20), calendar: calendar)
         }
         #expect(try context.fetch(FetchDescriptor<StateSnapshot>()).count == 1)
         #expect(try context.fetch(FetchDescriptor<DimensionProfile>()).first?.selfRating == 8)
         #expect(!context.hasChanges)
+        #expect(session.phase == .questionnaire)
+        #expect(session.pageIndex == 5)
+        #expect(session.answers == answers)
+        #expect(session.weeklyTargets == [.health: 6])
+        let writable = try container(url)
+        #expect(try session.advance(in: writable.mainContext, now: date(20), calendar: calendar))
+        #expect(session.phase == .completed)
+        #expect(try session.advance(in: writable.mainContext, now: date(20), calendar: calendar) == false)
+        let snapshots = try writable.mainContext.fetch(FetchDescriptor<StateSnapshot>(sortBy: [SortDescriptor(\StateSnapshot.assessedAt, order: .reverse)]))
+        #expect(snapshots.count == 2)
+        #expect(snapshots.first?.recordedAnswers == answers)
+        #expect(try writable.mainContext.fetch(FetchDescriptor<DimensionProfile>()).first { $0.dimension == .health }?.weeklyTarget == 6)
     }
 }
