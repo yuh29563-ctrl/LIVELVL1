@@ -29,14 +29,12 @@ struct StateAssessmentView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if session.phase == .completed {
-                    ProgressView("六维状态已更新")
+                if session.phase != .introduction && (canUpdate || session.phase == .completed) {
+                    questionnaire
                 } else if !canUpdate {
                     waitingContent
                 } else if session.phase == .introduction {
                     AssessmentIntroductionView { session.start() }
-                } else {
-                    questionnaire
                 }
             }
             .background(LivingOSTheme.canvas)
@@ -49,6 +47,7 @@ struct StateAssessmentView: View {
                 if mode != .initial {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("稍后再测") { dismiss() }
+                            .disabled(isSaving || session.phase == .completed)
                     }
                 }
             }
@@ -126,9 +125,16 @@ struct StateAssessmentView: View {
                     Button("上一组") { session.back() }
                         .buttonStyle(.bordered).disabled(session.pageIndex == 0 || isSaving)
                     Spacer()
-                    Button(session.pageIndex == 5 ? "更新六维状态" : "下一组", action: advance)
+                    Button(action: advance) {
+                        if session.phase == .completed {
+                            Label("状态已更新", systemImage: "checkmark")
+                        } else {
+                            Text(session.pageIndex == 5 ? "更新六维状态" : "下一组")
+                        }
+                    }
                     .buttonStyle(.borderedProminent)
-                    .disabled(!isPageComplete || isSaving)
+                    .contentTransition(.opacity)
+                    .disabled(!isPageComplete || isSaving || session.phase == .completed)
                 }
                 .padding()
                 .background(.regularMaterial)
@@ -138,8 +144,10 @@ struct StateAssessmentView: View {
                 sectionHeadingFocused = false
                 do { try await Task.sleep(for: .milliseconds(250)) }
                 catch { return }
+                guard session.phase == .questionnaire else { return }
                 sectionHeadingFocused = true
             }
+            .disabled(session.phase == .completed)
         }
     }
 

@@ -479,7 +479,11 @@ struct MainTabView: View {
             }
         }
         .onChange(of: stateSnapshots.first?.persistentModelID) { _, newSnapshot in
-            if newSnapshot != nil { selectedTab = .today }
+            if newSnapshot != nil {
+                withAnimation(reduceMotion ? .easeInOut(duration: 0.2) : .smooth(duration: 0.5)) {
+                    selectedTab = .today
+                }
+            }
         }
     }
 

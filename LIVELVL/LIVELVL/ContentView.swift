@@ -5,6 +5,7 @@ import Combine
 #endif
 
 struct ContentView: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \StateSnapshot.assessedAt, order: .reverse)
     private var snapshots: [StateSnapshot]
 #if DEBUG
@@ -43,11 +44,14 @@ struct ContentView: View {
 
     @ViewBuilder
     private var rootContent: some View {
+        ZStack {
 #if DEBUG
         switch debugPresentation.root(hasSnapshots: !snapshots.isEmpty) {
         case .initialAssessment:
             StateAssessmentView(mode: .initial)
                 .accessibilityIdentifier("content-root-initial-assessment")
+                .transition(.opacity)
+                .zIndex(1)
         case .mainTabs:
             MainTabView(
                 reportLocalDataResetFailure: { debugPresentation.report($0) },
@@ -55,14 +59,26 @@ struct ContentView: View {
                 debugResetActionTrigger: debugResetActionTrigger,
                 debugInitialTab: debugInitialTab
             )
+            .transition(homeEntrance)
         }
 #else
         if snapshots.isEmpty {
             StateAssessmentView(mode: .initial)
+                .transition(.opacity)
+                .zIndex(1)
         } else {
             MainTabView()
+                .transition(homeEntrance)
         }
 #endif
+        }
+        .background(LivingOSTheme.canvas)
+        .animation(snapshots.isEmpty ? nil : reduceMotion ? .easeInOut(duration: 0.2) : .smooth(duration: 0.5),
+            value: snapshots.isEmpty)
+    }
+
+    private var homeEntrance: AnyTransition {
+        reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 14))
     }
 }
 
