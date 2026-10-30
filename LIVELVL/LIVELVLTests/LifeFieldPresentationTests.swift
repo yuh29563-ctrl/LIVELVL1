@@ -25,7 +25,7 @@ struct LifeFieldPresentationTests {
         #expect(LifeFieldLayout.entranceAnchor(target: target, progress: 2) == target)
     }
 
-    @Test func entranceOnlyReplaysForANewAssessmentAndHonorsReduceMotion() {
+    @Test func entranceDoesNotReplayDuringOneAppearanceAndHonorsReduceMotion() {
         var state = LifeFieldEntranceState()
         let old = Date(timeIntervalSince1970: 100)
         let new = Date(timeIntervalSince1970: 200)
@@ -42,6 +42,22 @@ struct LifeFieldPresentationTests {
         let legacyPlays = [legacy.begin(assessedAt: nil, reduceMotion: false),
                            legacy.begin(assessedAt: nil, reduceMotion: false)]
         #expect(legacyPlays == [true, false])
+    }
+
+    @Test func returningHomeReplaysAndInvalidatesThePreviousVisitCallbacks() {
+        for date in [Date(timeIntervalSince1970: 100), nil] {
+            var state = LifeFieldEntranceState()
+            let first = state.begin(assessedAt: date, reduceMotion: false)
+            #expect(first)
+            let previousRun = state.generation
+            state.resetForNextAppearance()
+            #expect(state.generation != previousRun)
+            let replay = state.begin(assessedAt: date, reduceMotion: false)
+            #expect(replay)
+            #expect(state.generation != previousRun)
+            let refresh = state.begin(assessedAt: date, reduceMotion: false)
+            #expect(!refresh)
+        }
     }
 
     @Test func nodesUseTheSixRealDomainsInStableOrder() {

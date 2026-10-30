@@ -577,24 +577,32 @@ struct TodayLifeFieldSection: View {
         }
         .task(id: summary.assessedAt) {
             let assessedAt = summary.assessedAt
-            guard entrance.begin(assessedAt: assessedAt, reduceMotion: reduceMotion) else {
+            let previousGeneration = entrance.generation
+            let shouldAnimate = entrance.begin(assessedAt: assessedAt, reduceMotion: reduceMotion)
+            let generation = entrance.generation
+            if generation != previousGeneration {
+                var transaction = Transaction()
+                transaction.disablesAnimations = true
+                withTransaction(transaction) {
+                    opening = LifeCoreOpeningState()
+                    entranceProgress = shouldAnimate ? 0 : 1
+                }
+            }
+            guard shouldAnimate else {
                 finishEntranceWithoutAnimation()
                 expandCoreAfterEntranceIfNeeded()
                 return
             }
-            var transaction = Transaction()
-            transaction.disablesAnimations = true
-            withTransaction(transaction) { entranceProgress = 0 }
-            do { try await Task.sleep(for: .milliseconds(220)) }
+            do { try await Task.sleep(for: .milliseconds(120)) }
             catch {
-                if entrance.assessedAt == assessedAt { finishEntranceWithoutAnimation() }
+                if entrance.generation == generation { finishEntranceWithoutAnimation() }
                 return
             }
-            guard !Task.isCancelled, entrance.assessedAt == assessedAt else { return }
-            withAnimation(.easeInOut(duration: 1.4), completionCriteria: .removed) {
+            guard !Task.isCancelled, entrance.generation == generation else { return }
+            withAnimation(.easeInOut(duration: 1), completionCriteria: .removed) {
                 entranceProgress = 1
             } completion: {
-                guard entrance.assessedAt == assessedAt else { return }
+                guard entrance.generation == generation else { return }
                 expandCoreAfterEntranceIfNeeded()
             }
         }
@@ -602,7 +610,16 @@ struct TodayLifeFieldSection: View {
             isVisible = true
             expandCoreAfterEntranceIfNeeded()
         }
-        .onDisappear { isVisible = false }
+        .onDisappear {
+            isVisible = false
+            entrance.resetForNextAppearance()
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                entranceProgress = 0
+                opening = LifeCoreOpeningState()
+            }
+        }
         .onChange(of: reduceMotion) { _, enabled in
             if enabled {
                 finishEntranceWithoutAnimation()
