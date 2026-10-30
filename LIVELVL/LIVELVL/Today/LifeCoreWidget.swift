@@ -591,7 +591,7 @@ struct TodayLifeFieldSection: View {
                 return
             }
             guard !Task.isCancelled, entrance.assessedAt == assessedAt else { return }
-            withAnimation(.timingCurve(0.16, 1, 0.3, 1, duration: 0.8), completionCriteria: .removed) {
+            withAnimation(.easeInOut(duration: 1.4), completionCriteria: .removed) {
                 entranceProgress = 1
             } completion: {
                 guard entrance.assessedAt == assessedAt else { return }
