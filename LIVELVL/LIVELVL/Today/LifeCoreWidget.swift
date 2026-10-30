@@ -13,7 +13,7 @@ nonisolated enum LifeCoreDisplayMode: Equatable, Sendable {
     case expanded
     case compact
 
-    static let initial = LifeCoreDisplayMode.expanded
+    static let initial = LifeCoreDisplayMode.compact
 
     var toggleSymbolName: String {
         switch self {
@@ -24,6 +24,24 @@ nonisolated enum LifeCoreDisplayMode: Equatable, Sendable {
 
     mutating func toggle() {
         self = self == .expanded ? .compact : .expanded
+    }
+}
+
+nonisolated struct LifeCoreOpeningState: Equatable, Sendable {
+    private(set) var displayMode = LifeCoreDisplayMode.initial
+    private var automaticExpansionPending = true
+
+    @discardableResult
+    mutating func finishFieldEntrance() -> Bool {
+        guard automaticExpansionPending else { return false }
+        automaticExpansionPending = false
+        displayMode = .expanded
+        return true
+    }
+
+    mutating func toggle() {
+        automaticExpansionPending = false
+        displayMode.toggle()
     }
 }
 
@@ -441,7 +459,8 @@ struct LifeCoreWidget: View {
 struct TodayLifeFieldSection: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @State private var coreDisplayMode = LifeCoreDisplayMode.initial
+    @State private var opening = LifeCoreOpeningState()
+    @State private var isVisible = false
     @State private var entrance = LifeFieldEntranceState()
     @State private var entranceProgress: CGFloat = 0
     @StateObject private var pointCloudLoader = makeCompanionPointCloudLoader()
@@ -451,6 +470,8 @@ struct TodayLifeFieldSection: View {
     let core: LifeCoreWidgetPresentation
     let growthPhase: TodayGrowthPhase
     let levelUpFeedback: Int?
+
+    private var coreDisplayMode: LifeCoreDisplayMode { opening.displayMode }
 
     var body: some View {
         let layout = LifeCoreDockLayout.metrics(
@@ -558,6 +579,7 @@ struct TodayLifeFieldSection: View {
             let assessedAt = summary.assessedAt
             guard entrance.begin(assessedAt: assessedAt, reduceMotion: reduceMotion) else {
                 finishEntranceWithoutAnimation()
+                expandCoreAfterEntranceIfNeeded()
                 return
             }
             var transaction = Transaction()
@@ -569,13 +591,29 @@ struct TodayLifeFieldSection: View {
                 return
             }
             guard !Task.isCancelled, entrance.assessedAt == assessedAt else { return }
-            withAnimation(.timingCurve(0.16, 1, 0.3, 1, duration: 0.8)) {
+            withAnimation(.timingCurve(0.16, 1, 0.3, 1, duration: 0.8), completionCriteria: .removed) {
                 entranceProgress = 1
+            } completion: {
+                guard entrance.assessedAt == assessedAt else { return }
+                expandCoreAfterEntranceIfNeeded()
             }
         }
-        .onChange(of: reduceMotion) { _, enabled in
-            if enabled { finishEntranceWithoutAnimation() }
+        .onAppear {
+            isVisible = true
+            expandCoreAfterEntranceIfNeeded()
         }
+        .onDisappear { isVisible = false }
+        .onChange(of: reduceMotion) { _, enabled in
+            if enabled {
+                finishEntranceWithoutAnimation()
+                expandCoreAfterEntranceIfNeeded()
+            }
+        }
+    }
+
+    private func expandCoreAfterEntranceIfNeeded() {
+        guard isVisible, entranceProgress == 1, entrance.assessedAt == summary.assessedAt else { return }
+        withAnimation(sectionAnimation) { _ = opening.finishFieldEntrance() }
     }
 
     private func finishEntranceWithoutAnimation() {
@@ -612,12 +650,12 @@ struct TodayLifeFieldSection: View {
     private var sectionAnimation: Animation {
         reduceMotion
             ? .easeOut(duration: 0.16)
-            : .spring(response: 0.34, dampingFraction: 0.84)
+            : .spring(response: 0.5, dampingFraction: 0.88)
     }
 
     private func toggleCoreDisplayMode() {
         withAnimation(sectionAnimation) {
-            coreDisplayMode.toggle()
+            opening.toggle()
         }
     }
 

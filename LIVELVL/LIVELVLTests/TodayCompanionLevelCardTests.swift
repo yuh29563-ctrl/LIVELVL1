@@ -4,14 +4,40 @@ import Testing
 
 @MainActor
 struct TodayCompanionLevelCardTests {
-    @Test func lifeCoreDisplayModeDefaultsExpandedAndTogglesBothWays() {
+    @Test func lifeCoreDisplayModeStartsCompactAndTogglesBothWays() {
         var mode = LifeCoreDisplayMode.initial
 
-        #expect(mode == .expanded)
-        mode.toggle()
         #expect(mode == .compact)
         mode.toggle()
         #expect(mode == .expanded)
+        mode.toggle()
+        #expect(mode == .compact)
+    }
+
+    @Test func openingKeepsTheCardRetractedUntilTheFieldHasFinished() {
+        var opening = LifeCoreOpeningState()
+        #expect(opening.displayMode == .compact)
+        let first = opening.finishFieldEntrance()
+        #expect(first)
+        #expect(opening.displayMode == .expanded)
+        let repeated = opening.finishFieldEntrance()
+        #expect(!repeated)
+        opening.toggle()
+        #expect(opening.displayMode == .compact)
+        let laterAssessment = opening.finishFieldEntrance()
+        #expect(!laterAssessment)
+        #expect(opening.displayMode == .compact)
+    }
+
+    @Test func manualChoiceDuringTheEntranceCancelsAutomaticExpansion() {
+        var opening = LifeCoreOpeningState()
+        opening.toggle()
+        #expect(opening.displayMode == .expanded)
+        opening.toggle()
+        #expect(opening.displayMode == .compact)
+        let shouldOpen = opening.finishFieldEntrance()
+        #expect(!shouldOpen)
+        #expect(opening.displayMode == .compact)
     }
 
     @Test func lifeCoreToggleArrowMatchesTheActionItWillPerform() {
