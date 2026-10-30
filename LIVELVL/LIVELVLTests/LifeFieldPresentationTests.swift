@@ -6,6 +6,44 @@ import UIKit
 
 @MainActor
 struct LifeFieldPresentationTests {
+    @Test func entranceStartsAtTheCoreAndTravelsRadiallyToTheRealScore() {
+        for dimension in LifeDimension.allCases {
+            let target = LifeFieldLayout.anchor(for: dimension, score: 70)
+            #expect(LifeFieldLayout.entranceAnchor(target: target, progress: 0) == LifeFieldLayout.visualCore)
+            #expect(LifeFieldLayout.entranceAnchor(target: target, progress: 1) == target)
+            let halfway = LifeFieldLayout.entranceAnchor(target: target, progress: 0.5)
+            #expect(abs(halfway.x - (LifeFieldLayout.visualCore.x + target.x) / 2) < 0.000001)
+            #expect(abs(halfway.y - (LifeFieldLayout.visualCore.y + target.y) / 2) < 0.000001)
+        }
+        let zero = LifeFieldLayout.anchor(for: .health, score: 0)
+        #expect(LifeFieldLayout.entranceAnchor(target: zero, progress: 0.6) == LifeFieldLayout.visualCore)
+    }
+
+    @Test func entranceClampsProgressWithoutOvershootingOrInventingAScore() {
+        let target = LifeFieldLayout.anchor(for: .health, score: 50)
+        #expect(LifeFieldLayout.entranceAnchor(target: target, progress: -1) == LifeFieldLayout.visualCore)
+        #expect(LifeFieldLayout.entranceAnchor(target: target, progress: 2) == target)
+    }
+
+    @Test func entranceOnlyReplaysForANewAssessmentAndHonorsReduceMotion() {
+        var state = LifeFieldEntranceState()
+        let old = Date(timeIntervalSince1970: 100)
+        let new = Date(timeIntervalSince1970: 200)
+        let plays = [state.begin(assessedAt: old, reduceMotion: false),
+                     state.begin(assessedAt: old, reduceMotion: false),
+                     state.begin(assessedAt: new, reduceMotion: false),
+                     state.begin(assessedAt: new, reduceMotion: false)]
+        #expect(plays == [true, false, true, false])
+        var reduced = LifeFieldEntranceState()
+        let reducedPlays = [reduced.begin(assessedAt: old, reduceMotion: true),
+                            reduced.begin(assessedAt: old, reduceMotion: false)]
+        #expect(reducedPlays == [false, false])
+        var legacy = LifeFieldEntranceState()
+        let legacyPlays = [legacy.begin(assessedAt: nil, reduceMotion: false),
+                           legacy.begin(assessedAt: nil, reduceMotion: false)]
+        #expect(legacyPlays == [true, false])
+    }
+
     @Test func nodesUseTheSixRealDomainsInStableOrder() {
         let official = LifeStateValues(
             health: 7.8,

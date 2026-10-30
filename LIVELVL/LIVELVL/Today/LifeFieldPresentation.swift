@@ -1,5 +1,17 @@
 import Foundation
 
+nonisolated struct LifeFieldEntranceState: Equatable, Sendable {
+    private var hasStarted = false
+    private(set) var assessedAt: Date?
+
+    mutating func begin(assessedAt: Date?, reduceMotion: Bool) -> Bool {
+        guard !hasStarted || self.assessedAt != assessedAt else { return false }
+        hasStarted = true
+        self.assessedAt = assessedAt
+        return !reduceMotion
+    }
+}
+
 enum LifeFieldDetailPresentationStyle: Equatable, Sendable {
     case inline
     case sheet

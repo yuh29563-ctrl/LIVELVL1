@@ -442,6 +442,8 @@ struct TodayLifeFieldSection: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var coreDisplayMode = LifeCoreDisplayMode.initial
+    @State private var entrance = LifeFieldEntranceState()
+    @State private var entranceProgress: CGFloat = 0
     @StateObject private var pointCloudLoader = makeCompanionPointCloudLoader()
     @Namespace private var coreArtworkNamespace
 
@@ -489,7 +491,7 @@ struct TodayLifeFieldSection: View {
                 }
 
                 ZStack {
-                    LifeFieldBackdrop(summary: summary) { EmptyView() }
+                    LifeFieldBackdrop(summary: summary, entranceProgress: reduceMotion ? 1 : entranceProgress) { EmptyView() }
                     .zIndex(LifeFieldLayerOrder.backdropDots)
 
                     if composition.showsCenterTapTarget {
@@ -535,7 +537,8 @@ struct TodayLifeFieldSection: View {
 
                     LifeFieldView(
                         summary: summary,
-                        highlightedDimension: highlightedDimension
+                        highlightedDimension: highlightedDimension,
+                        entranceProgress: reduceMotion ? 1 : entranceProgress
                     )
                     .zIndex(LifeFieldLayerOrder.controls)
                 }
@@ -551,6 +554,34 @@ struct TodayLifeFieldSection: View {
         .task(id: core.artworkRequest) {
             pointCloudLoader.load(core.artworkRequest)
         }
+        .task(id: summary.assessedAt) {
+            let assessedAt = summary.assessedAt
+            guard entrance.begin(assessedAt: assessedAt, reduceMotion: reduceMotion) else {
+                finishEntranceWithoutAnimation()
+                return
+            }
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) { entranceProgress = 0 }
+            do { try await Task.sleep(for: .milliseconds(220)) }
+            catch {
+                if entrance.assessedAt == assessedAt { finishEntranceWithoutAnimation() }
+                return
+            }
+            guard !Task.isCancelled, entrance.assessedAt == assessedAt else { return }
+            withAnimation(.timingCurve(0.16, 1, 0.3, 1, duration: 0.8)) {
+                entranceProgress = 1
+            }
+        }
+        .onChange(of: reduceMotion) { _, enabled in
+            if enabled { finishEntranceWithoutAnimation() }
+        }
+    }
+
+    private func finishEntranceWithoutAnimation() {
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) { entranceProgress = 1 }
     }
 
     private var highlightedDimension: LifeDimension? {

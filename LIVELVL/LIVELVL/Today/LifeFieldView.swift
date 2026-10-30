@@ -70,6 +70,13 @@ nonisolated enum LifeFieldLayout {
         )
     }
 
+    static func entranceAnchor(target: CGPoint, progress: CGFloat) -> CGPoint {
+        let amount = min(1, max(0, progress))
+        if amount == 1 { return target }
+        return CGPoint(x: visualCore.x + (target.x - visualCore.x) * amount,
+                       y: visualCore.y + (target.y - visualCore.y) * amount)
+    }
+
     static func point(for dimension: LifeDimension, in size: CGSize) -> CGPoint {
         let normalized = anchor(for: dimension)
         return point(for: normalized, in: size)
@@ -301,6 +308,7 @@ struct LifeFieldView: View {
 
     let summary: LifeStateSummary
     let highlightedDimension: LifeDimension?
+    var entranceProgress: CGFloat = 1
 
     private var nodes: [LifeFieldNodePresentation] {
         LifeFieldNodePresentation.make(summary: summary)
@@ -327,22 +335,28 @@ struct LifeFieldView: View {
                             isRewardTarget: isRewardTarget,
                             reduceMotion: reduceMotion
                         )
-                        .position(LifeFieldLayout.point(for: anchors.official, in: size))
+                        .position(LifeFieldLayout.point(for: LifeFieldLayout.entranceAnchor(
+                            target: anchors.official, progress: reduceMotion ? 1 : entranceProgress), in: size))
                         .animation(
                             reduceMotion ? nil : .spring(response: 0.42, dampingFraction: 0.82),
                             value: node.projectedDisplayValue
                         )
+                        .id(reduceMotion)
                     }
 
                     LifeFieldOfficialNode(
                         isSelected: isSelected,
                         action: { activate(node) }
                     )
-                    .position(LifeFieldLayout.point(for: anchors.projected, in: size))
+                    .position(LifeFieldLayout.point(for: LifeFieldLayout.entranceAnchor(
+                        target: anchors.projected, progress: reduceMotion ? 1 : entranceProgress), in: size))
                     .animation(
                         reduceMotion ? nil : .spring(response: 0.42, dampingFraction: 0.82),
                         value: node.projectedDisplayValue
                     )
+                    // Reset the position modifier to stop an in-flight tween when motion is disabled.
+                    .id(reduceMotion)
+                    .allowsHitTesting(reduceMotion || entranceProgress > 0)
 
                     LifeFieldNodeLabel(
                         value: node,
@@ -389,14 +403,18 @@ struct LifeFieldView: View {
 }
 
 struct LifeFieldBackdrop<CenterContent: View>: View {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let summary: LifeStateSummary
+    private let entranceProgress: CGFloat
     private let centerContent: CenterContent
 
     init(
         summary: LifeStateSummary,
+        entranceProgress: CGFloat = 1,
         @ViewBuilder centerContent: () -> CenterContent
     ) {
         self.summary = summary
+        self.entranceProgress = entranceProgress
         self.centerContent = centerContent()
     }
 
@@ -431,6 +449,9 @@ struct LifeFieldBackdrop<CenterContent: View>: View {
                     .zIndex(LifeFieldLayerOrder.radialLinks)
 
                 LifeFieldEdgeParticles(targets: officialTargets)
+                    .scaleEffect(reduceMotion ? 1 : entranceProgress,
+                        anchor: UnitPoint(x: LifeFieldLayout.visualCore.x, y: LifeFieldLayout.visualCore.y))
+                    .id(reduceMotion)
                     .zIndex(LifeFieldLayerOrder.dynamicEdges)
 
                 LifeFieldPolygon(
@@ -453,6 +474,9 @@ struct LifeFieldBackdrop<CenterContent: View>: View {
                     LivingOSTheme.graphite.opacity(LifeFieldPolygonPresentation.innerOpacity),
                     lineWidth: 0.85
                 )
+                .scaleEffect(reduceMotion ? 1 : entranceProgress,
+                    anchor: UnitPoint(x: LifeFieldLayout.visualCore.x, y: LifeFieldLayout.visualCore.y))
+                .id(reduceMotion)
                 .zIndex(LifeFieldLayerOrder.dynamicEdges)
             }
         }
