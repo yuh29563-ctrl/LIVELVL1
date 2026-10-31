@@ -60,6 +60,23 @@ struct LifeFieldPresentationTests {
         }
     }
 
+    @Test func playbackIsPreparedBeforeTheAsyncAnimationAndInvalidatedOnExit() {
+        var state = LifeFieldEntranceState()
+        #expect(!state.shouldAnimate)
+        _ = state.begin(assessedAt: nil, reduceMotion: false)
+        #expect(state.shouldAnimate)
+        let preparedGeneration = state.generation
+        // A duplicate appearance must not replace the prepared playback.
+        _ = state.begin(assessedAt: nil, reduceMotion: false)
+        #expect(state.shouldAnimate)
+        #expect(state.generation == preparedGeneration)
+        state.resetForNextAppearance()
+        #expect(!state.shouldAnimate)
+        #expect(state.generation != preparedGeneration)
+        _ = state.begin(assessedAt: nil, reduceMotion: true)
+        #expect(!state.shouldAnimate)
+    }
+
     @Test func nodesUseTheSixRealDomainsInStableOrder() {
         let official = LifeStateValues(
             health: 7.8,

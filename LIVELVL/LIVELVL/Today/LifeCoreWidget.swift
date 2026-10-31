@@ -575,29 +575,16 @@ struct TodayLifeFieldSection: View {
         .task(id: core.artworkRequest) {
             pointCloudLoader.load(core.artworkRequest)
         }
-        .task(id: summary.assessedAt) {
-            let assessedAt = summary.assessedAt
-            let previousGeneration = entrance.generation
-            let shouldAnimate = entrance.begin(assessedAt: assessedAt, reduceMotion: reduceMotion)
+        .task(id: entrance.generation) {
+            guard isVisible, !Task.isCancelled else { return }
             let generation = entrance.generation
-            if generation != previousGeneration {
-                var transaction = Transaction()
-                transaction.disablesAnimations = true
-                withTransaction(transaction) {
-                    opening = LifeCoreOpeningState()
-                    entranceProgress = shouldAnimate ? 0 : 1
-                }
-            }
-            guard shouldAnimate else {
+            guard entrance.shouldAnimate else {
                 finishEntranceWithoutAnimation()
                 expandCoreAfterEntranceIfNeeded()
                 return
             }
             do { try await Task.sleep(for: .milliseconds(120)) }
-            catch {
-                if entrance.generation == generation { finishEntranceWithoutAnimation() }
-                return
-            }
+            catch { return }
             guard !Task.isCancelled, entrance.generation == generation else { return }
             withAnimation(.easeInOut(duration: 1), completionCriteria: .removed) {
                 entranceProgress = 1
@@ -608,23 +595,34 @@ struct TodayLifeFieldSection: View {
         }
         .onAppear {
             isVisible = true
-            expandCoreAfterEntranceIfNeeded()
+            prepareEntrance()
         }
         .onDisappear {
             isVisible = false
             entrance.resetForNextAppearance()
-            var transaction = Transaction()
-            transaction.disablesAnimations = true
-            withTransaction(transaction) {
-                entranceProgress = 0
-                opening = LifeCoreOpeningState()
-            }
+        }
+        .onChange(of: summary.assessedAt) { _, _ in
+            guard isVisible else { return }
+            prepareEntrance()
         }
         .onChange(of: reduceMotion) { _, enabled in
             if enabled {
                 finishEntranceWithoutAnimation()
                 expandCoreAfterEntranceIfNeeded()
             }
+        }
+    }
+
+    private func prepareEntrance() {
+        let previousGeneration = entrance.generation
+        let shouldAnimate = entrance.begin(assessedAt: summary.assessedAt, reduceMotion: reduceMotion)
+        guard entrance.generation != previousGeneration else { return }
+        // Prepare the dock and field together before appearance, never in the async playback task.
+        var transaction = Transaction()
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            opening = LifeCoreOpeningState()
+            entranceProgress = shouldAnimate ? 0 : 1
         }
     }
 

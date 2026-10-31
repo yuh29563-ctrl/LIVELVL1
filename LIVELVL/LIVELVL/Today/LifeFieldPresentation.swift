@@ -4,18 +4,21 @@ nonisolated struct LifeFieldEntranceState: Equatable, Sendable {
     private var hasStarted = false
     private(set) var assessedAt: Date?
     private(set) var generation = 0
+    private(set) var shouldAnimate = false
 
     mutating func begin(assessedAt: Date?, reduceMotion: Bool) -> Bool {
         guard !hasStarted || self.assessedAt != assessedAt else { return false }
         hasStarted = true
         self.assessedAt = assessedAt
         generation &+= 1
-        return !reduceMotion
+        shouldAnimate = !reduceMotion
+        return shouldAnimate
     }
 
     mutating func resetForNextAppearance() {
         hasStarted = false
         assessedAt = nil
+        shouldAnimate = false
         generation &+= 1
     }
 }
