@@ -7,7 +7,10 @@ import Testing
 struct DailyTaskXPTests {
     private func container() throws -> ModelContainer {
         try ModelContainer(
-            for: Schema([Item.self, LIVELVL.Progress.self, Completion.self, CoinTransaction.self]),
+            for: Schema([
+                Item.self, LIVELVL.Progress.self, Completion.self, CoinTransaction.self,
+                CollectionProgress.self, OwnedCollectible.self, PendingCardReward.self,
+            ]),
             configurations: .init(isStoredInMemoryOnly: true)
         )
     }

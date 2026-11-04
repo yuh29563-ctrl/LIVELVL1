@@ -116,17 +116,6 @@ private enum LifeCoreArtworkTransition {
     static let id = "today-life-core-artwork"
 }
 
-extension CompanionStage {
-    nonisolated var nextArtworkStage: CompanionStage? {
-        switch self {
-        case .juvenile: .stageTwo
-        case .stageTwo: .stageThree
-        case .stageThree: .mature
-        case .mature: nil
-        }
-    }
-}
-
 nonisolated struct LifeCoreDockMetrics: Equatable, Sendable {
     let topInset: CGFloat
     let dockHeight: CGFloat
@@ -214,14 +203,12 @@ struct LifeCoreWidgetPresentation: Equatable, Sendable {
     var artworkRequest: CompanionPointCloudRequest {
         CompanionPointCloudRequest(
             current: CompanionArtworkID(collectibleID: definition.id, stage: stage),
-            next: stage.nextArtworkStage.map {
-                CompanionArtworkID(collectibleID: definition.id, stage: $0)
-            }
+            next: nil
         )
     }
     var levelText: String { "LV \(level)" }
     var xpText: String { "\(max(0, currentXP)) / \(max(0, requiredXP)) XP" }
-    var remainingText: String { "下一形态 \(max(0, remainingXP)) XP" }
+    var remainingText: String { "成熟还差 \(max(0, remainingXP)) XP" }
     var compactRemainingText: String { "还差 \(max(0, remainingXP)) XP" }
     var accessibilityLabel: String {
         "正在陪伴，\(companionName)，\(stageTitle)，等级 \(level)"
@@ -467,25 +454,25 @@ struct TodayLifeFieldSection: View {
     @Namespace private var coreArtworkNamespace
 
     let summary: LifeStateSummary
-    let core: LifeCoreWidgetPresentation
+    let core: LifeCoreWidgetPresentation?
     let growthPhase: TodayGrowthPhase
     let levelUpFeedback: Int?
 
     private var coreDisplayMode: LifeCoreDisplayMode { opening.displayMode }
 
     var body: some View {
+        let displayMode = core == nil ? LifeCoreDisplayMode.expanded : coreDisplayMode
         let layout = LifeCoreDockLayout.metrics(
-            displayMode: coreDisplayMode,
+            displayMode: displayMode,
             isAccessibilitySize: dynamicTypeSize.isAccessibilitySize
         )
         let composition = LifeCoreDisplayComposition(
-            displayMode: coreDisplayMode,
+            displayMode: displayMode,
             artworkState: pointCloudLoader.state
         )
-        let accessibility = LifeCoreAccessibilityComposition(
-            displayMode: coreDisplayMode,
-            presentation: core
-        )
+        let accessibility = core.map {
+            LifeCoreAccessibilityComposition(displayMode: displayMode, presentation: $0)
+        }
 
         GeometryReader { proxy in
             let coreWidth = resolvedCoreWidth(containerWidth: proxy.size.width)
@@ -496,7 +483,8 @@ struct TodayLifeFieldSection: View {
             let expandedCoreCenter = LifeCorePlacement.expandedCenter(in: fieldSize)
 
             VStack(spacing: layout.spacing) {
-                if composition.showsCompactDock, let dockAccessibility = accessibility.dock {
+                if composition.showsCompactDock,
+                   let core, let dockAccessibility = accessibility?.dock {
                     LifeCoreCompactWidget(
                         presentation: core,
                         accessibility: dockAccessibility,
@@ -515,11 +503,11 @@ struct TodayLifeFieldSection: View {
                     LifeFieldBackdrop(summary: summary, entranceProgress: reduceMotion ? 1 : entranceProgress) { EmptyView() }
                     .zIndex(LifeFieldLayerOrder.backdropDots)
 
-                    if composition.showsCenterTapTarget {
+                    if composition.showsCenterTapTarget, core != nil {
                         GeometryReader { fieldProxy in
                             LifeCoreCenterTapTarget(
                                 isAccessibilitySize: dynamicTypeSize.isAccessibilitySize,
-                                isAccessibilityHidden: accessibility.centerTargetIsAccessibilityHidden,
+                                isAccessibilityHidden: accessibility?.centerTargetIsAccessibilityHidden ?? true,
                                 action: toggleCoreDisplayMode
                             )
                             .position(
@@ -534,26 +522,41 @@ struct TodayLifeFieldSection: View {
                     }
 
                     if composition.showsExpandedCard {
-                        LifeCoreWidget(
-                            presentation: core,
-                            artworkState: pointCloudLoader.state,
-                            isRewarding: growthPhase == .core,
-                            levelUpFeedback: levelUpFeedback,
-                            artworkNamespace: coreArtworkNamespace
-                        )
-                        .frame(width: coreWidth, height: coreHeight)
-                        .position(expandedCoreCenter)
-                        .transition(coreTransition)
-                        .zIndex(LifeFieldLayerOrder.expandedCore)
-
-                        LifeCoreCollapseButton(action: toggleCoreDisplayMode)
-                            .position(expandedCoreCenter)
-                            .offset(
-                                x: coreWidth / 2 - LifeCoreCollapseLayout.minimumTapDimension / 2,
-                                y: -coreHeight / 2 + LifeCoreCollapseLayout.minimumTapDimension / 2
+                        if let core {
+                            LifeCoreWidget(
+                                presentation: core,
+                                artworkState: pointCloudLoader.state,
+                                isRewarding: growthPhase == .core,
+                                levelUpFeedback: levelUpFeedback,
+                                artworkNamespace: coreArtworkNamespace
                             )
-                            .transition(.opacity)
-                            .zIndex(LifeFieldLayerOrder.coreControl)
+                            .frame(width: coreWidth, height: coreHeight)
+                            .position(expandedCoreCenter)
+                            .transition(coreTransition)
+                            .zIndex(LifeFieldLayerOrder.expandedCore)
+
+                            LifeCoreCollapseButton(action: toggleCoreDisplayMode)
+                                .position(expandedCoreCenter)
+                                .offset(
+                                    x: coreWidth / 2 - LifeCoreCollapseLayout.minimumTapDimension / 2,
+                                    y: -coreHeight / 2 + LifeCoreCollapseLayout.minimumTapDimension / 2
+                                )
+                                .transition(.opacity)
+                                .zIndex(LifeFieldLayerOrder.coreControl)
+                        } else {
+                            VStack(spacing: 8) {
+                                Text("等待新伙伴")
+                                    .font(.title3.weight(.semibold))
+                                Text("新的伙伴尚未加入卡库，等级仍会继续成长。")
+                                    .font(.subheadline)
+                                    .multilineTextAlignment(.center)
+                            }
+                            .foregroundStyle(LivingOSTheme.ink)
+                            .padding(20)
+                            .frame(width: coreWidth, height: coreHeight)
+                            .position(expandedCoreCenter)
+                            .accessibilityElement(children: .combine)
+                        }
                     }
 
                     LifeFieldView(
@@ -572,7 +575,8 @@ struct TodayLifeFieldSection: View {
         }
         .frame(height: layout.sectionHeight, alignment: .top)
         .todayGrowthAnchor(.field)
-        .task(id: core.artworkRequest) {
+        .task(id: core?.artworkRequest) {
+            guard let core else { return }
             pointCloudLoader.load(core.artworkRequest)
         }
         .task(id: entrance.generation) {

@@ -137,14 +137,14 @@ struct DailyTaskXPPersistenceTests {
         }
     }
 
-    @Test func failedDiskSaveRollsBackCompletionXPAndCoinAwardTogether() throws {
+    @Test func failedDiskSaveRollsBackCompletionXPCoinsAndAdultCardTogether() throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("readonly.store")
         try autoreleasepool {
             let writable = try store(at: url)
             let context = writable.mainContext
-            context.insert(LIVELVL.Progress(totalXP: 100))
+            context.insert(LIVELVL.Progress(totalXP: 195))
             context.insert(Item(title: "行动", dimension: .learning, minutes: 30,
                                 difficulty: 2, xp: 80, recurrence: .daily))
             try context.save()
@@ -157,9 +157,12 @@ struct DailyTaskXPPersistenceTests {
         #expect(throws: (any Error).self) {
             try TaskRewardCoordinator.complete(item: task, progress: progress, in: context)
         }
-        #expect(progress.totalXP == 100)
+        #expect(progress.totalXP == 195)
         #expect(try context.fetch(FetchDescriptor<Completion>()).isEmpty)
         #expect(try context.fetch(FetchDescriptor<CoinTransaction>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<OwnedCollectible>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<CollectionProgress>()).isEmpty)
         #expect(!context.hasChanges)
     }
 
@@ -215,7 +218,7 @@ struct DailyTaskXPPersistenceTests {
         #expect(try CoinLedgerService.balance(in: context) == 80)
     }
 
-    @Test func cardFailureAndRecoveryNeverReawardTaskXPOrCoins() throws {
+    @Test func adultCardAndTaskRewardsSurviveDiskReopenWithoutReaward() throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("card-retry.store")
@@ -233,12 +236,9 @@ struct DailyTaskXPPersistenceTests {
         try autoreleasepool {
             let readonly = try store(at: url, allowsSave: false)
             readonly.mainContext.autosaveEnabled = false
-            #expect(throws: (any Error).self) {
-                try CardRewardService.reconcilePersistedRewards(in: readonly.mainContext, now: now, calendar: .current)
-            }
-            // The UI context must not keep phantom pending rewards after a failed save.
-            #expect(try readonly.mainContext.fetch(FetchDescriptor<PendingCardReward>()).isEmpty)
-            #expect(try readonly.mainContext.fetch(FetchDescriptor<CollectionProgress>()).isEmpty)
+            try CardRewardService.reconcilePersistedRewards(in: readonly.mainContext, now: now, calendar: .current)
+            #expect(try readonly.mainContext.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey) == ["ordinary.level.1"])
+            #expect(try readonly.mainContext.fetch(FetchDescriptor<OwnedCollectible>()).map(\.awardKey) == ["ordinary.level.1"])
         }
         try autoreleasepool {
             let recovered = try store(at: url)
@@ -247,10 +247,49 @@ struct DailyTaskXPPersistenceTests {
                 try CardRewardService.reconcilePersistedRewards(in: context, now: now, calendar: .current)
             }
             #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey) == ["ordinary.level.1"])
+            let adult = try #require(context.fetch(FetchDescriptor<OwnedCollectible>()).first)
+            #expect(adult.awardKey == "ordinary.level.1")
+            #expect(adult.isUnseen)
             #expect(try context.fetch(FetchDescriptor<LIVELVL.Progress>()).first?.totalXP == 200)
             #expect(try context.fetch(FetchDescriptor<Completion>()).count == 1)
             #expect(try context.fetch(FetchDescriptor<CoinTransaction>()).count == 1)
             #expect(try CoinLedgerService.balance(in: context) == 200)
+        }
+    }
+
+    @Test func reopenAcknowledgesAdultOnDisk() throws {
+        let directory = try temporaryDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let url = directory.appendingPathComponent("adult-reopen.store")
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        try autoreleasepool {
+            let store = try store(at: url)
+            let context = store.mainContext
+            let progress = LIVELVL.Progress(totalXP: 195)
+            let task = Item(title: "升级任务", dimension: .learning, minutes: 20,
+                            difficulty: 2, xp: 20, recurrence: .once)
+            context.insert(progress)
+            context.insert(task)
+            try context.save()
+            try TaskRewardCoordinator.complete(item: task, progress: progress, in: context, now: now)
+            #expect(try context.fetch(FetchDescriptor<OwnedCollectible>()).count == 1)
+            #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).count == 1)
+        }
+        try autoreleasepool {
+            let reopened = try store(at: url)
+            let acknowledged = try CardRewardService.acknowledgeAlreadyOwnedOrdinaryRewards(
+                in: reopened.mainContext, now: now
+            )
+            #expect(acknowledged == ["ordinary.level.1"])
+        }
+        try autoreleasepool {
+            let reopened = try store(at: url)
+            let context = reopened.mainContext
+            #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).isEmpty)
+            #expect(try context.fetch(FetchDescriptor<OwnedCollectible>()).first?.isUnseen == true)
+            #expect(try context.fetch(FetchDescriptor<CollectionProgress>()).first?.activeOrdinaryIndex == 1)
+            #expect(try context.fetch(FetchDescriptor<LIVELVL.Progress>()).first?.totalXP == 215)
+            #expect(try CoinLedgerService.balance(in: context) == 20)
         }
     }
 

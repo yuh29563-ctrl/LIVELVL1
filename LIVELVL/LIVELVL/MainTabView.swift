@@ -324,6 +324,7 @@ enum CollectionTabTargetResolver {
 @MainActor
 struct MainTabView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query private var pendingRewards: [PendingCardReward]
     @Query private var ownedCollectibles: [OwnedCollectible]
@@ -334,6 +335,8 @@ struct MainTabView: View {
     @State private var handoff = CardRewardHandoffState()
     @State private var archiveArrival = ArchiveArrivalPresentationState()
     @State private var collectionTabFrameInWindow: CGRect?
+    @State private var didResolveLaunchRewards = false
+    @State private var autoAcknowledgedAwardKeys: Set<String> = []
 #if DEBUG
     let reportLocalDataResetFailure: (LocalDataResetFailure) -> Void
     private let debugResetActionConfiguration: ProfileView.DebugResetActionConfiguration
@@ -357,8 +360,16 @@ struct MainTabView: View {
     }
 
     private var queueHead: PendingCardReward? {
-        orderedPendingRewards.first {
-            CollectionCatalog.definition(id: $0.collectibleID) != nil
+        guard didResolveLaunchRewards else { return nil }
+        return orderedPendingRewards.first {
+            !autoAcknowledgedAwardKeys.contains($0.awardKey)
+                && CollectionCatalog.definition(id: $0.collectibleID) != nil
+        }
+    }
+
+    private var blocksForOrdinaryReward: Bool {
+        !didResolveLaunchRewards || pendingRewards.contains {
+            $0.kind == .ordinaryMature && !autoAcknowledgedAwardKeys.contains($0.awardKey)
         }
     }
 
@@ -394,7 +405,7 @@ struct MainTabView: View {
 
                 CollectionView(
                     isCollectionSelected: selectedTab == .collection,
-                    isObscured: presentation.presentedReward != nil,
+                    isObscured: blocksForOrdinaryReward || presentation.presentedReward != nil,
                     arrivalState: $archiveArrival,
                     onMarkedSeen: { attention.markSeen() }
                 )
@@ -429,7 +440,8 @@ struct MainTabView: View {
                     }
             }
             .tint(TodayVisualTheme.ink)
-            .accessibilityHidden(presentation.presentedReward != nil)
+            .allowsHitTesting(!blocksForOrdinaryReward && presentation.presentedReward == nil)
+            .accessibilityHidden(blocksForOrdinaryReward || presentation.presentedReward != nil)
             .background {
                 CollectionTabFeedbackBridge(
                     attentionToken: attention.shakeToken,
@@ -484,6 +496,31 @@ struct MainTabView: View {
                     selectedTab = .today
                 }
             }
+        }
+        .onAppear {
+            guard !didResolveLaunchRewards else { return }
+            acknowledgeUnfinishedOrdinaryRewards()
+            didResolveLaunchRewards = true
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .background {
+                acknowledgeUnfinishedOrdinaryRewards()
+                presentation = CardRewardPresentationState()
+                handoff.recordDismissalCompletion(at: .now)
+            }
+        }
+    }
+
+    private func acknowledgeUnfinishedOrdinaryRewards() {
+        do {
+            autoAcknowledgedAwardKeys.formUnion(
+                try CardRewardService.acknowledgeAlreadyOwnedOrdinaryRewards(
+                    in: context,
+                    now: .now
+                )
+            )
+        } catch {
+            // Keep any unacknowledged reward in the queue for the next launch.
         }
     }
 
