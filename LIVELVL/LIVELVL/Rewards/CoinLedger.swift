@@ -66,12 +66,22 @@ enum CoinLedgerService {
         in context: ModelContext,
         now: Date = .now
     ) throws {
+        try insertTaskAward(completion: completion, in: context, now: now)
+        try save(context)
+    }
+
+    // Staging operations let TaskRewardCoordinator own the single atomic save.
+    static func insertTaskAward(
+        completion: Completion,
+        in context: ModelContext,
+        now: Date
+    ) throws {
         let operationKey = "task-earned:\(sourceKey(for: completion))"
         let transactions = try context.fetch(FetchDescriptor<CoinTransaction>())
         guard !transactions.contains(where: { $0.operationKey == operationKey }) else {
             return
         }
-        let amount = max(0, completion.xp)
+        let amount = completion.recordedNominalXP
         context.insert(CoinTransaction(
             operationKey: operationKey,
             kind: .taskEarned,
@@ -81,7 +91,6 @@ enum CoinLedgerService {
             createdAt: now,
             note: "完成任务获得金币"
         ))
-        try save(context)
     }
 
     static func reverseTask(
@@ -89,12 +98,23 @@ enum CoinLedgerService {
         in context: ModelContext,
         now: Date = .now
     ) throws {
+        try insertTaskReversal(completion: completion, in: context, now: now)
+        try save(context)
+    }
+
+    static func insertTaskReversal(
+        completion: Completion,
+        in context: ModelContext,
+        now: Date
+    ) throws {
         let operationKey = "task-revoked:\(sourceKey(for: completion))"
         let transactions = try context.fetch(FetchDescriptor<CoinTransaction>())
         guard !transactions.contains(where: { $0.operationKey == operationKey }) else {
             return
         }
-        let requested = max(0, completion.xp)
+        let earnedKey = "task-earned:\(sourceKey(for: completion))"
+        let originalAward = transactions.first { $0.operationKey == earnedKey }
+        let requested = max(0, originalAward?.amountCoinUnits ?? completion.recordedNominalXP)
         let actual = min(requested, try balance(in: context))
         context.insert(CoinTransaction(
             operationKey: operationKey,
@@ -105,7 +125,6 @@ enum CoinLedgerService {
             createdAt: now,
             note: "撤销任务扣回金币"
         ))
-        try save(context)
     }
 
     private static func save(_ context: ModelContext) throws {

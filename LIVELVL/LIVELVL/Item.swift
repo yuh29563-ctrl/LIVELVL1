@@ -141,14 +141,18 @@ enum TodayTaskCollection {
     var date: Date
     var xp: Int
     var dimensionRaw: String?
+    // Missing on pre-cap records. Read through recordedNominalXP for compatibility.
+    var nominalXP: Int? = nil
     var durationMinutes: Int?
     var taskTitle: String?
 
     init(itemID: UUID, xp: Int, dimension: LifeDimension? = nil,
-         durationMinutes: Int? = nil, taskTitle: String? = nil, date: Date = .now) {
+         durationMinutes: Int? = nil, taskTitle: String? = nil, date: Date = .now,
+         nominalXP: Int? = nil) {
         id = UUID()
         self.itemID = itemID
         self.xp = xp
+        self.nominalXP = nominalXP
         self.dimensionRaw = dimension?.rawValue
         self.durationMinutes = durationMinutes
         self.taskTitle = taskTitle
@@ -158,6 +162,8 @@ enum TodayTaskCollection {
     var recordedDimension: LifeDimension? {
         dimensionRaw.flatMap(LifeDimension.init(rawValue:))
     }
+
+    var recordedNominalXP: Int { max(0, nominalXP ?? xp) }
 
     func stateActivity(fallbackItem: Item?) -> DimensionActivityRecord? {
         guard let dimension = recordedDimension

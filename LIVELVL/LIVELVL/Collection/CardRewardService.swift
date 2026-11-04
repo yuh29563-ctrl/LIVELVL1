@@ -139,19 +139,28 @@ enum CardRewardService {
     static func reconcilePersistedRewards(
         in context: ModelContext,
         now: Date,
-        calendar: Calendar
+        calendar: Calendar,
+        previousLevel: Int? = nil
     ) throws {
-        guard let progress = try context.fetch(FetchDescriptor<Progress>()).first else {
+        // Read committed task facts in a fresh context. A failed save must not
+        // leave phantom rewards in the UI context or suppress the next retry.
+        let writer = ModelContext(context.container)
+        writer.autosaveEnabled = false
+        guard let progress = try writer.fetch(FetchDescriptor<Progress>()).first else {
             return
         }
-        let completions = try context.fetch(FetchDescriptor<Completion>())
-        try reconcile(
+        let completions = try writer.fetch(FetchDescriptor<Completion>())
+        let reachedLevel = try progressWithoutSaving(in: writer).highestLevel
+        try processCompletion(
             progress: progress,
+            previousLevel: previousLevel ?? reachedLevel,
             completions: completions,
-            in: context,
+            in: writer,
             now: now,
             calendar: calendar
         )
+        _ = try context.fetch(FetchDescriptor<CollectionProgress>())
+        _ = try context.fetch(FetchDescriptor<PendingCardReward>())
     }
 
     static func ordered(_ rewards: [PendingCardReward]) -> [PendingCardReward] {

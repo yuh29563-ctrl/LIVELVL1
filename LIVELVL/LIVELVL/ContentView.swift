@@ -92,6 +92,11 @@ private struct TodayGrowthTaskID: Hashable {
     let isSceneActive: Bool
 }
 
+private struct TodayTaskDayRefreshID: Hashable {
+    let revision: Int
+    let isSceneActive: Bool
+}
+
 struct TodayView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -117,12 +122,30 @@ struct TodayView: View {
     @State private var levelUpFeedback: Int?
     @State private var rewardFlow = CompletionRewardFlowState()
     @State private var isShowingJournal = false
+    @State private var taskDayNow = Date.now
+    @State private var taskDayCalendar = Calendar.current
+    @State private var taskDayRevision = 0
+    @State private var completionNotice: String?
 
     private var progress: Progress { progressItems.first ?? Progress() }
     private var rewardFeedback: TaskRewardFeedback? { growthPresentation.feedback }
     private var activeItems: [Item] { TodayTaskCollection.activeItems(from: items) }
     private var headerPresentation: TodayHeaderPresentation {
-        TodayHeaderPresentation(itemCount: activeItems.count)
+        TodayHeaderPresentation(itemCount: activeItems.count, now: taskDayNow, calendar: taskDayCalendar)
+    }
+    private var dailyAllowance: DailyTaskXPAllowance? {
+        try? TaskRewardCoordinator.preview(
+            nominalXP: 0, completions: completions, now: taskDayNow, calendar: taskDayCalendar
+        )
+    }
+
+    private var completionConfirmation: String {
+        guard let item = activeItems.first(where: { $0.id == pendingItemID }),
+              let allowance = try? TaskRewardCoordinator.preview(
+                nominalXP: item.xp, completions: completions, now: taskDayNow, calendar: taskDayCalendar
+              ) else { return "暂时无法计算奖励，请稍后重试。" }
+        let coins = CoinDisplayFormatter.text(forCoinUnits: allowance.nominalXP)
+        return "本次预计获得 \(allowance.awardedXP) XP 和 \(coins) 金币（任务标称 \(allowance.nominalXP) XP）。以确认时的今日剩余额度为准。取消完成会扣回实际 XP 和金币。"
     }
     private var taskSummaryPresentation: TodayTaskSummaryPresentation {
         TodayTaskSummaryPresentation(
@@ -229,6 +252,27 @@ struct TodayView: View {
                             .padding(.top, 24)
                             .padding(.bottom, 8)
 
+                        if let allowance = dailyAllowance {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("今日任务 XP：已获得 \(allowance.earnedXP) · 上限 \(DailyTaskXPPolicy.limit)")
+                                Text(allowance.remainingXP > 0
+                                    ? "今日还可获得 \(allowance.remainingXP) XP"
+                                    : "今日 XP 已达上限，任务仍可完成，金币照常获得")
+                            }
+                            .font(.caption)
+                            .foregroundStyle(LivingOSTheme.graphite)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .accessibilityElement(children: .combine)
+                            .padding(.bottom, 8)
+                        }
+                        if let completionNotice {
+                            Text(completionNotice)
+                                .font(.caption)
+                                .foregroundStyle(LivingOSTheme.ink)
+                                .fixedSize(horizontal: false, vertical: true)
+                                .padding(.bottom, 8)
+                        }
+
                         if activeItems.isEmpty {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("今天还没有任务")
@@ -250,7 +294,8 @@ struct TodayView: View {
                                     completed: isCompleted(item),
                                     rewardXP: rewardFeedback?.itemID == item.id
                                         ? rewardFeedback?.xp
-                                        : nil
+                                        : nil,
+                                    completion: todayCompletion(for: item)
                                 ),
                                 onToggle: { toggle(item) },
                                 onEdit: { selectedTask = item }
@@ -289,7 +334,7 @@ struct TodayView: View {
                 Button("确认完成") { confirmCompletion() }
                 Button("先不完成", role: .cancel) { pendingItemID = nil }
             } message: {
-                Text("完成后将获得对应 XP。误触时再次点击勾选按钮可以取消，并退回 XP。")
+                Text(completionConfirmation)
             }
             .alert("任务状态已更新", isPresented: $showMessage) { Button("好的") {} } message: { Text(message) }
             .alert("任务已取消", isPresented: Binding(
@@ -312,13 +357,33 @@ struct TodayView: View {
                 Text("任务和 XP 已保存，但收藏奖励尚未处理。请重试补发奖励。")
             }
             .onAppear {
+                refreshTaskDay()
                 ensureProgress()
                 reconcilePersistedRewards()
             }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
+                    refreshTaskDay()
                     reconcilePersistedRewards()
                 }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
+                refreshTaskDay()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemTimeZoneDidChange)) { _ in
+                refreshTaskDay()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .NSSystemClockDidChange)) { _ in
+                refreshTaskDay()
+            }
+            .task(id: TodayTaskDayRefreshID(revision: taskDayRevision, isSceneActive: scenePhase == .active)) {
+                guard scenePhase == .active,
+                      let day = try? DailyTaskXPPolicy.day(containing: .now, calendar: .current) else { return }
+                do {
+                    try await Task.sleep(for: .seconds(max(0.05, day.end.timeIntervalSinceNow)))
+                } catch { return }
+                guard !Task.isCancelled else { return }
+                refreshTaskDay()
             }
             .task(id: TodayGrowthTaskID(
                 sequenceID: feedbackSequenceID,
@@ -371,6 +436,7 @@ struct TodayView: View {
         proxy: GeometryProxy
     ) -> some View {
         if let feedback = growthPresentation.feedback,
+           feedback.xp > 0,
            let taskAnchor = anchors[.task(feedback.itemID)],
            let fieldAnchor = anchors[.field] {
             let taskFrame = proxy[taskAnchor]
@@ -419,12 +485,14 @@ struct TodayView: View {
 
     private func todayCompletion(for item: Item) -> Completion? {
         completions.first {
-            $0.itemID == item.id && Calendar.current.isDateInToday($0.date)
+            $0.itemID == item.id && taskDayCalendar.isDate($0.date, inSameDayAs: taskDayNow)
         }
     }
 
     private func toggle(_ item: Item) {
-        if let completion = completions.first(where: { $0.itemID == item.id && Calendar.current.isDateInToday($0.date) }) {
+        refreshTaskDay()
+        if let completion = todayCompletion(for: item) {
+            let revokedXP = completion.xp
             do {
                 try TaskRewardCoordinator.revoke(
                     completion: completion,
@@ -437,7 +505,8 @@ struct TodayView: View {
                 return
             }
             cancelGrowthPresentation()
-            message = "已取消完成，退回 \(completion.xp) XP"
+            completionNotice = nil
+            message = "已取消完成，扣回 \(revokedXP) XP"
             showMessage = true
         } else {
             pendingItemID = item.id
@@ -449,11 +518,16 @@ struct TodayView: View {
         guard let id = pendingItemID,
               let item = activeItems.first(where: { $0.id == id }) else { return }
         let levelBefore = progress.level
+        let now = Date.now
+        let calendar = Calendar.current
+        let result: TaskCompletionResult
         do {
-            _ = try TaskRewardCoordinator.complete(
+            result = try TaskRewardCoordinator.complete(
                 item: item,
                 progress: progress,
-                in: context
+                in: context,
+                now: now,
+                calendar: calendar
             )
         } catch {
             pendingItemID = nil
@@ -462,17 +536,15 @@ struct TodayView: View {
             showMessage = true
             return
         }
+        refreshTaskDay()
         let levelAfter = progress.level
 
         do {
-            let persistedCompletions = try context.fetch(FetchDescriptor<Completion>())
-            try CardRewardService.processCompletion(
-                progress: progress,
-                previousLevel: levelBefore,
-                completions: persistedCompletions,
+            try CardRewardService.reconcilePersistedRewards(
                 in: context,
-                now: .now,
-                calendar: .current
+                now: now,
+                calendar: calendar,
+                previousLevel: levelBefore
             )
             rewardFlow.rewardProcessingSucceeded()
         } catch {
@@ -484,15 +556,36 @@ struct TodayView: View {
 
         guard rewardFlow.allowsSuccessFeedback else { return }
         pendingItemID = nil
+        guard result.wasCreated else { return }
+        let completion = result.completion
+        if completion.xp == 0 {
+            completionNotice = "任务已完成，今日任务 XP 已达上限，金币照常获得。"
+        } else if completion.xp < completion.recordedNominalXP {
+            completionNotice = "任务已完成，获得 \(completion.xp) XP；今日任务 XP 已达上限。"
+        } else {
+            completionNotice = nil
+        }
         let feedback = TaskRewardFeedback(
             itemID: item.id,
-            xp: item.xp,
+            xp: completion.xp,
             dimension: item.dimension,
             levelBefore: levelBefore,
             levelAfter: levelAfter
         )
         growthPresentation.begin(feedback)
         feedbackSequenceID = feedback.id
+    }
+
+    private func refreshTaskDay() {
+        let now = Date.now
+        let calendar = Calendar.current
+        if !calendar.isDate(taskDayNow, inSameDayAs: now) || calendar.timeZone != taskDayCalendar.timeZone {
+            cancelGrowthPresentation()
+            completionNotice = nil
+        }
+        taskDayNow = now
+        taskDayCalendar = calendar
+        taskDayRevision += 1
     }
 
     private func cancelGrowthPresentation() {

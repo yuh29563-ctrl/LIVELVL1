@@ -75,22 +75,36 @@ struct TaskRailPresentation: Equatable, Sendable {
     let baseXP: Int
     let isCompleted: Bool
     let rewardXP: Int?
+    let completedXP: Int?
+    let nominalXP: Int
 
-    init(item: Item, completed: Bool, rewardXP: Int?) {
+    init(item: Item, completed: Bool, rewardXP: Int?, completion: Completion? = nil) {
         title = item.title
         dimensionTitle = item.dimension.title
         baseXP = max(0, item.xp)
         isCompleted = completed
         self.rewardXP = rewardXP.map { max(0, $0) }
+        completedXP = completed ? completion.map { max(0, $0.xp) } : nil
+        nominalXP = completion?.recordedNominalXP ?? baseXP
     }
 
     var isRewarding: Bool { rewardXP != nil }
     var xpText: String? {
-        rewardXP.map { "+\($0) XP" }
+        rewardXP.map { $0 == 0 ? "已完成" : "+\($0) XP" }
     }
-    var displayedXPText: String { xpText ?? "\(baseXP) XP" }
+    var displayedXPText: String { xpText ?? "\(completedXP ?? baseXP) XP" }
+    var accessibilityValue: String {
+        let xpDescription: String
+        if let completedXP {
+            let nominal = completedXP < nominalXP ? "，标称 \(nominalXP) XP" : ""
+            xpDescription = "实际获得 \(completedXP) XP\(nominal)"
+        } else {
+            xpDescription = "\(baseXP) XP"
+        }
+        return "\(dimensionTitle)，\(xpDescription)，\(isCompleted ? "已完成" : "未完成")"
+    }
     var accessibilityLabel: String {
-        "\(title)，\(dimensionTitle)，\(baseXP) XP，\(isCompleted ? "已完成" : "未完成")"
+        "\(title)，\(accessibilityValue)"
     }
     var completionAccessibilityLabel: String {
         isCompleted ? "取消完成 \(title)" : "完成 \(title)"
@@ -178,9 +192,7 @@ struct TaskRailView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(presentation.editAccessibilityLabel)
-            .accessibilityValue(
-                "\(presentation.dimensionTitle)，\(presentation.baseXP) XP，\(presentation.isCompleted ? "已完成" : "未完成")"
-            )
+            .accessibilityValue(presentation.accessibilityValue)
             .accessibilityHint("轻点编辑任务")
         }
         .overlay(alignment: .bottom) {

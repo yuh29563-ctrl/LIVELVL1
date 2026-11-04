@@ -107,6 +107,10 @@ struct TodayGrowthPresentationState: Equatable, Sendable {
 
         switch phase {
         case .task:
+            guard feedback.xp > 0 else {
+                finish()
+                return
+            }
             phase = .dimension(feedback.dimension)
         case .dimension:
             phase = .core
