@@ -1,10 +1,49 @@
 import SwiftUI
 
 @MainActor
-struct ArchiveCollectiblePresentation: Identifiable {
-    var id: String { collectible.awardKey }
-    let collectible: OwnedCollectible
-    let definition: CollectibleDefinition
+enum ArchiveCollectiblePresentation: Identifiable {
+    case permanent(PermanentCollectionCard)
+    case earned(OwnedCollectible, CollectibleDefinition)
+
+    init(collectible: OwnedCollectible, definition: CollectibleDefinition) {
+        self = .earned(collectible, definition)
+    }
+
+    var id: String {
+        switch self {
+        case .permanent(let card): card.id
+        case .earned(let collectible, _): collectible.awardKey
+        }
+    }
+
+    var caption: ArchiveCardCaptionPresentation {
+        switch self {
+        case .permanent(let card):
+            ArchiveCardCaptionPresentation(permanentCard: card)
+        case .earned(let collectible, let definition):
+            ArchiveCardCaptionPresentation(
+                name: definition.name,
+                kindTitle: ArchiveCardMetadata.kindTitle(for: collectible.kind)
+                    + (definition.series.map { " · \($0)" } ?? ""),
+                sourceTitle: collectible.collectionSourceTitle,
+                awardKey: collectible.awardKey,
+                acquiredAt: collectible.acquiredAt,
+                calendar: .current
+            )
+        }
+    }
+
+    static func items(
+        owned: [OwnedCollectible],
+        permanentCards: [PermanentCollectionCard] = PermanentCollectionCatalog.cards
+    ) -> [Self] {
+        permanentCards.map(Self.permanent) + owned.compactMap { collectible in
+            guard let definition = CollectionCatalog.definition(id: collectible.collectibleID) else {
+                return nil
+            }
+            return .earned(collectible, definition)
+        }
+    }
 }
 
 @MainActor
@@ -73,12 +112,17 @@ struct ArchiveCarouselView: View {
                                                     }
                                                 }
                                             } label: {
-                                                ArchiveCardView(
-                                                    collectible: item.collectible,
-                                                    definition: item.definition,
-                                                    index: index + 1,
-                                                    count: items.count
-                                                )
+                                                switch item {
+                                                case .permanent(let card):
+                                                    PermanentCollectionCardFront(card: card)
+                                                case .earned(let collectible, let definition):
+                                                    ArchiveCardView(
+                                                        collectible: collectible,
+                                                        definition: definition,
+                                                        index: index + 1,
+                                                        count: items.count
+                                                    )
+                                                }
                                             }
                                             .buttonStyle(.plain)
                                             .frame(width: cardWidth, height: layout.cardSize.height)
@@ -111,18 +155,7 @@ struct ArchiveCarouselView: View {
                                             alignment: .bottom
                                         )
 
-                                        ArchiveCardCaption(
-                                            presentation: ArchiveCardCaptionPresentation(
-                                                name: item.definition.name,
-                                                kindTitle: ArchiveCardMetadata.kindTitle(
-                                                    for: item.collectible.kind
-                                                ),
-                                                sourceTitle: item.collectible.collectionSourceTitle,
-                                                awardKey: item.collectible.awardKey,
-                                                acquiredAt: item.collectible.acquiredAt,
-                                                calendar: .current
-                                            )
-                                        )
+                                        ArchiveCardCaption(presentation: item.caption)
                                         .frame(height: captionHeight, alignment: .top)
                                         .offset(y: 8)
                                         .opacity(

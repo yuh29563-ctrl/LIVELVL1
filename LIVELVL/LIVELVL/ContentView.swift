@@ -237,6 +237,28 @@ struct TodayView: View {
                         )
                     )
 
+#if DEBUG
+                    Button {
+                        cancelGrowthPresentation()
+                        do {
+                            try TaskRewardCoordinator.debugAdvanceOneLevel(progress: progress, in: context)
+                        } catch {
+                            message = "测试升级失败，请重试"
+                            showMessage = true
+                        }
+                    } label: {
+                        Label("测试升一级", systemImage: "arrow.up.circle")
+                            .frame(minHeight: 44)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.orange)
+                    .disabled(progressItems.isEmpty)
+                    .accessibilityIdentifier("debug-level-up")
+                    .accessibilityHint("补齐下一级经验并触发成熟卡奖励，会保存等级变化")
+                    .padding(.horizontal, LivingOSMetrics.pageHorizontalInset)
+                    .padding(.bottom, 8)
+#endif
+
                     if let levelUpFeedback {
                         HStack(spacing: 7) {
                             Circle()

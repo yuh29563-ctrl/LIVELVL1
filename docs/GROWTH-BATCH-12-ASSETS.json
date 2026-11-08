@@ -1,0 +1,450 @@
+{
+  "entries": [
+    {
+      "collectibleID": "growth.binary-eclipse",
+      "name": "双星蚀",
+      "series": "异界天象",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6d28aae4-cfce-4848-a4dd-631ec40e3bcc.png",
+      "sourceSHA256": "ed162cbeac0941b538429866c84556eb8821704b43de5ca7a80dfd0332a725c5",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-04-juvenile.png",
+      "sha256": "09f0eeef180d77c991fea28ec952c41894a42c0d3339166238b6e1e3ff12203f"
+    },
+    {
+      "collectibleID": "growth.binary-eclipse",
+      "name": "双星蚀",
+      "series": "异界天象",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6d28aae4-cfce-4848-a4dd-631ec40e3bcc.png",
+      "sourceSHA256": "ed162cbeac0941b538429866c84556eb8821704b43de5ca7a80dfd0332a725c5",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-04-mature.png",
+      "sha256": "977a3eadad4e7859e22e44155f482a2ba7097e33ad596f034e9615d5cfc4efeb"
+    },
+    {
+      "collectibleID": "growth.inverted-starfall",
+      "name": "倒悬星瀑",
+      "series": "异界天象",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6d28aae4-cfce-4848-a4dd-631ec40e3bcc.png",
+      "sourceSHA256": "ed162cbeac0941b538429866c84556eb8821704b43de5ca7a80dfd0332a725c5",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-05-juvenile.png",
+      "sha256": "aaf91e120d745891c991f0ce2eea85073945e7403cff3a4eec85d0af674e52cf"
+    },
+    {
+      "collectibleID": "growth.inverted-starfall",
+      "name": "倒悬星瀑",
+      "series": "异界天象",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6d28aae4-cfce-4848-a4dd-631ec40e3bcc.png",
+      "sourceSHA256": "ed162cbeac0941b538429866c84556eb8821704b43de5ca7a80dfd0332a725c5",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-05-mature.png",
+      "sha256": "a60de652558aaec9eee09f17aa20f589d2c974c42e5ce8939ca51b4bb889b6ee"
+    },
+    {
+      "collectibleID": "growth.shattered-moon",
+      "name": "碎月",
+      "series": "异界天象",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6d28aae4-cfce-4848-a4dd-631ec40e3bcc.png",
+      "sourceSHA256": "ed162cbeac0941b538429866c84556eb8821704b43de5ca7a80dfd0332a725c5",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-06-juvenile.png",
+      "sha256": "243924fe493e80be1a3c3db771737be779c498fe6a61a6a087af44606086d3d6"
+    },
+    {
+      "collectibleID": "growth.shattered-moon",
+      "name": "碎月",
+      "series": "异界天象",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6d28aae4-cfce-4848-a4dd-631ec40e3bcc.png",
+      "sourceSHA256": "ed162cbeac0941b538429866c84556eb8821704b43de5ca7a80dfd0332a725c5",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-06-mature.png",
+      "sha256": "7ce12de7b0da97384feccbed8775300b3363246ed555b7ec8482d86b3b14b542"
+    },
+    {
+      "collectibleID": "growth.silent-bell",
+      "name": "无声古钟",
+      "series": "失落遗物",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1eb302a1-bfee-4b97-a116-ea1a6afbc8d2.png",
+      "sourceSHA256": "8a794f7a4e92cb5058e56b46b07aba8211bb0c3844e901d7fe8c0fe7e27b1065",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-07-juvenile.png",
+      "sha256": "74eecea7cf296e0602332f6ea621d6b1527ecdca9e2529ed15035bfe85808453"
+    },
+    {
+      "collectibleID": "growth.silent-bell",
+      "name": "无声古钟",
+      "series": "失落遗物",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1eb302a1-bfee-4b97-a116-ea1a6afbc8d2.png",
+      "sourceSHA256": "8a794f7a4e92cb5058e56b46b07aba8211bb0c3844e901d7fe8c0fe7e27b1065",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-07-mature.png",
+      "sha256": "a9974e02c3ed13659a712c4fd63a07c01f63e45ce8441e50dc4438aa875a2fd4"
+    },
+    {
+      "collectibleID": "growth.floating-crown",
+      "name": "悬浮王冠",
+      "series": "失落遗物",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1eb302a1-bfee-4b97-a116-ea1a6afbc8d2.png",
+      "sourceSHA256": "8a794f7a4e92cb5058e56b46b07aba8211bb0c3844e901d7fe8c0fe7e27b1065",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-08-juvenile.png",
+      "sha256": "42572ca272a50d81557da6454753ee36cd66ee10d6e9db4bbc5f524389d8f210"
+    },
+    {
+      "collectibleID": "growth.floating-crown",
+      "name": "悬浮王冠",
+      "series": "失落遗物",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1eb302a1-bfee-4b97-a116-ea1a6afbc8d2.png",
+      "sourceSHA256": "8a794f7a4e92cb5058e56b46b07aba8211bb0c3844e901d7fe8c0fe7e27b1065",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-08-mature.png",
+      "sha256": "17babecccc9ae30ca976a7aa30cd2d53bf0517dbf2b467fb14495e3e8943654f"
+    },
+    {
+      "collectibleID": "growth.unwritten-book",
+      "name": "无字之书",
+      "series": "失落遗物",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1eb302a1-bfee-4b97-a116-ea1a6afbc8d2.png",
+      "sourceSHA256": "8a794f7a4e92cb5058e56b46b07aba8211bb0c3844e901d7fe8c0fe7e27b1065",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-09-juvenile.png",
+      "sha256": "c2136c423866011f5380e9630e34d34059fce2999eabe6ac5d172a4868600eb6"
+    },
+    {
+      "collectibleID": "growth.unwritten-book",
+      "name": "无字之书",
+      "series": "失落遗物",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1eb302a1-bfee-4b97-a116-ea1a6afbc8d2.png",
+      "sourceSHA256": "8a794f7a4e92cb5058e56b46b07aba8211bb0c3844e901d7fe8c0fe7e27b1065",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-09-mature.png",
+      "sha256": "2057e936acbf8ea29f91dd3a130d7c9c5a5550b32d0d00f245222651ff7c5a56"
+    },
+    {
+      "collectibleID": "growth.endless-stairway",
+      "name": "无尽阶梯",
+      "series": "空间奇观",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-481a0640-4dd6-4277-bac9-6eceb7f7cb25.png",
+      "sourceSHA256": "e9b3dc77ef0e7dcc4d606aec78f7ec8dcbd04cb34bf522a3738a0c1d4e8c0ec3",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-10-juvenile.png",
+      "sha256": "4b085241a20be3608fb28e50b18af25b987190469868242d68d34a6c5250f31e"
+    },
+    {
+      "collectibleID": "growth.endless-stairway",
+      "name": "无尽阶梯",
+      "series": "空间奇观",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-481a0640-4dd6-4277-bac9-6eceb7f7cb25.png",
+      "sourceSHA256": "e9b3dc77ef0e7dcc4d606aec78f7ec8dcbd04cb34bf522a3738a0c1d4e8c0ec3",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-10-mature.png",
+      "sha256": "01c82422592831ea16cb8a020adc6334901c5ba5490a3f1cc235a9773ee98451"
+    },
+    {
+      "collectibleID": "growth.folded-maze",
+      "name": "折叠迷宫",
+      "series": "空间奇观",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-481a0640-4dd6-4277-bac9-6eceb7f7cb25.png",
+      "sourceSHA256": "e9b3dc77ef0e7dcc4d606aec78f7ec8dcbd04cb34bf522a3738a0c1d4e8c0ec3",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-11-juvenile.png",
+      "sha256": "d4d5db0a48e3502084071890b9b69ecd51d5b294f6fb4ff66bf5d51651269cd9"
+    },
+    {
+      "collectibleID": "growth.folded-maze",
+      "name": "折叠迷宫",
+      "series": "空间奇观",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-481a0640-4dd6-4277-bac9-6eceb7f7cb25.png",
+      "sourceSHA256": "e9b3dc77ef0e7dcc4d606aec78f7ec8dcbd04cb34bf522a3738a0c1d4e8c0ec3",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-11-mature.png",
+      "sha256": "cd2401207cc9d5803356f7692685472028c6980538ec5d5a74326d52a8571bc3"
+    },
+    {
+      "collectibleID": "growth.drifting-isle",
+      "name": "漂浮孤岛",
+      "series": "空间奇观",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-481a0640-4dd6-4277-bac9-6eceb7f7cb25.png",
+      "sourceSHA256": "e9b3dc77ef0e7dcc4d606aec78f7ec8dcbd04cb34bf522a3738a0c1d4e8c0ec3",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-12-juvenile.png",
+      "sha256": "688aa9ad09cc79d154f6451e538361866dffe5eb12427ed773213810468902f6"
+    },
+    {
+      "collectibleID": "growth.drifting-isle",
+      "name": "漂浮孤岛",
+      "series": "空间奇观",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-481a0640-4dd6-4277-bac9-6eceb7f7cb25.png",
+      "sourceSHA256": "e9b3dc77ef0e7dcc4d606aec78f7ec8dcbd04cb34bf522a3738a0c1d4e8c0ec3",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-12-mature.png",
+      "sha256": "ced6b2ee6cfbb1316a2778d8021d5172d22ab9d8295364a515d1d72fbaeede3a"
+    },
+    {
+      "collectibleID": "growth.dream-cocoon",
+      "name": "织梦之茧",
+      "series": "异界生命",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7072cdc6-f59e-4aec-9d91-4733213c91b6.png",
+      "sourceSHA256": "98013b0b70426bde740ed12c3ea8fcc4f28c92e8d05483c6c5208b39103bd417",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-13-juvenile.png",
+      "sha256": "b666aa4f74c7b2f25c52efb0f5eeacb1746fd27f8d2b83ebd8503331429bd7c3"
+    },
+    {
+      "collectibleID": "growth.dream-cocoon",
+      "name": "织梦之茧",
+      "series": "异界生命",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7072cdc6-f59e-4aec-9d91-4733213c91b6.png",
+      "sourceSHA256": "98013b0b70426bde740ed12c3ea8fcc4f28c92e8d05483c6c5208b39103bd417",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-13-mature.png",
+      "sha256": "37dffe0ecf8e03047af956a9937186a0a849f4ea78aa635c3db255b177b3b226"
+    },
+    {
+      "collectibleID": "growth.sky-whale",
+      "name": "游空鲸影",
+      "series": "异界生命",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7072cdc6-f59e-4aec-9d91-4733213c91b6.png",
+      "sourceSHA256": "98013b0b70426bde740ed12c3ea8fcc4f28c92e8d05483c6c5208b39103bd417",
+      "crop": [
+        20,
+        590,
+        430,
+        310
+      ],
+      "resource": "growth-14-juvenile.png",
+      "sha256": "523b31e0f1488adb4d94f33d346fdf850014ea72e4e77b0735e430b1cbd3fe99",
+      "clipVertices": [
+        [
+          0,
+          0
+        ],
+        [
+          430,
+          0
+        ],
+        [
+          430,
+          200
+        ],
+        [
+          330,
+          310
+        ],
+        [
+          0,
+          310
+        ]
+      ],
+      "renderWidth": 430,
+      "outputCanvas": [
+        512,
+        512
+      ]
+    },
+    {
+      "collectibleID": "growth.sky-whale",
+      "name": "游空鲸影",
+      "series": "异界生命",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7072cdc6-f59e-4aec-9d91-4733213c91b6.png",
+      "sourceSHA256": "98013b0b70426bde740ed12c3ea8fcc4f28c92e8d05483c6c5208b39103bd417",
+      "crop": [
+        352,
+        512,
+        672,
+        440
+      ],
+      "resource": "growth-14-mature.png",
+      "sha256": "80130b05cb62b7d031aec82f274bb3c539a988f1eb0d69f68481751bc3d586c0",
+      "clipVertices": [
+        [
+          160,
+          0
+        ],
+        [
+          672,
+          0
+        ],
+        [
+          672,
+          440
+        ],
+        [
+          0,
+          440
+        ],
+        [
+          0,
+          310
+        ],
+        [
+          90,
+          260
+        ],
+        [
+          160,
+          210
+        ]
+      ],
+      "renderWidth": 480,
+      "outputCanvas": [
+        512,
+        512
+      ]
+    },
+    {
+      "collectibleID": "growth.crystal-butterflies",
+      "name": "晶簇蝶群",
+      "series": "异界生命",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7072cdc6-f59e-4aec-9d91-4733213c91b6.png",
+      "sourceSHA256": "98013b0b70426bde740ed12c3ea8fcc4f28c92e8d05483c6c5208b39103bd417",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-15-juvenile.png",
+      "sha256": "6afedb0a4cdf46bff0c5fc52cf87103e61f50df66b1b59354cb2155f44f220f0"
+    },
+    {
+      "collectibleID": "growth.crystal-butterflies",
+      "name": "晶簇蝶群",
+      "series": "异界生命",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7072cdc6-f59e-4aec-9d91-4733213c91b6.png",
+      "sourceSHA256": "98013b0b70426bde740ed12c3ea8fcc4f28c92e8d05483c6c5208b39103bd417",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-15-mature.png",
+      "sha256": "617cc362650587e0c0c667be3136143757ce27e7fb8a562424fcd08098f06684"
+    }
+  ]
+}

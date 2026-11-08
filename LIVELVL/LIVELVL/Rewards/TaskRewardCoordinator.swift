@@ -105,6 +105,11 @@ enum TaskRewardCoordinator {
             try CoinLedgerService.insertTaskReversal(completion: persisted, in: writer, now: now)
             storedProgress.totalXP = max(0, storedProgress.totalXP - max(0, persisted.xp))
             writer.delete(persisted)
+            let remaining = try writer.fetch(FetchDescriptor<Completion>()).filter {
+                $0.persistentModelID != identity
+            }
+            try CardRewardService.stageHiddenRewards(completions: remaining, in: writer,
+                                                    now: now, calendar: .current)
             try writer.save()
         } catch {
             writer.rollback()
@@ -113,8 +118,40 @@ enum TaskRewardCoordinator {
         try refreshProgress(progress, in: context)
         // Refetch committed records so the caller never needs the writer's model instances.
         _ = try context.fetch(FetchDescriptor<Completion>())
+        _ = try context.fetch(FetchDescriptor<OwnedCollectible>())
+        _ = try context.fetch(FetchDescriptor<PendingCardReward>())
         return true
     }
+
+#if DEBUG
+    static func debugAdvanceOneLevel(
+        progress: Progress,
+        in context: ModelContext,
+        now: Date = .now
+    ) throws {
+        let writer = ModelContext(context.container)
+        writer.autosaveEnabled = false
+        let stored = try storedProgress(for: progress, in: writer)
+        let previousLevel = stored.level
+        do {
+            stored.totalXP += GrowthEngine.xpNeededForNextLevel(for: stored.totalXP)
+                - GrowthEngine.xpInCurrentLevel(for: stored.totalXP)
+            try CardRewardService.stageCompletion(
+                progress: stored,
+                previousLevel: previousLevel,
+                completions: try writer.fetch(FetchDescriptor<Completion>()),
+                in: writer,
+                now: now,
+                calendar: .current
+            )
+            try writer.save()
+        } catch {
+            writer.rollback()
+            throw error
+        }
+        try refreshProgress(progress, in: context)
+    }
+#endif
 
     private static func storedProgress(for progress: Progress, in context: ModelContext) throws -> Progress {
         guard let stored = try context.fetch(FetchDescriptor<Progress>()).first(where: {

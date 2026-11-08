@@ -91,23 +91,30 @@ struct PixelSpeciesArtwork: View {
     }
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Image(systemName: isSilhouette ? definition.silhouetteSymbolName : definition.symbolName)
-                .resizable()
-                .scaledToFit()
-                .symbolRenderingMode(.monochrome)
-                .foregroundStyle(artworkColor)
-                .frame(width: symbolSize, height: symbolSize)
-                .padding(.bottom, 9)
+        Group {
+            if !isSilhouette {
+                GrowthCardArtwork(collectibleID: definition.id, stage: stage)
+                    .padding(5)
+            } else {
+                ZStack(alignment: .bottom) {
+                    Image(systemName: isSilhouette ? definition.silhouetteSymbolName : definition.symbolName)
+                        .resizable()
+                        .scaledToFit()
+                        .symbolRenderingMode(.monochrome)
+                        .foregroundStyle(artworkColor)
+                        .frame(width: symbolSize, height: symbolSize)
+                        .padding(.bottom, 9)
 
-            HStack(alignment: .bottom, spacing: 3) {
-                ForEach(0..<pixelCount, id: \.self) { index in
-                    Rectangle()
-                        .fill(artworkColor.opacity(isSilhouette ? 1 : 0.58 + Double(index) * 0.14))
-                        .frame(width: index == 1 ? 5 : 4, height: index == 1 ? 5 : 4)
+                    HStack(alignment: .bottom, spacing: 3) {
+                        ForEach(0..<pixelCount, id: \.self) { index in
+                            Rectangle()
+                                .fill(artworkColor.opacity(isSilhouette ? 1 : 0.58 + Double(index) * 0.14))
+                                .frame(width: index == 1 ? 5 : 4, height: index == 1 ? 5 : 4)
+                        }
+                    }
+                    .padding(.bottom, 7)
                 }
             }
-            .padding(.bottom, 7)
         }
         .frame(width: 92, height: 84)
         .background(

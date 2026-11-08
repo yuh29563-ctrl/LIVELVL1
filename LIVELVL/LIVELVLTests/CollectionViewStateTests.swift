@@ -472,8 +472,8 @@ struct CollectionViewStateTests {
     }
 
     @Test func archiveMetadataUsesPersistedKinds() {
-        #expect(ArchiveCardMetadata.kindTitle(for: .ordinaryMature) == "成熟卡")
-        #expect(ArchiveCardMetadata.kindTitle(for: .hiddenDiscovery) == "隐藏发现")
+        #expect(ArchiveCardMetadata.kindTitle(for: .ordinaryMature) == "成长卡")
+        #expect(ArchiveCardMetadata.kindTitle(for: .hiddenDiscovery) == "隐藏卡")
     }
 
     @Test func archiveOrganismParticlesAreStableDistinctAndMotionAware() {

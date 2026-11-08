@@ -1,0 +1,306 @@
+[
+  {
+    "id": "growth.pulsar-core",
+    "name": "脉冲星核",
+    "series": "宇宙残响",
+    "summary": "把愿望放进可以持续的节律。",
+    "story": "幼小的星核在寂静星野里闪烁，总因急着照亮远方而耗尽气力。守星人没有让它更用力，只陪它数清一次亮起、一次歇息，让光慢慢有了稳定的间隔。\n\n许多个长夜之后，微弱的闪光汇成了清晰的脉冲。远航者开始用它校准航向，在陌生的星海里辨认时间。星核依旧一明一暗地呼吸，却已经能把可靠的光，送到很远的地方。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-555eee95-7b86-4f0f-812f-29d797a5d6a8.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-555eee95-7b86-4f0f-812f-29d797a5d6a8.png",
+    "row": 0,
+    "crops": {
+      "mature": [
+        480,
+        0,
+        544,
+        512
+      ]
+    }
+  },
+  {
+    "id": "growth.collapsed-star-nest",
+    "name": "坍缩星巢",
+    "series": "宇宙残响",
+    "summary": "慢慢整理，也能为新的开始腾出空间。",
+    "story": "旧星巢坍缩时，许多熟悉的轨道都挤在了一起。小小的筑巢者守着残片，不知道该从哪里重建。后来，它先清理出一条能够通行的缝，再把仍有余温的星石一颗颗安放好。\n\n散乱的碎光逐渐有了新的位置，巢心也重新响起安稳的回声。第一颗新星醒来时，筑巢者正替它整理身旁的空隙。曾经破碎的地方，在耐心的照看里，成了生命再次出发的家。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-555eee95-7b86-4f0f-812f-29d797a5d6a8.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-555eee95-7b86-4f0f-812f-29d797a5d6a8.png",
+    "row": 1
+  },
+  {
+    "id": "growth.gravity-rift",
+    "name": "引力裂谷",
+    "series": "宇宙残响",
+    "summary": "在遥远的两端之间，搭起可以信任的连接。",
+    "story": "一条裂谷将星原分开，幼小的引力丝只能牵住两岸最轻的尘埃。它曾为自己的微弱发愁，直到一位旅人沿岸留下第一枚锚点，请它试着把光送过去。\n\n一枚、两枚，新的锚点在两岸慢慢增多，细丝也织成了能承载脚步的通道。后来，远行的人相互照应着穿过裂谷。那片空旷依然辽阔，沿途却已经有了可以认真交付重量的地方。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-555eee95-7b86-4f0f-812f-29d797a5d6a8.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-555eee95-7b86-4f0f-812f-29d797a5d6a8.png",
+    "row": 2,
+    "crops": {
+      "mature": [
+        480,
+        1024,
+        544,
+        512
+      ]
+    }
+  },
+  {
+    "id": "growth.wind-listening-lily",
+    "name": "听风之铃兰",
+    "series": "异界花园",
+    "summary": "先认真倾听，再送出自己的回应。",
+    "story": "小铃兰初开时，总抢在风来以前摇动花冠，盼着花园听见自己。一次夜雨，它终于安静下来，听见叶背的小虫正在寻找能避雨的地方，便把一朵花轻轻低下。\n\n后来，铃兰长出更多花穗，学会随着不同的风调整姿态。每当谁经过花旁，总能找到一处合宜的停留。花园里有了轻柔的铃声，也有了许多被认真听见的小小声音。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6821e8d6-3f63-4031-90c9-3b149a7e3405.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6821e8d6-3f63-4031-90c9-3b149a7e3405.png",
+    "row": 0
+  },
+  {
+    "id": "growth.reverse-growing-vine",
+    "name": "逆生藤蔓",
+    "series": "异界花园",
+    "summary": "生长的方向，可以从自己的处境里找到。",
+    "story": "岩壁上的小藤总向下伸展，攀不上旁边高高的枝架。它反复扯回柔嫩的梢，直到发现，石壁下方有一片干渴的苔地，正等着有人把高处的水引来。\n\n小藤顺着自己的方向继续生长，让水滴沿叶缘缓缓落下。后来，石壁披上了连绵的绿，鸟也停在枝间歇脚。那些曾显得不同的弯曲，已经连成一条滋养山谷的路。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6821e8d6-3f63-4031-90c9-3b149a7e3405.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6821e8d6-3f63-4031-90c9-3b149a7e3405.png",
+    "row": 1
+  },
+  {
+    "id": "growth.rainkeeping-fern",
+    "name": "藏雨之蕨",
+    "series": "异界花园",
+    "summary": "留下一点滋养，照顾尚未到来的日子。",
+    "story": "小蕨长在雨来得很少的坡地，最初总在雨停后迅速失去精神。园丁陪它整理叶片，让细小的绒边接住露水，也在根旁铺上能留住湿润的苔。\n\n一季一季，蕨叶长成蓬松的绿伞，叶间蓄着清凉的水珠。漫长的晴日里，幼苗在它身旁慢慢扎根。它把从雨里学会的珍惜，变成了可以分享给别人的柔软荫凉。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6821e8d6-3f63-4031-90c9-3b149a7e3405.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-6821e8d6-3f63-4031-90c9-3b149a7e3405.png",
+    "row": 2
+  },
+  {
+    "id": "growth.reviving-amber",
+    "name": "复苏之珀",
+    "series": "远古化生",
+    "summary": "被保存的可能，也值得重新照料。",
+    "story": "古珀里封着一粒未醒的种子，许多季节过去，表面只添了新的尘。年轻的看守者每天擦亮一小处，让温和的日光缓缓照进深处，从不拿尖锐的工具催它裂开。\n\n终于有一天，珀心泛起细微的绿，沉睡的纹路也开始流动。第一片叶子伸展时，看守者替它留出呼吸的空间。那份长久被耐心守护的可能，终于有了属于自己的新季节。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7037df6a-688b-4d86-9ab2-8ca8e9d38b8f.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7037df6a-688b-4d86-9ab2-8ca8e9d38b8f.png",
+    "row": 0
+  },
+  {
+    "id": "growth.layered-shell",
+    "name": "叠纪之壳",
+    "series": "远古化生",
+    "summary": "走过的岁月，会成为新的支撑。",
+    "story": "小壳每经过一片陌生的海，身上便多出一圈细纹。它嫌这些痕迹不够平滑，总想把它们磨去。一次深海急流袭来，那些层层叠起的纹路，恰好替柔软的内里分散了冲击。\n\n此后，它开始认真照料每一层新生的壳，也记住每一段旅程教会的本领。后来，它能安稳穿过更深的水域，带着岁月留下的形状，迎接尚未见过的海。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7037df6a-688b-4d86-9ab2-8ca8e9d38b8f.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7037df6a-688b-4d86-9ab2-8ca8e9d38b8f.png",
+    "row": 1
+  },
+  {
+    "id": "growth.renewing-bone",
+    "name": "蜕生之骨",
+    "series": "远古化生",
+    "summary": "为新的自己，留出舒展的位置。",
+    "story": "一截古骨在春潮里重新醒来，却被厚重的旧壳束住。它一度想带着所有残片一起站起，几次失去平衡后，才学着放下已经松脱的外层，保护里面仍在生长的纹路。\n\n新的光沿着骨脉慢慢延伸，支起轻盈而结实的轮廓。后来，它走出了潮湿的石窟，脚步里带着旧日的经验，也有了能够适应新路的柔韧。身后的碎壳，静静留在春天经过的地方。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7037df6a-688b-4d86-9ab2-8ca8e9d38b8f.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7037df6a-688b-4d86-9ab2-8ca8e9d38b8f.png",
+    "row": 2,
+    "crops": {
+      "mature": [
+        480,
+        1024,
+        544,
+        512
+      ]
+    }
+  },
+  {
+    "id": "growth.twin-rings",
+    "name": "双生指环",
+    "series": "契约信物",
+    "summary": "把彼此的步调，也放进共同的约定。",
+    "story": "两枚小指环初次相连时，都想按自己的节奏转动，常在碰撞里留下细小裂痕。修环人请它们停下来，轮流听一听对方的回声，再试着一起走完最短的一圈。\n\n长久的磨合让连接处变得平稳，也给各自的转动留出了余地。后来，两枚环共同托起一道明亮的光。佩戴它们的旅人每次启程，都记得先确认身旁的人，是否准备好一同出发。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ecbdb04a-b35c-4ad2-a99c-660618d596ad.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ecbdb04a-b35c-4ad2-a99c-660618d596ad.png",
+    "row": 0,
+    "crops": {
+      "mature": [
+        480,
+        0,
+        544,
+        512
+      ]
+    }
+  },
+  {
+    "id": "growth.promise-seal",
+    "name": "守诺之印",
+    "series": "契约信物",
+    "summary": "让每个小约定，都有落在生活里的分量。",
+    "story": "年轻的刻印者想做一枚能承担宏大誓言的印，却连纸边的细纹也刻不稳。老师让他先记下一件今天答应的事，认真做完后，再在印面添上一刀。\n\n许多清晨过去，浅浅的刻痕渐渐组成清晰的图案。后来，人们把重要的托付交到他手里，因为那些细小约定，早已一次次被稳妥地接住。印章落下时，带着可以被生活验证的温度。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ecbdb04a-b35c-4ad2-a99c-660618d596ad.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ecbdb04a-b35c-4ad2-a99c-660618d596ad.png",
+    "row": 1
+  },
+  {
+    "id": "growth.wish-binding-cord",
+    "name": "结愿之绳",
+    "series": "契约信物",
+    "summary": "把愿望与行动，认真系在一起。",
+    "story": "小绳上挂满了写着愿望的纸，风一大，许多结就散开了。编绳人陪它逐一整理，只留下愿意为之行动的几张，再把每个愿望拆成能够练习的小步骤。\n\n每做完一步，他们便重新收紧一个结。松散的丝线渐渐织成结实的绳，带着已经发生的故事。后来，有人沿着它攀上山坡，纸上的远方，也一点点变成了脚下真实的风景。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ecbdb04a-b35c-4ad2-a99c-660618d596ad.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ecbdb04a-b35c-4ad2-a99c-660618d596ad.png",
+    "row": 2
+  },
+  {
+    "id": "growth.suspended-dunes",
+    "name": "悬砂之丘",
+    "series": "梦境地貌",
+    "summary": "一粒一粒，也能聚成可以站稳的地方。",
+    "story": "梦境里的砂总悬在半空，一阵风就能吹散小小的丘形。年轻的聚砂者曾急着堆起高峰，后来改用细线围出一个小圈，让今天收来的砂先有地方停留。\n\n日复一日，细砂在彼此之间找到支撑，慢慢托起了起伏的坡面。后来，远行的人能在丘上留下脚印，停下来看看路。那些轻得几乎看不见的小小积累，已经接住了真实的重量。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-161df282-9776-408a-95b9-cc0b76e0b7f1.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-161df282-9776-408a-95b9-cc0b76e0b7f1.png",
+    "row": 0
+  },
+  {
+    "id": "growth.refracting-canyon",
+    "name": "折光峡谷",
+    "series": "梦境地貌",
+    "summary": "让不同的目光，照见同一段前路。",
+    "story": "小峡谷只让一束光通过，谷底总有许多地方看不清。勘路者在两侧试着安放不同角度的晶石，听同行的人说出各自看见的暗礁，再慢慢调整光路。\n\n后来，光在岩壁间折出丰富的颜色，显出从前未被注意的台阶与水源。旅人们沿着这些线索走过山谷，也学会在停步时，邀请身旁的人指一指自己尚未看见的地方。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-161df282-9776-408a-95b9-cc0b76e0b7f1.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-161df282-9776-408a-95b9-cc0b76e0b7f1.png",
+    "row": 1
+  },
+  {
+    "id": "growth.echo-cavern",
+    "name": "回声洞庭",
+    "series": "梦境地貌",
+    "summary": "在回应里认识自己，也给沉默留一点时间。",
+    "story": "洞庭深处的小回声总模仿每一种声音，越学越多，却渐渐分不清自己的节奏。守洞人陪它坐在泉边，先听完一滴水落下，再安静等到涟漪散去。\n\n小回声开始认真选择要传向远处的音符，也学会让声音之间保持呼吸。后来，迷路的人在洞里轻声呼唤，总能听见清晰而温柔的回应，帮助他们一步步走回有光的出口。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-161df282-9776-408a-95b9-cc0b76e0b7f1.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-161df282-9776-408a-95b9-cc0b76e0b7f1.png",
+    "row": 2,
+    "crops": {
+      "mature": [
+        480,
+        1024,
+        544,
+        512
+      ]
+    }
+  },
+  {
+    "id": "growth.mist-treading-hoof",
+    "name": "踏雾灵蹄",
+    "series": "灵性游兽",
+    "summary": "看不清远处时，先确认脚下这一落。",
+    "story": "小灵蹄第一次走进雾里，总因望不见前路而僵在原地。山中的引路者没有催促，只陪它轻轻试一试脚下的石面，站稳以后，再向前挪出短短的一步。\n\n走过许多清晨，它渐渐听懂了泥土与岩石的回声。后来，灵蹄能带着迷路的伙伴穿过浓雾，也仍会在松动的地方停下来，等每一个脚步，都找到属于自己的支撑。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-101c946a-0bfd-45e3-a4a5-624914d51b66.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-101c946a-0bfd-45e3-a4a5-624914d51b66.png",
+    "row": 0
+  },
+  {
+    "id": "growth.tide-coiling-eel",
+    "name": "卷潮长鳗",
+    "series": "灵性游兽",
+    "summary": "顺着变化调整，也能守住想去的方向。",
+    "story": "幼鳗想笔直穿过海峡，总被回卷的潮水推回原处。它累得蜷在礁边，才发现老海鳗会在浪起时轻轻转身，借着下一段水流，重新靠近远方的出口。\n\n小鳗开始练习舒展与回旋，把自己的呼吸放进潮汐里。后来，它长成能穿过暗流的修长身影，也把学会的路线留给新来的伙伴。海仍不断变化，它的方向却愈发清晰。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-101c946a-0bfd-45e3-a4a5-624914d51b66.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-101c946a-0bfd-45e3-a4a5-624914d51b66.png",
+    "row": 1
+  },
+  {
+    "id": "growth.mountain-bearing-sleeper",
+    "name": "负山眠兽",
+    "series": "灵性游兽",
+    "summary": "放下片刻，也是在照顾长久前行的力量。",
+    "story": "小眠兽背上生着一座细小的山，起初总想不眠不休地守住山上的生命。直到一次疲惫让脚步摇晃，它才在伙伴的陪伴下，找了一处平稳的谷地，安心睡过一个夜晚。\n\n此后，它学会安排停歇，也让山上的居民参与照料水源与树林。山渐渐繁盛，眠兽的步伐也越来越稳。每次醒来，它都能带着休息过的力量，继续走向下一片温暖的土地。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-101c946a-0bfd-45e3-a4a5-624914d51b66.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-101c946a-0bfd-45e3-a4a5-624914d51b66.png",
+    "row": 2,
+    "crops": {
+      "mature": [
+        480,
+        1024,
+        544,
+        512
+      ]
+    }
+  },
+  {
+    "id": "growth.lockless-gate",
+    "name": "无锁之门",
+    "series": "隐秘机关",
+    "summary": "先看清阻碍，才能找到合适的用力方式。",
+    "story": "古道尽头的门没有锁孔，小修门匠带来的钥匙全都派不上用场。他停下反复敲打的手，仔细听门轴的轻响，终于发现，门脚被多年累积的砂石卡住了。\n\n他一铲一铲清理缝隙，又给生锈的转轴添上油。门缓缓打开时，许多等待的旅人一同走来。修门匠把工具收好，带着学会观察的耐心，继续前往下一段古道。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0834bec4-75a8-4757-b5ae-21bd169965a2.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0834bec4-75a8-4757-b5ae-21bd169965a2.png",
+    "row": 0
+  },
+  {
+    "id": "growth.realm-turning-axle",
+    "name": "转境之轴",
+    "series": "隐秘机关",
+    "summary": "从能够调整的一点，慢慢改变眼前的格局。",
+    "story": "小轴连着梦城里许多房间，却只要一转，就会把所有通路搅乱。机关师没有催它一次完成整座城的变化，只陪它标记位置，先稳稳转动其中最轻的一环。\n\n一次次校准以后，齿轮之间有了清晰的配合。后来，房间能在需要时移动，让阳光照进原本昏暗的角落。小轴也终于明白，细小而准确的调整，可以慢慢改变一整片风景。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0834bec4-75a8-4757-b5ae-21bd169965a2.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0834bec4-75a8-4757-b5ae-21bd169965a2.png",
+    "row": 1,
+    "crops": {
+      "mature": [
+        512,
+        512,
+        512,
+        500
+      ]
+    }
+  },
+  {
+    "id": "growth.hidden-path-box",
+    "name": "藏径之匣",
+    "series": "隐秘机关",
+    "summary": "把尝试过的线索，收成下一次出发的准备。",
+    "story": "小匣里藏着许多折叠的小路，旅人每次打开，都容易被纷乱的岔口困住。他开始为走过的道路留一枚标记，记下哪里有水，哪里需要绕行，再把暂时用不到的路径妥善收起。\n\n匣中的空间渐渐清晰，新的线索也能找到安放的位置。后来，有人向他询问陌生山路，他便打开匣子，取出一段认真走过的经验，陪对方一起规划最初的几步。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0834bec4-75a8-4757-b5ae-21bd169965a2.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0834bec4-75a8-4757-b5ae-21bd169965a2.png",
+    "row": 2
+  },
+  {
+    "id": "growth.star-gathering-pack",
+    "name": "拾星背囊",
+    "series": "旅途行装",
+    "summary": "认真选择要带走的东西，也给脚步留一点轻盈。",
+    "story": "小背囊想把旅途里遇见的每颗星都装下，渐渐重得让主人无法前行。夜里的营火旁，他们一起整理行囊，留下真正需要的工具与珍惜的信物，也把多余的星光分给同行的人。\n\n后来，背囊长出结实而柔软的纹路，能稳妥承载新的旅程。每次离开营地，主人都会检查一次里面的东西，让值得珍视的重量，与仍能轻快迈出的脚步，一同走向远方。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-aa75e0a8-f30d-4226-953f-b8f4ed32f5cd.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-aa75e0a8-f30d-4226-953f-b8f4ed32f5cd.png",
+    "row": 0
+  },
+  {
+    "id": "growth.night-crossing-cloak",
+    "name": "渡夜斗篷",
+    "series": "旅途行装",
+    "summary": "把自己照顾好，再慢慢穿过漫长的夜。",
+    "story": "初织好的小斗篷只能挡住一点寒风，旅人却总把它展开到最紧，想护住所有来客。几次撕裂以后，织衣人陪他缝好边缘，也教他在天冷时，先找一处能生火歇息的地方。\n\n斗篷在长久照料里变得温暖而坚韧。后来，大家围着营火轮流守夜，疲惫的人可以安心裹着它睡去。黎明到来时，他们带着恢复过的精神，一起收拾行装，继续赶路。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-aa75e0a8-f30d-4226-953f-b8f4ed32f5cd.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-aa75e0a8-f30d-4226-953f-b8f4ed32f5cd.png",
+    "row": 1,
+    "crops": {
+      "mature": [
+        480,
+        512,
+        544,
+        512
+      ]
+    }
+  },
+  {
+    "id": "growth.wind-seeking-boots",
+    "name": "寻风之履",
+    "series": "旅途行装",
+    "summary": "找到自己的步幅，让每一步都能接续。",
+    "story": "一双新履总想跟上路上最快的脚步，鞋底很快磨出裂痕。修鞋人陪旅人重新丈量脚掌，调好松紧，再沿着熟悉的山径，试着用舒服的速度走完一小段。\n\n走过石路、草地与长坡，新履渐渐有了贴合脚步的形状。后来，旅人抵达更远的山口，仍记得在疲惫时放缓速度，让呼吸、风声和自己的步幅，安稳地接在一起。",
+    "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-aa75e0a8-f30d-4226-953f-b8f4ed32f5cd.png",
+    "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-aa75e0a8-f30d-4226-953f-b8f4ed32f5cd.png",
+    "row": 2
+  }
+]

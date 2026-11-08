@@ -1,0 +1,942 @@
+{
+  "entries": [
+    {
+      "collectibleID": "growth.reverse-clock",
+      "name": "逆行之钟",
+      "series": "时间遗迹",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "sourceSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "processedSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-16-juvenile.png",
+      "sha256": "51cda9b727983aa5d31de16cfaeccaa84bf96662d0486f4e5fbb8c73c3e1975c",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png"
+    },
+    {
+      "collectibleID": "growth.reverse-clock",
+      "name": "逆行之钟",
+      "series": "时间遗迹",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "sourceSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "processedSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-16-mature.png",
+      "sha256": "d15bec8ebb4c21f4ecbb7014c9f32e52a9fd10db19d08cb6ed35f79400666e8a",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png"
+    },
+    {
+      "collectibleID": "growth.yesterday-mirror",
+      "name": "昨日之镜",
+      "series": "时间遗迹",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "sourceSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "processedSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-17-juvenile.png",
+      "sha256": "0915e47e9f2df14a0a7f201ed630adfac1e0cb5baebed6e87e914804a25f7463",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png"
+    },
+    {
+      "collectibleID": "growth.yesterday-mirror",
+      "name": "昨日之镜",
+      "series": "时间遗迹",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "sourceSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "processedSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "crop": [
+        512,
+        470,
+        512,
+        500
+      ],
+      "resource": "growth-17-mature.png",
+      "sha256": "908966fabde6b3ea0b5caae981adb804c302fede678dbd939ff79bc1c39f1389",
+      "normalization": "Fit within 480 pixels on centered 512 RGBA canvas",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png"
+    },
+    {
+      "collectibleID": "growth.unfinished-beacon",
+      "name": "未尽灯塔",
+      "series": "时间遗迹",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "sourceSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "processedSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-18-juvenile.png",
+      "sha256": "81dde9d29df343b804538309f8a5c685cc23dac60d1ef32faeffbf985a69d9f1",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png"
+    },
+    {
+      "collectibleID": "growth.unfinished-beacon",
+      "name": "未尽灯塔",
+      "series": "时间遗迹",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "sourceSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png",
+      "processedSHA256": "18d6ac0be73c57d55b3adf7efa020204459f1a1adee52c585393e4eeeda84293",
+      "crop": [
+        512,
+        972,
+        512,
+        564
+      ],
+      "resource": "growth-18-mature.png",
+      "sha256": "09746c81fe4226149f85d606b153fdc2becd524f958f6ed6f85f9ce90109be29",
+      "normalization": "Fit within 480 pixels on centered 512 RGBA canvas",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-fed82d26-529c-43a2-8d12-926238ac5c11.png"
+    },
+    {
+      "collectibleID": "growth.floating-crystal",
+      "name": "悬浮晶心",
+      "series": "异界矿藏",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "sourceSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "processedSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-19-juvenile.png",
+      "sha256": "cb08f17e7543896ac8505c17c797576587665060280a7ccad731fb8aa884d2ab",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png"
+    },
+    {
+      "collectibleID": "growth.floating-crystal",
+      "name": "悬浮晶心",
+      "series": "异界矿藏",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "sourceSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "processedSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-19-mature.png",
+      "sha256": "cccc4360ed0c2ebda5653c6f1b0775ca83f11964204740f10843447f24447931",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png"
+    },
+    {
+      "collectibleID": "growth.hollow-stone",
+      "name": "空洞原石",
+      "series": "异界矿藏",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "sourceSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "processedSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-20-juvenile.png",
+      "sha256": "5191c1ebb0646877ddff1a8ac6b5118d62e45d6d5f34782f6cdda655b7ef1e08",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png"
+    },
+    {
+      "collectibleID": "growth.hollow-stone",
+      "name": "空洞原石",
+      "series": "异界矿藏",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "sourceSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "processedSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-20-mature.png",
+      "sha256": "1f182077f9a1d6ed7ced6dc9686b25f260fcdb61e675dc6d09e9408ecd2a79d8",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png"
+    },
+    {
+      "collectibleID": "growth.living-vein",
+      "name": "流动矿脉",
+      "series": "异界矿藏",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "sourceSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "processedSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-21-juvenile.png",
+      "sha256": "479278861b75d766cdbe012fb8d9d9d718a0a7be92d8a34da77594bdc33ca5b0",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png"
+    },
+    {
+      "collectibleID": "growth.living-vein",
+      "name": "流动矿脉",
+      "series": "异界矿藏",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "sourceSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png",
+      "processedSHA256": "11aa2f4a3e15ff9ffb7a4725e5e5afe4bd382a83eb1084e3d88d73f6ca7a4450",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-21-mature.png",
+      "sha256": "35d71534c8a9e446bde0e70c753db96b78d747cfec1709326f291ba7f6d32860",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-547880fb-b79b-46f0-a320-0a5413264f55.png"
+    },
+    {
+      "collectibleID": "growth.doorless-tower",
+      "name": "无门之塔",
+      "series": "梦境建筑",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png",
+      "sourceSHA256": "32a7f8fac492621f08580ad1974fe9bc75527165d069efffb1985f85387964bc",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-68cd0ac1-2aa1-48ed-a235-83fa6d0ba9a8.png",
+      "processedSHA256": "4daf2955da564e0f8090268a42028de1c032a389e44aa2824113358738255394",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-22-juvenile.png",
+      "sha256": "caefc464b7721bf56d3313e7477259c6174231a151337f3fe972598b2701aae0",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png"
+    },
+    {
+      "collectibleID": "growth.doorless-tower",
+      "name": "无门之塔",
+      "series": "梦境建筑",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png",
+      "sourceSHA256": "32a7f8fac492621f08580ad1974fe9bc75527165d069efffb1985f85387964bc",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-68cd0ac1-2aa1-48ed-a235-83fa6d0ba9a8.png",
+      "processedSHA256": "4daf2955da564e0f8090268a42028de1c032a389e44aa2824113358738255394",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-22-mature.png",
+      "sha256": "bfa8ae9d864ca12a42b4365f5e6e0d6b7eed006e5ce4f5fa1d7d020ac80c758f",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png"
+    },
+    {
+      "collectibleID": "growth.returning-bridge",
+      "name": "回环长桥",
+      "series": "梦境建筑",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png",
+      "sourceSHA256": "32a7f8fac492621f08580ad1974fe9bc75527165d069efffb1985f85387964bc",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-68cd0ac1-2aa1-48ed-a235-83fa6d0ba9a8.png",
+      "processedSHA256": "4daf2955da564e0f8090268a42028de1c032a389e44aa2824113358738255394",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-23-juvenile.png",
+      "sha256": "8d17f4ea7a29d577cd1a95e82bd717d5a50e91eca5985e2050b34290dcb8999f",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png"
+    },
+    {
+      "collectibleID": "growth.returning-bridge",
+      "name": "回环长桥",
+      "series": "梦境建筑",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png",
+      "sourceSHA256": "32a7f8fac492621f08580ad1974fe9bc75527165d069efffb1985f85387964bc",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-68cd0ac1-2aa1-48ed-a235-83fa6d0ba9a8.png",
+      "processedSHA256": "4daf2955da564e0f8090268a42028de1c032a389e44aa2824113358738255394",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-23-mature.png",
+      "sha256": "31a562c810bf5ae303671c1f3169235ad8dd2212500332200b38bc53b259995d",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png"
+    },
+    {
+      "collectibleID": "growth.inverted-sanctum",
+      "name": "倒悬神殿",
+      "series": "梦境建筑",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png",
+      "sourceSHA256": "32a7f8fac492621f08580ad1974fe9bc75527165d069efffb1985f85387964bc",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-68cd0ac1-2aa1-48ed-a235-83fa6d0ba9a8.png",
+      "processedSHA256": "4daf2955da564e0f8090268a42028de1c032a389e44aa2824113358738255394",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-24-juvenile.png",
+      "sha256": "0066cf538e7ab4457d2d6f6280f2477777467abb93a6efc9946fe0393f6a66a7",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png"
+    },
+    {
+      "collectibleID": "growth.inverted-sanctum",
+      "name": "倒悬神殿",
+      "series": "梦境建筑",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png",
+      "sourceSHA256": "32a7f8fac492621f08580ad1974fe9bc75527165d069efffb1985f85387964bc",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-68cd0ac1-2aa1-48ed-a235-83fa6d0ba9a8.png",
+      "processedSHA256": "4daf2955da564e0f8090268a42028de1c032a389e44aa2824113358738255394",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-24-mature.png",
+      "sha256": "bf0ff892e83847ba4e93a8c958924a17cfc764a5d1ba8bc4ed22f48d1ea93fb2",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-9942bbc3-0fb5-44e1-bea1-e249e8a14860.png"
+    },
+    {
+      "collectibleID": "growth.thunder-spear",
+      "name": "凝雷之矛",
+      "series": "元素造物",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png",
+      "sourceSHA256": "d831ebf0513f0f58c808469634debcf93c2564b7f0e4e51d129b88a9e61a71ac",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-8e813292-d19b-4c13-92d7-f67debf8fb8d.png",
+      "processedSHA256": "d5c50d6020cd1677c5b10f9dbcae3aa6072a1f02c04b5e3b327545d1370ec012",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-25-juvenile.png",
+      "sha256": "4f3231ed4b0812544506a8a5279d380b818e97d2066acdf260db8ad3870a600f",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png"
+    },
+    {
+      "collectibleID": "growth.thunder-spear",
+      "name": "凝雷之矛",
+      "series": "元素造物",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png",
+      "sourceSHA256": "d831ebf0513f0f58c808469634debcf93c2564b7f0e4e51d129b88a9e61a71ac",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-8e813292-d19b-4c13-92d7-f67debf8fb8d.png",
+      "processedSHA256": "d5c50d6020cd1677c5b10f9dbcae3aa6072a1f02c04b5e3b327545d1370ec012",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-25-mature.png",
+      "sha256": "b0d14f7377e3a3b6e92df5a6a4e3197a960211aff04b917b34b75ae6997262af",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png"
+    },
+    {
+      "collectibleID": "growth.tidal-bow",
+      "name": "潮汐之弓",
+      "series": "元素造物",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png",
+      "sourceSHA256": "d831ebf0513f0f58c808469634debcf93c2564b7f0e4e51d129b88a9e61a71ac",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-8e813292-d19b-4c13-92d7-f67debf8fb8d.png",
+      "processedSHA256": "d5c50d6020cd1677c5b10f9dbcae3aa6072a1f02c04b5e3b327545d1370ec012",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-26-juvenile.png",
+      "sha256": "d991507b69bbcc89f53cc153d96fc45417a51112a93b40c7999230519edb6f21",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png"
+    },
+    {
+      "collectibleID": "growth.tidal-bow",
+      "name": "潮汐之弓",
+      "series": "元素造物",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png",
+      "sourceSHA256": "d831ebf0513f0f58c808469634debcf93c2564b7f0e4e51d129b88a9e61a71ac",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-8e813292-d19b-4c13-92d7-f67debf8fb8d.png",
+      "processedSHA256": "d5c50d6020cd1677c5b10f9dbcae3aa6072a1f02c04b5e3b327545d1370ec012",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-26-mature.png",
+      "sha256": "8d97e9e100a4cbd71c243f55b44b77889c4d416dc9b80d053162aadf512352c4",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png"
+    },
+    {
+      "collectibleID": "growth.ember-shield",
+      "name": "余烬之盾",
+      "series": "元素造物",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png",
+      "sourceSHA256": "d831ebf0513f0f58c808469634debcf93c2564b7f0e4e51d129b88a9e61a71ac",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-8e813292-d19b-4c13-92d7-f67debf8fb8d.png",
+      "processedSHA256": "d5c50d6020cd1677c5b10f9dbcae3aa6072a1f02c04b5e3b327545d1370ec012",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-27-juvenile.png",
+      "sha256": "73441a5af6ae7a5fcbf64b3f9c57847083bcf0e74380255a3a0d8cc18a4e7330",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png"
+    },
+    {
+      "collectibleID": "growth.ember-shield",
+      "name": "余烬之盾",
+      "series": "元素造物",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png",
+      "sourceSHA256": "d831ebf0513f0f58c808469634debcf93c2564b7f0e4e51d129b88a9e61a71ac",
+      "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-8e813292-d19b-4c13-92d7-f67debf8fb8d.png",
+      "processedSHA256": "d5c50d6020cd1677c5b10f9dbcae3aa6072a1f02c04b5e3b327545d1370ec012",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-27-mature.png",
+      "sha256": "95455a975fc791c564bef4bb07baa5820795597d1a998fdffe7ddea2408803b5",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-50146e04-4759-419d-ad5a-4623148c9801.png"
+    },
+    {
+      "collectibleID": "growth.broken-harp",
+      "name": "断弦竖琴",
+      "series": "异界乐器",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "sourceSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "processedSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-28-juvenile.png",
+      "sha256": "e53ed32ae4620d4ad119a64370ebc7d5d1324999b2b8079ba6fbeaee79e580ce",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png"
+    },
+    {
+      "collectibleID": "growth.broken-harp",
+      "name": "断弦竖琴",
+      "series": "异界乐器",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "sourceSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "processedSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "crop": [
+        480,
+        0,
+        544,
+        560
+      ],
+      "resource": "growth-28-mature.png",
+      "sha256": "f0163fcc1e9b8302a4eac8177baf1b3a717ca579ff686fdcf835f1bb7c3ad113",
+      "normalization": "Fit within 480 pixels on centered 512 RGBA canvas",
+      "clipVertices": [
+        [
+          0,
+          0
+        ],
+        [
+          544,
+          0
+        ],
+        [
+          544,
+          512
+        ],
+        [
+          320,
+          560
+        ],
+        [
+          0,
+          560
+        ]
+      ],
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png"
+    },
+    {
+      "collectibleID": "growth.echo-flute",
+      "name": "回声骨笛",
+      "series": "异界乐器",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "sourceSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "processedSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-29-juvenile.png",
+      "sha256": "399e964d17deaf05199feb1e149d9708510283b0cdaadf263f583e8393468560",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png"
+    },
+    {
+      "collectibleID": "growth.echo-flute",
+      "name": "回声骨笛",
+      "series": "异界乐器",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "sourceSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "processedSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-29-mature.png",
+      "sha256": "a023f8ae862b31e55e94e2979d293354fdbdc747de449705a952b751bfaebf67",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png"
+    },
+    {
+      "collectibleID": "growth.silent-chimes",
+      "name": "无声风铃",
+      "series": "异界乐器",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "sourceSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "processedSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "crop": [
+        0,
+        990,
+        512,
+        546
+      ],
+      "resource": "growth-30-juvenile.png",
+      "sha256": "63550c40bdf21ecf5bb5a698ba4cf9ddcc56dab9d8ebe6971abf7388d18a0232",
+      "normalization": "Fit within 480 pixels on centered 512 RGBA canvas",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png"
+    },
+    {
+      "collectibleID": "growth.silent-chimes",
+      "name": "无声风铃",
+      "series": "异界乐器",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "sourceSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png",
+      "processedSHA256": "4fb5727cd2824ad4702357611f7328d888aa384ae85255e121d1cb0ce43fe0a3",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-30-mature.png",
+      "sha256": "6ec6892dacce823c7dbefd121dfa17b50f0c704f6428be061af0acc153908300",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-b1d84b8f-c47b-42fa-ba2a-96931dab267b.png"
+    },
+    {
+      "collectibleID": "growth.path-lantern",
+      "name": "寻路提灯",
+      "series": "旅途信物",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "sourceSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "processedSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-31-juvenile.png",
+      "sha256": "5ec8acea95913acfccd9ba812961f0c75bcf31acb390023099797efc8d3b86be",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png"
+    },
+    {
+      "collectibleID": "growth.path-lantern",
+      "name": "寻路提灯",
+      "series": "旅途信物",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "sourceSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "processedSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-31-mature.png",
+      "sha256": "606c0e5b6f7e652738698b0dfd1fdb85c4cdc3aca8154cbe15c3761d9724297a",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png"
+    },
+    {
+      "collectibleID": "growth.boundary-boat",
+      "name": "渡界小舟",
+      "series": "旅途信物",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "sourceSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "processedSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-32-juvenile.png",
+      "sha256": "5716dc54fd020a698264c59c17d1ce462b9251202841d2087219ea861a80a504",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png"
+    },
+    {
+      "collectibleID": "growth.boundary-boat",
+      "name": "渡界小舟",
+      "series": "旅途信物",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "sourceSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "processedSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-32-mature.png",
+      "sha256": "04ee8d338aabeb91642c710a3d8d7c4099877c7ff6fc218ac18959845b911f14",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png"
+    },
+    {
+      "collectibleID": "growth.homeward-anchor",
+      "name": "归途之锚",
+      "series": "旅途信物",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "sourceSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "processedSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-33-juvenile.png",
+      "sha256": "70d2876aeb609d169cd3ddfd15900f636945ee240da9820d43e362817d3fe820",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png"
+    },
+    {
+      "collectibleID": "growth.homeward-anchor",
+      "name": "归途之锚",
+      "series": "旅途信物",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "sourceSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png",
+      "processedSHA256": "8e2a9617a75226241a404b3ef1b01531f2bab6ec227fd2c55283a75141238181",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-33-mature.png",
+      "sha256": "88e53c2806cc9b07e30f4221f92b39fa9924c55f001d0f3bcd1a8c1854bd4bca",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-83608064-feac-406c-9536-caec296bd348.png"
+    },
+    {
+      "collectibleID": "growth.suspended-sun",
+      "name": "悬日之轮",
+      "series": "天空遗迹",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "sourceSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "processedSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-34-juvenile.png",
+      "sha256": "be18a6775d3d61c9f94e9af548a5d4a6fad0dbdbda4a1f8dd7b88c45e5f2cb9d",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png"
+    },
+    {
+      "collectibleID": "growth.suspended-sun",
+      "name": "悬日之轮",
+      "series": "天空遗迹",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "sourceSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "processedSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-34-mature.png",
+      "sha256": "79d5b4c825f0c9bbf2587b411859145d49ac0c6acdc9d48dc738a66e71d5d9d2",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png"
+    },
+    {
+      "collectibleID": "growth.stardust-scales",
+      "name": "星屑天平",
+      "series": "天空遗迹",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "sourceSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "processedSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-35-juvenile.png",
+      "sha256": "26d055ad16b8f6d8a7d1e12265392f71892d154b74c1fad6cae75a8f128a6741",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png"
+    },
+    {
+      "collectibleID": "growth.stardust-scales",
+      "name": "星屑天平",
+      "series": "天空遗迹",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "sourceSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "processedSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-35-mature.png",
+      "sha256": "3adf10da7af43b44f2527bd49e90e8f8bf0f51c8e271207d0d8d3cfa530a7c3b",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png"
+    },
+    {
+      "collectibleID": "growth.wind-chasing-sail",
+      "name": "逐风之帆",
+      "series": "天空遗迹",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "sourceSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "processedSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-36-juvenile.png",
+      "sha256": "1003ef21e45793763537d6e368f22deb6acd08bebb297c87f21ab2eeb2b2a3c5",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png"
+    },
+    {
+      "collectibleID": "growth.wind-chasing-sail",
+      "name": "逐风之帆",
+      "series": "天空遗迹",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "sourceSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png",
+      "processedSHA256": "318ca6252a136552704a78a6eb4a5f890b97f0f4c2be4e1ee48de6ece3bd09a6",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-36-mature.png",
+      "sha256": "ec55196396547ec414526674be0b5b6b37f8135a09812071e5e43e7eb70c4bd4",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-1559090f-223c-4468-a1e2-ce3edb3b2996.png"
+    },
+    {
+      "collectibleID": "growth.sleeping-ember-egg",
+      "name": "眠火之卵",
+      "series": "秘境生命",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "sourceSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "processedSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-37-juvenile.png",
+      "sha256": "be8f4dce0878877a85312cb5386e1c08eafe8ec84d279a1a15c32d998cea1b14",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png"
+    },
+    {
+      "collectibleID": "growth.sleeping-ember-egg",
+      "name": "眠火之卵",
+      "series": "秘境生命",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "sourceSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "processedSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-37-mature.png",
+      "sha256": "e91fb477ef94d45cd9e0f3500d78ef66e7e13019c0728fbd38e7bdb4aa52188f",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png"
+    },
+    {
+      "collectibleID": "growth.star-bearing-beast",
+      "name": "负星灵兽",
+      "series": "秘境生命",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "sourceSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "processedSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-38-juvenile.png",
+      "sha256": "464a4fbfb0d7b80361295258b6ac844c2016b115b4b1f32e9d88213e2a0e71f3",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png"
+    },
+    {
+      "collectibleID": "growth.star-bearing-beast",
+      "name": "负星灵兽",
+      "series": "秘境生命",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "sourceSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "processedSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-38-mature.png",
+      "sha256": "82a1e73a84e793ae2916426a71526453cd8adb17b645c365e2929ab8948b2f0e",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png"
+    },
+    {
+      "collectibleID": "growth.floating-root-lotus",
+      "name": "浮根之莲",
+      "series": "秘境生命",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "sourceSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "processedSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-39-juvenile.png",
+      "sha256": "9ea040e17524e649657162ad16de16d2bd32acf8bf8140e648a632fd37bcdde3",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png"
+    },
+    {
+      "collectibleID": "growth.floating-root-lotus",
+      "name": "浮根之莲",
+      "series": "秘境生命",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "sourceSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "processedSource": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png",
+      "processedSHA256": "6a3a4623a0881e15426b80505c82f4872cad9bc99bcbeba12bd23df95eca4c98",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-39-mature.png",
+      "sha256": "287c01c7de233208e55e6e5ec6ccd5a57026d3af70aa0f0e20e0145844f3d45e",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24-source-sheets/codex-clipboard-8c01b772-c9f7-4e24-a897-d7df2327cd4e.png"
+    }
+  ]
+}

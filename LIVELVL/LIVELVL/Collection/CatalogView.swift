@@ -15,6 +15,10 @@ struct CatalogView: View {
         return Set(ownedCollectibles.map(\.collectibleID)).intersection(catalogIDs)
     }
 
+    private var visibleDefinitions: [CollectibleDefinition] {
+        CollectionCatalog.visibleDefinitions(ownedIDs: unlockedIDs)
+    }
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
@@ -25,16 +29,16 @@ struct CatalogView: View {
 
                     Spacer()
 
-                    Text("\(unlockedIDs.count) / \(CollectionCatalog.all.count)")
+                    Text("\(unlockedIDs.count) / \(visibleDefinitions.count)")
                         .font(.title3.bold().monospacedDigit())
                         .foregroundStyle(TodayVisualTheme.ink)
                         .accessibilityLabel(
-                            "已发现 \(unlockedIDs.count) 个，共 \(CollectionCatalog.all.count) 个"
+                            "已发现 \(unlockedIDs.count) 个，共 \(visibleDefinitions.count) 个"
                         )
                 }
 
                 LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(CollectionCatalog.all) { definition in
+                    ForEach(visibleDefinitions) { definition in
                         CatalogCardView(
                             definition: definition,
                             isUnlocked: unlockedIDs.contains(definition.id)
@@ -47,7 +51,7 @@ struct CatalogView: View {
             .padding(.bottom, 28)
         }
         .background(TodayVisualTheme.pageBackground)
-        .navigationTitle("图鉴")
+        .navigationTitle("卡库")
         .navigationBarTitleDisplayMode(.inline)
     }
 }

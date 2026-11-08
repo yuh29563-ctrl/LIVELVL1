@@ -1,0 +1,59 @@
+{
+  "source": "/Users/fy/Downloads/透明背景上的五幅点彩抽象图.png",
+  "sourceSHA256": "6c5b9e60ae1d15ad00510b9c3a8312877b06e9d62a8da6820cb8418aceef0ff8",
+  "processedSource": "/Users/fy/.codex/generated_images/01a1a5a6-da64-7661-8ace-ebdf44bdbc0e/exec-b79ce904-a877-4199-9087-7d4bdf897a52.png",
+  "processedSHA256": "37d1fe42558cdb207d9a92aaab1a413dbe247471bf18bee211ab386e0eecdf40",
+  "processing": "Built-in imagegen background removal; CoreGraphics rectangular crops; original untouched.",
+  "entries": [
+    {
+      "asset": "JourneyGuide01",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "sha256": "6023f164b6b14990e3f9f25c61e74a54f8df544b76f1ed064253468cb5055362"
+    },
+    {
+      "asset": "JourneyGuide02",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "sha256": "5ad765300d9e5da5f6552f0baa874e296a564813066c3c01aa0487b5e3dd7a06"
+    },
+    {
+      "asset": "JourneyGuide03",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "sha256": "a770c7a975d8e9d68c0f7015c6773efb54aa6898b7eeb3a9cf5fb90d5ce1c5a3"
+    },
+    {
+      "asset": "JourneyGuide04",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "sha256": "16bf5989f2313e10452ef6ffcafe95069247008039e5220f4a0e2b184614ff4a"
+    },
+    {
+      "asset": "JourneyGuide05",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "sha256": "8e928454aa0e4b65bacb9c5a7d86148cfbc97f2fc9b73efc92180217d14aee08"
+    }
+  ]
+}

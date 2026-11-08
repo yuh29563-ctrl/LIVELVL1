@@ -317,7 +317,7 @@ struct ExpandedCollectibleCardOverlay: View {
         isCardFocused = true
     }
 
-    private static let ordinaryStageLabels = ["幼体", "第二形态", "第三形态", "成熟体"]
+    private static let ordinaryStageLabels = ["幼体", "成熟体"]
 }
 
 private struct CardDetailRow: View {
@@ -356,7 +356,7 @@ private struct StageLabel: View {
 
 extension OwnedCollectible {
     var collectionKindTitle: String {
-        kind == .ordinaryMature ? "普通物种" : "隐藏物种"
+        kind == .ordinaryMature ? "成长卡" : "隐藏卡"
     }
 
     var collectionSourceTitle: String {

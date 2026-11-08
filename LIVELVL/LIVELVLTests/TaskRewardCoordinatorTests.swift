@@ -21,6 +21,28 @@ struct TaskRewardCoordinatorTests {
         )
     }
 
+#if DEBUG
+    @Test func debugLevelUpAdvancesExactlyOnceWithoutTaskOrCoinRewards() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+        let progress = LIVELVL.Progress(totalXP: 110)
+        context.insert(progress)
+        try context.save()
+
+        try TaskRewardCoordinator.debugAdvanceOneLevel(progress: progress, in: context)
+        #expect(progress.level == 1)
+        #expect(progress.totalXP == 200)
+        try TaskRewardCoordinator.debugAdvanceOneLevel(progress: progress, in: context)
+        #expect(progress.level == 2)
+        #expect(progress.totalXP == 2_200)
+        #expect(try context.fetch(FetchDescriptor<Completion>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<CoinTransaction>()).isEmpty)
+        #expect(Set(try context.fetch(FetchDescriptor<OwnedCollectible>()).map(\.awardKey))
+            == ["ordinary.level.1", "ordinary.level.2"])
+        #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).count == 2)
+    }
+#endif
+
     private func makeItem(xp: Int = 80) -> Item {
         Item(
             title: "读书 20 分钟",

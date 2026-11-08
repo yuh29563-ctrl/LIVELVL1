@@ -1,0 +1,835 @@
+{
+  "entries": [
+    {
+      "collectibleID": "growth.drowned-crown",
+      "name": "沉潮之冠",
+      "series": "深海秘藏",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "sourceSHA256": "b9f707a70b0f3f5a21214d936f39a2a99780d22ad94ca07fafc6314b40c99471",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-40-juvenile.png",
+      "sha256": "9dd1253fff8b3f385597eab8c2d6ba197eab9cb4a15e0eabc3881455813ff580"
+    },
+    {
+      "collectibleID": "growth.drowned-crown",
+      "name": "沉潮之冠",
+      "series": "深海秘藏",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "sourceSHA256": "b9f707a70b0f3f5a21214d936f39a2a99780d22ad94ca07fafc6314b40c99471",
+      "crop": [
+        480,
+        0,
+        544,
+        512
+      ],
+      "resource": "growth-40-mature.png",
+      "sha256": "6103b3d14e1eeeb45ea92a1b9d565816109292a5a0845bd787753850c335c917",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.abyss-pearl",
+      "name": "渊底明珠",
+      "series": "深海秘藏",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "sourceSHA256": "b9f707a70b0f3f5a21214d936f39a2a99780d22ad94ca07fafc6314b40c99471",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-41-juvenile.png",
+      "sha256": "7bf381936377b4536d355cf1987c3bab1ede05e495e7cee72e1cb6b898df6fe5"
+    },
+    {
+      "collectibleID": "growth.abyss-pearl",
+      "name": "渊底明珠",
+      "series": "深海秘藏",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "sourceSHA256": "b9f707a70b0f3f5a21214d936f39a2a99780d22ad94ca07fafc6314b40c99471",
+      "crop": [
+        480,
+        512,
+        544,
+        512
+      ],
+      "resource": "growth-41-mature.png",
+      "sha256": "e9d81f32534d03c4216e06980403ed5b9697026392a65d902b07e3da682da03c",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.returning-reef",
+      "name": "回游之礁",
+      "series": "深海秘藏",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "sourceSHA256": "b9f707a70b0f3f5a21214d936f39a2a99780d22ad94ca07fafc6314b40c99471",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-42-juvenile.png",
+      "sha256": "a59dffed4efc003ad8fddb84b9730db1871c475815b8676ab9575433addf4978"
+    },
+    {
+      "collectibleID": "growth.returning-reef",
+      "name": "回游之礁",
+      "series": "深海秘藏",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-427ade2b-b42c-440b-8d22-a8031582d4ff.png",
+      "sourceSHA256": "b9f707a70b0f3f5a21214d936f39a2a99780d22ad94ca07fafc6314b40c99471",
+      "crop": [
+        480,
+        1024,
+        544,
+        512
+      ],
+      "resource": "growth-42-mature.png",
+      "sha256": "6f7db1e2ceaec433851dea08801179ba737017286b76d4feddd62516f3ce12bd",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.frost-breaking-bud",
+      "name": "破霜之芽",
+      "series": "季节轮转",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "sourceSHA256": "453e4f78d1c530c9e08136dfaea59f5108b28211dbf6f8835900c03fe45c9fb4",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-43-juvenile.png",
+      "sha256": "16962ab9b94beb5cf0cc6cb8bd8b01a853df1895c5bd8053839cc16ea0261116"
+    },
+    {
+      "collectibleID": "growth.frost-breaking-bud",
+      "name": "破霜之芽",
+      "series": "季节轮转",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "sourceSHA256": "453e4f78d1c530c9e08136dfaea59f5108b28211dbf6f8835900c03fe45c9fb4",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-43-mature.png",
+      "sha256": "72cd8ae343930b54e2679bb821f0e7ebffae03b302393463b802f5166a9435b2"
+    },
+    {
+      "collectibleID": "growth.summer-keeping-fruit",
+      "name": "藏夏之果",
+      "series": "季节轮转",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "sourceSHA256": "453e4f78d1c530c9e08136dfaea59f5108b28211dbf6f8835900c03fe45c9fb4",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-44-juvenile.png",
+      "sha256": "26a65d1d20f141f889348ba577bf1d5d27a0dd84ec2b4a6cb15f5d74c5ec2310"
+    },
+    {
+      "collectibleID": "growth.summer-keeping-fruit",
+      "name": "藏夏之果",
+      "series": "季节轮转",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "sourceSHA256": "453e4f78d1c530c9e08136dfaea59f5108b28211dbf6f8835900c03fe45c9fb4",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-44-mature.png",
+      "sha256": "e296372cc0b30c8705f34409b349a24ee15ac4c410e42bdadfd858474f85569f"
+    },
+    {
+      "collectibleID": "growth.winter-crossing-branch",
+      "name": "渡冬之枝",
+      "series": "季节轮转",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "sourceSHA256": "453e4f78d1c530c9e08136dfaea59f5108b28211dbf6f8835900c03fe45c9fb4",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-45-juvenile.png",
+      "sha256": "19ea471cc764a7a6d909685893f059931690b64186e464c215fedffcf14a197a"
+    },
+    {
+      "collectibleID": "growth.winter-crossing-branch",
+      "name": "渡冬之枝",
+      "series": "季节轮转",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f6a67949-b5fe-42cf-8dd8-c062073ba121.png",
+      "sourceSHA256": "453e4f78d1c530c9e08136dfaea59f5108b28211dbf6f8835900c03fe45c9fb4",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-45-mature.png",
+      "sha256": "dcf4961243cb522687ad8df71cb44d4f247d5e0f4c206f057ee33b225e807d69"
+    },
+    {
+      "collectibleID": "growth.star-carrying-fish",
+      "name": "衔星飞鱼",
+      "series": "星空信使",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "sourceSHA256": "e916ed15518becb8072dcbb248a38c235c77fa556c029d677566d7beb88d50d7",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-46-juvenile.png",
+      "sha256": "5a3b0a0bdba8d3a0cad2b508b2f90ae3a6358a3a1bba06939ec550e6ac17a192"
+    },
+    {
+      "collectibleID": "growth.star-carrying-fish",
+      "name": "衔星飞鱼",
+      "series": "星空信使",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "sourceSHA256": "e916ed15518becb8072dcbb248a38c235c77fa556c029d677566d7beb88d50d7",
+      "crop": [
+        480,
+        0,
+        544,
+        512
+      ],
+      "resource": "growth-46-mature.png",
+      "sha256": "e16e51ef71057710ca987e136f66b9eb0f1ca6788d70208942b3efada0935303",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.nightwatch-moth",
+      "name": "巡夜灵蛾",
+      "series": "星空信使",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "sourceSHA256": "e916ed15518becb8072dcbb248a38c235c77fa556c029d677566d7beb88d50d7",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-47-juvenile.png",
+      "sha256": "23d7b40b34c61eb22351b8415e39a338189efe33fdc50eb10ea87e248dab7e35"
+    },
+    {
+      "collectibleID": "growth.nightwatch-moth",
+      "name": "巡夜灵蛾",
+      "series": "星空信使",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "sourceSHA256": "e916ed15518becb8072dcbb248a38c235c77fa556c029d677566d7beb88d50d7",
+      "crop": [
+        440,
+        536,
+        584,
+        488
+      ],
+      "resource": "growth-47-mature.png",
+      "sha256": "2d5306cbdaec05fd15f579250e233c1610d20200fb72be284471a97dd3fcf3d2",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.comet-spirit",
+      "name": "曳尾彗灵",
+      "series": "星空信使",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "sourceSHA256": "e916ed15518becb8072dcbb248a38c235c77fa556c029d677566d7beb88d50d7",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-48-juvenile.png",
+      "sha256": "50d532678c05585a109103c72e1eddc791164919ffa14e28630bcce85cbe4590"
+    },
+    {
+      "collectibleID": "growth.comet-spirit",
+      "name": "曳尾彗灵",
+      "series": "星空信使",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-7b4ac887-9a53-4788-bdb8-5b1d5815b1fc.png",
+      "sourceSHA256": "e916ed15518becb8072dcbb248a38c235c77fa556c029d677566d7beb88d50d7",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-48-mature.png",
+      "sha256": "ddea3d1a64cf9f9efb295e3383b9cbea47a15dc032619f7bd5dca5d8f66f38bf"
+    },
+    {
+      "collectibleID": "growth.light-gathering-windmill",
+      "name": "拾光风车",
+      "series": "奇异装置",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "sourceSHA256": "8ce3ebee40c059bc28d345dffea19beab776485308f67cdfaa0b636670807c90",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-49-juvenile.png",
+      "sha256": "2fb8607900426155787fb571505c76361a6930a10e0422c9451ec6a235ef37d5"
+    },
+    {
+      "collectibleID": "growth.light-gathering-windmill",
+      "name": "拾光风车",
+      "series": "奇异装置",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "sourceSHA256": "8ce3ebee40c059bc28d345dffea19beab776485308f67cdfaa0b636670807c90",
+      "crop": [
+        480,
+        0,
+        544,
+        512
+      ],
+      "resource": "growth-49-mature.png",
+      "sha256": "9b92e116d63603a3ec0488b1b483dceea152b309553427c6ee75637d7f71ed1c",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.dream-spinning-wheel",
+      "name": "引梦纺轮",
+      "series": "奇异装置",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "sourceSHA256": "8ce3ebee40c059bc28d345dffea19beab776485308f67cdfaa0b636670807c90",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-50-juvenile.png",
+      "sha256": "e0f16ff396df21be09e708c152b48169c16a9a84d8811baf2ebcf53b2faae6ac"
+    },
+    {
+      "collectibleID": "growth.dream-spinning-wheel",
+      "name": "引梦纺轮",
+      "series": "奇异装置",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "sourceSHA256": "8ce3ebee40c059bc28d345dffea19beab776485308f67cdfaa0b636670807c90",
+      "crop": [
+        480,
+        512,
+        544,
+        512
+      ],
+      "resource": "growth-50-mature.png",
+      "sha256": "8b0e421f3a26cd1cf5e4a48cda02cf5d7649c59af498d758999c826a7e237c94",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.gap-seeking-key",
+      "name": "寻隙钥匙",
+      "series": "奇异装置",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "sourceSHA256": "8ce3ebee40c059bc28d345dffea19beab776485308f67cdfaa0b636670807c90",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-51-juvenile.png",
+      "sha256": "eb1306a36a839b78cd9eb0bffb3fb2150bfd450e7ea9ce81ea8e1f55917c38c0"
+    },
+    {
+      "collectibleID": "growth.gap-seeking-key",
+      "name": "寻隙钥匙",
+      "series": "奇异装置",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-1ed1ae74-b6d6-4fc9-b35e-9e818e727c4e.png",
+      "sourceSHA256": "8ce3ebee40c059bc28d345dffea19beab776485308f67cdfaa0b636670807c90",
+      "crop": [
+        480,
+        980,
+        544,
+        556
+      ],
+      "resource": "growth-51-mature.png",
+      "sha256": "5d20ecb2e9cddc2ac791dbd852ed767996789c97d03b6da837f7bdfa725b58ff",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.rift-starship",
+      "name": "裂空星舰",
+      "series": "星际航行",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "sourceSHA256": "bc14e7a857d8017c25549a223a9d06e5915a7174b180aa27589cfa86f5f358ee",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-52-juvenile.png",
+      "sha256": "66a028fd616d4bd488dbb326772d962c3d5202a7a354af9175ae5f9c3abb3e11"
+    },
+    {
+      "collectibleID": "growth.rift-starship",
+      "name": "裂空星舰",
+      "series": "星际航行",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "sourceSHA256": "bc14e7a857d8017c25549a223a9d06e5915a7174b180aa27589cfa86f5f358ee",
+      "crop": [
+        480,
+        0,
+        544,
+        512
+      ],
+      "resource": "growth-52-mature.png",
+      "sha256": "a428e0714c09893a3b4c4059e9df46cc0241be604d32a7fe831538742263a9b1",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.gravity-sail",
+      "name": "引力风帆",
+      "series": "星际航行",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "sourceSHA256": "bc14e7a857d8017c25549a223a9d06e5915a7174b180aa27589cfa86f5f358ee",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-53-juvenile.png",
+      "sha256": "333a81e2137fe25769ec5da4c87d3f5ff842be74c2d4ac41728fd593da6d0dc4"
+    },
+    {
+      "collectibleID": "growth.gravity-sail",
+      "name": "引力风帆",
+      "series": "星际航行",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "sourceSHA256": "bc14e7a857d8017c25549a223a9d06e5915a7174b180aa27589cfa86f5f358ee",
+      "crop": [
+        480,
+        500,
+        544,
+        524
+      ],
+      "resource": "growth-53-mature.png",
+      "sha256": "c4f503ff8d9b33f3be36df06d661b142f39ba27754d9a07ea349b8732b9c14ee",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.transit-ring",
+      "name": "跃迁之环",
+      "series": "星际航行",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "sourceSHA256": "bc14e7a857d8017c25549a223a9d06e5915a7174b180aa27589cfa86f5f358ee",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-54-juvenile.png",
+      "sha256": "58e674129a47326b2cbb4185333c4e3b1a3541c7e4676cbf8358cdbe6f34a6bf"
+    },
+    {
+      "collectibleID": "growth.transit-ring",
+      "name": "跃迁之环",
+      "series": "星际航行",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-f40ca71c-439e-4aa8-954f-54cf8431f170.png",
+      "sourceSHA256": "bc14e7a857d8017c25549a223a9d06e5915a7174b180aa27589cfa86f5f358ee",
+      "crop": [
+        480,
+        1024,
+        544,
+        512
+      ],
+      "resource": "growth-54-mature.png",
+      "sha256": "9731573d26ebc713f8b5a2f7aa36afdbf14c3e9d3710216487019822fc282e9f",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.memory-bottle",
+      "name": "回忆之瓶",
+      "series": "记忆容器",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "sourceSHA256": "28cb67e0ee3ce44bd859f67b50eb0812e108e483340e1cfbffb955bc696d835e",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-55-juvenile.png",
+      "sha256": "9ea491da59f567d3b302b5744c2d3574ab0d4671355c25017d65a28f404df899"
+    },
+    {
+      "collectibleID": "growth.memory-bottle",
+      "name": "回忆之瓶",
+      "series": "记忆容器",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "sourceSHA256": "28cb67e0ee3ce44bd859f67b50eb0812e108e483340e1cfbffb955bc696d835e",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-55-mature.png",
+      "sha256": "3cbd03b478ada774745d69f9e7df7841277adf7b623dd0b45de7975b0a225a80"
+    },
+    {
+      "collectibleID": "growth.soundkeeping-conch",
+      "name": "留声海螺",
+      "series": "记忆容器",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "sourceSHA256": "28cb67e0ee3ce44bd859f67b50eb0812e108e483340e1cfbffb955bc696d835e",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-56-juvenile.png",
+      "sha256": "c7fe2beeeb67da1a1a03e1c8a466535c1403a492ecb6afbfdaa65149f1498478"
+    },
+    {
+      "collectibleID": "growth.soundkeeping-conch",
+      "name": "留声海螺",
+      "series": "记忆容器",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "sourceSHA256": "28cb67e0ee3ce44bd859f67b50eb0812e108e483340e1cfbffb955bc696d835e",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-56-mature.png",
+      "sha256": "3ef9e2fd2dde0b34328519e7d6a10c68d7ae613c2c302c03c70f9aa62e13d5fb"
+    },
+    {
+      "collectibleID": "growth.dream-vault",
+      "name": "梦藏匣",
+      "series": "记忆容器",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "sourceSHA256": "28cb67e0ee3ce44bd859f67b50eb0812e108e483340e1cfbffb955bc696d835e",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-57-juvenile.png",
+      "sha256": "3d4607d9d72436ea9466b940797bd35a4ae1cb60150ac62eb91a3e44d4390277"
+    },
+    {
+      "collectibleID": "growth.dream-vault",
+      "name": "梦藏匣",
+      "series": "记忆容器",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-5760c069-8a4a-4e76-8193-e2a95059da8e.png",
+      "sourceSHA256": "28cb67e0ee3ce44bd859f67b50eb0812e108e483340e1cfbffb955bc696d835e",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-57-mature.png",
+      "sha256": "f3c940dadec7e7098ffdd553695626e1f768e3f2162aa25791d1995f566a585d"
+    },
+    {
+      "collectibleID": "growth.rising-snowcloud",
+      "name": "逆雪之云",
+      "series": "异界气象",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "sourceSHA256": "965b861f1a3232fc6e86dd31bd1b4fdc666cf7c107b5bc22df8b6f8fda1ceaf0",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-58-juvenile.png",
+      "sha256": "3cedc3673d9895ea61995cba0c390ff465dfc1ef425014adc1655d5ac9b56bb7"
+    },
+    {
+      "collectibleID": "growth.rising-snowcloud",
+      "name": "逆雪之云",
+      "series": "异界气象",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "sourceSHA256": "965b861f1a3232fc6e86dd31bd1b4fdc666cf7c107b5bc22df8b6f8fda1ceaf0",
+      "crop": [
+        480,
+        0,
+        544,
+        528
+      ],
+      "resource": "growth-58-mature.png",
+      "sha256": "ff7613233303e3b9dce02772d9925361101b33a58c8ed9a1cba10fcc95ae2e14",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.gathering-rain-ring",
+      "name": "凝雨之环",
+      "series": "异界气象",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "sourceSHA256": "965b861f1a3232fc6e86dd31bd1b4fdc666cf7c107b5bc22df8b6f8fda1ceaf0",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-59-juvenile.png",
+      "sha256": "05ac255a7862c692ac04e7962ae70bad12bc354741d9a1b005e4680f14d93be4"
+    },
+    {
+      "collectibleID": "growth.gathering-rain-ring",
+      "name": "凝雨之环",
+      "series": "异界气象",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "sourceSHA256": "965b861f1a3232fc6e86dd31bd1b4fdc666cf7c107b5bc22df8b6f8fda1ceaf0",
+      "crop": [
+        460,
+        528,
+        564,
+        496
+      ],
+      "resource": "growth-59-mature.png",
+      "sha256": "c951ded9a5ff32a4b137b1036270bfc45dc32f21cce0c1e3edb6628924433884",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.spiraling-aurora",
+      "name": "回旋极光",
+      "series": "异界气象",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "sourceSHA256": "965b861f1a3232fc6e86dd31bd1b4fdc666cf7c107b5bc22df8b6f8fda1ceaf0",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-60-juvenile.png",
+      "sha256": "06c79dd0be31c571b47d02951fee7d6d72cd80f0d7ab46e95832f542ac7fcffd"
+    },
+    {
+      "collectibleID": "growth.spiraling-aurora",
+      "name": "回旋极光",
+      "series": "异界气象",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-828188c2-a269-470d-bf0c-0bc25720bf95.png",
+      "sourceSHA256": "965b861f1a3232fc6e86dd31bd1b4fdc666cf7c107b5bc22df8b6f8fda1ceaf0",
+      "crop": [
+        440,
+        1024,
+        584,
+        512
+      ],
+      "resource": "growth-60-mature.png",
+      "sha256": "e564ea91a4907513402e3c2cac02e7ece27709ca43878fe0293b72ec1af1982d",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.sleeping-statue",
+      "name": "沉眠石像",
+      "series": "古老守护",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "sourceSHA256": "be96bf847c587762176ff9508cd3772826736b4a959103e378a8c20312f05fd5",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-61-juvenile.png",
+      "sha256": "4c3e781012e1b816114a22185fe8a2bc1c1f1d73f9d204463020d8f42c1f88e9"
+    },
+    {
+      "collectibleID": "growth.sleeping-statue",
+      "name": "沉眠石像",
+      "series": "古老守护",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "sourceSHA256": "be96bf847c587762176ff9508cd3772826736b4a959103e378a8c20312f05fd5",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "resource": "growth-61-mature.png",
+      "sha256": "e3948604a9eaee09d027c965fd62a7c234d44efe6a5e6d733224f28839347b9b"
+    },
+    {
+      "collectibleID": "growth.embracing-wall",
+      "name": "环抱之壁",
+      "series": "古老守护",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "sourceSHA256": "be96bf847c587762176ff9508cd3772826736b4a959103e378a8c20312f05fd5",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "resource": "growth-62-juvenile.png",
+      "sha256": "e74283f77a594985acfd173b03a653709ef850de54eb63e685fe9ca91e5224e7"
+    },
+    {
+      "collectibleID": "growth.embracing-wall",
+      "name": "环抱之壁",
+      "series": "古老守护",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "sourceSHA256": "be96bf847c587762176ff9508cd3772826736b4a959103e378a8c20312f05fd5",
+      "crop": [
+        480,
+        512,
+        544,
+        512
+      ],
+      "resource": "growth-62-mature.png",
+      "sha256": "44bfa4c33627c5e3166cd34cc43bf0cf3c29d69f978e52ef708c96e7c46d2207",
+      "normalization": "Fit within 480 pixels on a centered transparent 512x512 canvas"
+    },
+    {
+      "collectibleID": "growth.watchful-feather",
+      "name": "守望之羽",
+      "series": "古老守护",
+      "stage": "juvenile",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "sourceSHA256": "be96bf847c587762176ff9508cd3772826736b4a959103e378a8c20312f05fd5",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-63-juvenile.png",
+      "sha256": "cd4074a5eef679ad5e767acb10cce21e63c271edcd98490347f0392f79c3aa13"
+    },
+    {
+      "collectibleID": "growth.watchful-feather",
+      "name": "守望之羽",
+      "series": "古老守护",
+      "stage": "mature",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261105-growth-v1/batch24b-source-sheets/codex-clipboard-384b0714-6d6f-4c64-9704-16964f8a8750.png",
+      "sourceSHA256": "be96bf847c587762176ff9508cd3772826736b4a959103e378a8c20312f05fd5",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "resource": "growth-63-mature.png",
+      "sha256": "bd1b0c2b5e0b2a0c612d0e44e2f6e5d6be37028cef1d5da9e7c33c37c83c63fd"
+    }
+  ]
+}

@@ -16,8 +16,8 @@ enum ArchiveCardAccessibility {
 enum ArchiveCardMetadata {
     static func kindTitle(for kind: CardRewardKind) -> String {
         switch kind {
-        case .ordinaryMature: "成熟卡"
-        case .hiddenDiscovery: "隐藏发现"
+        case .ordinaryMature: "成长卡"
+        case .hiddenDiscovery: "隐藏卡"
         }
     }
 }
@@ -261,6 +261,19 @@ struct ArchiveOrganismArtwork: View {
     let identifier: String
 
     var body: some View {
+        Group {
+            if CollectionCatalog.definition(id: identifier) != nil {
+                GrowthCardArtwork(collectibleID: identifier)
+            } else {
+                fallback
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+
+    @ViewBuilder
+    private var fallback: some View {
         let phase = 0.23
         let samples = ArchiveOrganismGeometry.samples(
             identifier: identifier,

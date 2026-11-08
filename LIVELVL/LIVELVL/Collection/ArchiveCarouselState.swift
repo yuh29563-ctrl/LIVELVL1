@@ -254,6 +254,14 @@ nonisolated struct ArchiveCardCaptionPresentation: Equatable, Sendable {
     let levelText: String
     let acquiredText: String
 
+    init(permanentCard: PermanentCollectionCard) {
+        title = permanentCard.title
+        kindTitle = permanentCard.series
+        sourceTitle = "永久卡片"
+        levelText = String(format: "GUIDE %02d", permanentCard.number)
+        acquiredText = "随时翻阅 · 永久保留"
+    }
+
     init(
         name: String,
         kindTitle: String,
@@ -359,8 +367,14 @@ nonisolated struct ArchiveArrivalPresentationState: Equatable, Sendable {
         pendingAwardKeys.append(awardKey)
     }
 
+    mutating func reconcile(validAwardKeys: Set<String>) {
+        completedAwardKeys.formIntersection(validAwardKeys)
+        // A newly claimed row may reach the query after its arrival is registered.
+    }
+
     mutating func takeArrivalIfNeeded(validAwardKeys: Set<String>) -> String? {
-        pendingAwardKeys.first {
+        reconcile(validAwardKeys: validAwardKeys)
+        return pendingAwardKeys.first {
             validAwardKeys.contains($0) && !completedAwardKeys.contains($0)
         }
     }

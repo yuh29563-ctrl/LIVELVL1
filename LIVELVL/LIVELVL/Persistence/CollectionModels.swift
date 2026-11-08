@@ -13,19 +13,24 @@ final class CollectionProgress {
     var activeOrdinaryIndex: Int
     var activeStageRaw: Int
     var lastProcessedMaturityLevel: Int
+    var growthCatalogRevision: Int = 0
+    var hiddenCardsEnabledAt: Date? = nil
+    var hiddenCardsTimeZoneIdentifier: String? = nil
 
     init(
         singletonKey: String = "collection.progress",
         highestLevel: Int = 0,
         activeOrdinaryIndex: Int = 0,
         activeStage: CompanionStage = .juvenile,
-        lastProcessedMaturityLevel: Int = -1
+        lastProcessedMaturityLevel: Int = -1,
+        growthCatalogRevision: Int = 1
     ) {
         self.singletonKey = singletonKey
         self.highestLevel = highestLevel
         self.activeOrdinaryIndex = activeOrdinaryIndex
         activeStageRaw = activeStage.rawValue
         self.lastProcessedMaturityLevel = lastProcessedMaturityLevel
+        self.growthCatalogRevision = growthCatalogRevision
     }
 
     var activeStage: CompanionStage {

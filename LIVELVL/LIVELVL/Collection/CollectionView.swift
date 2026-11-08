@@ -178,15 +178,7 @@ struct CollectionView: View {
     }
 
     private var archiveItems: [ArchiveCollectiblePresentation] {
-        ownedCollectibles.compactMap { collectible in
-            guard let definition = CollectionCatalog.definition(id: collectible.collectibleID) else {
-                return nil
-            }
-            return ArchiveCollectiblePresentation(
-                collectible: collectible,
-                definition: definition
-            )
-        }
+        ArchiveCollectiblePresentation.items(owned: ownedCollectibles)
     }
 
     private var orderedAwardKeys: [String] {
@@ -284,8 +276,7 @@ struct CollectionView: View {
 
             if let expandedItem {
                 ArchiveExpandedView(
-                    collectible: expandedItem.collectible,
-                    definition: expandedItem.definition,
+                    item: expandedItem,
                     isShowingBack: showingBackBinding,
                     onClose: closeExpanded
                 )
@@ -299,7 +290,22 @@ struct CollectionView: View {
             }
         }
         .onChange(of: orderedAwardKeys, initial: true) { _, keys in
+            let lostExpandedCard = archiveState.expandedAwardKey.map { !keys.contains($0) } ?? false
             archiveState.reconcile(orderedAwardKeys: keys)
+            arrivalState.reconcile(validAwardKeys: Set(keys))
+            if let arrivingAwardKey, !keys.contains(arrivingAwardKey) {
+                self.arrivingAwardKey = nil
+                arrivalSequenceID = nil
+                arrivalTraceProgress = 0
+            }
+            if lostExpandedCard, isCollectionSelected, let centered = archiveState.centeredAwardKey {
+                Task { @MainActor in
+                    await Task.yield()
+                    guard archiveState.expandedAwardKey == nil,
+                          orderedAwardKeys.contains(centered), isCollectionSelected else { return }
+                    focusedCard = ArchiveAccessibilityFocusRestoration.target(awardKey: centered)
+                }
+            }
             seenVisibility.center(archiveState.centeredAwardKey)
             presentPendingArrival()
             markVisibleCollectiblesSeen()

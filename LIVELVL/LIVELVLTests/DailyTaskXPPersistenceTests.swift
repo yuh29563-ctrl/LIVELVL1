@@ -53,7 +53,7 @@ struct DailyTaskXPPersistenceTests {
         return directory
     }
 
-    @Test func oldDiskStoreMigratesAndReopensWithoutRewritingXPOrCollection() throws {
+    @Test func oldDiskStorePreservesExistingRecordsWhileBackfillingMissingRewards() throws {
         let directory = try temporaryDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
         let url = directory.appendingPathComponent("legacy.store")
@@ -95,7 +95,8 @@ struct DailyTaskXPPersistenceTests {
             let task = Item(title: "新行动", dimension: .health, minutes: 60, difficulty: 2, xp: 80, recurrence: .daily)
             context.insert(task)
             try context.save()
-            let result = try TaskRewardCoordinator.complete(item: task, progress: progress, in: context, now: date)
+            try CardRewardService.activateHiddenCards(in: context, now: date.addingTimeInterval(1), calendar: .current)
+            let result = try TaskRewardCoordinator.complete(item: task, progress: progress, in: context, now: date.addingTimeInterval(1))
             #expect(result.completion.xp == 0)
             #expect(result.completion.nominalXP == 80)
             #expect(try CoinLedgerService.balance(in: context) == 6_280)
@@ -126,11 +127,15 @@ struct DailyTaskXPPersistenceTests {
             #expect(collection.activeStage == .stageThree)
             #expect(collection.lastProcessedMaturityLevel == 1)
             let owned = try context.fetch(FetchDescriptor<OwnedCollectible>())
-            #expect(owned.count == 2)
+            #expect(owned.count == 4)
+            #expect(owned.first { $0.awardKey == "ordinary.level.2" }?.collectibleID == "growth.star-vortex")
+            #expect(owned.first { $0.awardKey == "ordinary.level.3" }?.collectibleID == "growth.light-tree")
             #expect(owned.first { $0.awardKey == "ordinary.level.1" }?.isUnseen == false)
             #expect(owned.first { $0.awardKey == "hidden.study.three-day-streak" }?.isUnseen == true)
             #expect(owned.first { $0.awardKey == "ordinary.level.1" }?.reason == "旧获得原因")
-            let pending = try #require(context.fetch(FetchDescriptor<PendingCardReward>()).first)
+            let rewards = try context.fetch(FetchDescriptor<PendingCardReward>())
+            #expect(Set(rewards.map(\.awardKey)) == ["ordinary.level.2", "ordinary.level.3", "ordinary.level.4", "hidden.health.first"])
+            let pending = try #require(rewards.first { $0.awardKey == "ordinary.level.4" })
             #expect(pending.awardKey == "ordinary.level.4")
             #expect(pending.collectibleID == "ordinary.hare")
             #expect(pending.eligibleAt == date.addingTimeInterval(1.6))
@@ -196,7 +201,7 @@ struct DailyTaskXPPersistenceTests {
         #expect(!context.hasChanges)
     }
 
-    @Test func zeroXPCompletionStillEnqueuesBehaviorRewardExactlyOnce() throws {
+    @Test func zeroXPCompletionKeepsBehaviorFactsWithoutUnmappedHiddenRewards() throws {
         let container = try ModelContainer(for: schema(), configurations: .init(isStoredInMemoryOnly: true))
         let context = container.mainContext
         let now = Date(timeIntervalSince1970: 1_800_000_000)
@@ -213,7 +218,10 @@ struct DailyTaskXPPersistenceTests {
             try CardRewardService.reconcilePersistedRewards(in: context, now: now, calendar: .current)
         }
         let pending = try context.fetch(FetchDescriptor<PendingCardReward>())
-        #expect(pending.map(\.awardKey) == ["hidden.health.first-sixty-minutes"])
+        #expect(Set(pending.map(\.awardKey)) == ["ordinary.level.1", "hidden.health.first"])
+        #expect(try context.fetch(FetchDescriptor<OwnedCollectible>()).map(\.collectibleID) == ["growth.star-vortex"])
+        #expect(result.completion.durationMinutes == 60)
+        #expect(result.completion.recordedDimension == .health)
         #expect(progress.totalXP == 400)
         #expect(try CoinLedgerService.balance(in: context) == 80)
     }
@@ -237,7 +245,7 @@ struct DailyTaskXPPersistenceTests {
             let readonly = try store(at: url, allowsSave: false)
             readonly.mainContext.autosaveEnabled = false
             try CardRewardService.reconcilePersistedRewards(in: readonly.mainContext, now: now, calendar: .current)
-            #expect(try readonly.mainContext.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey) == ["ordinary.level.1"])
+            #expect(Set(try readonly.mainContext.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey)) == ["ordinary.level.1", "hidden.learning.first"])
             #expect(try readonly.mainContext.fetch(FetchDescriptor<OwnedCollectible>()).map(\.awardKey) == ["ordinary.level.1"])
         }
         try autoreleasepool {
@@ -246,7 +254,7 @@ struct DailyTaskXPPersistenceTests {
             for _ in 0..<2 {
                 try CardRewardService.reconcilePersistedRewards(in: context, now: now, calendar: .current)
             }
-            #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey) == ["ordinary.level.1"])
+            #expect(Set(try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey)) == ["ordinary.level.1", "hidden.learning.first"])
             let adult = try #require(context.fetch(FetchDescriptor<OwnedCollectible>()).first)
             #expect(adult.awardKey == "ordinary.level.1")
             #expect(adult.isUnseen)
@@ -273,7 +281,7 @@ struct DailyTaskXPPersistenceTests {
             try context.save()
             try TaskRewardCoordinator.complete(item: task, progress: progress, in: context, now: now)
             #expect(try context.fetch(FetchDescriptor<OwnedCollectible>()).count == 1)
-            #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).count == 1)
+            #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).count == 2)
         }
         try autoreleasepool {
             let reopened = try store(at: url)
@@ -285,7 +293,7 @@ struct DailyTaskXPPersistenceTests {
         try autoreleasepool {
             let reopened = try store(at: url)
             let context = reopened.mainContext
-            #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).isEmpty)
+            #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey) == ["hidden.learning.first"])
             #expect(try context.fetch(FetchDescriptor<OwnedCollectible>()).first?.isUnseen == true)
             #expect(try context.fetch(FetchDescriptor<CollectionProgress>()).first?.activeOrdinaryIndex == 1)
             #expect(try context.fetch(FetchDescriptor<LIVELVL.Progress>()).first?.totalXP == 215)

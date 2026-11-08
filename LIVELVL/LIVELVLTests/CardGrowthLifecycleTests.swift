@@ -34,10 +34,10 @@ struct CardGrowthLifecycleTests {
         #expect(progress.level == 1)
         let owned = try context.fetch(FetchDescriptor<OwnedCollectible>())
         #expect(owned.map(\.awardKey) == ["ordinary.level.1"])
-        #expect(owned.first?.collectibleID == "ordinary.sprout")
+        #expect(owned.first?.collectibleID == "growth.star-vortex")
         #expect(owned.first?.isUnseen == true)
-        #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey)
-            == ["ordinary.level.1"])
+        #expect(Set(try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey))
+            == ["ordinary.level.1", "hidden.learning.first"])
     }
 
     @Test func leavingAppAcknowledgesAlreadyOwnedAdultBeforeAnimationIsEligible() throws {
@@ -51,13 +51,13 @@ struct CardGrowthLifecycleTests {
         try context.save()
         let now = Date(timeIntervalSince1970: 1_800_000_000)
         _ = try TaskRewardCoordinator.complete(item: item, progress: progress, in: context, now: now)
-        let pending = try #require(context.fetch(FetchDescriptor<PendingCardReward>()).first)
+        let pending = try #require(context.fetch(FetchDescriptor<PendingCardReward>()).first { $0.kind == .ordinaryMature })
         let collection = try #require(context.fetch(FetchDescriptor<CollectionProgress>()).first)
         let acquiredAt = try #require(context.fetch(FetchDescriptor<OwnedCollectible>()).first?.acquiredAt)
 
         try CardRewardService.claim(pending, progress: collection, in: context, now: now)
 
-        #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).isEmpty)
+        #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey) == ["hidden.learning.first"])
         #expect(collection.activeOrdinaryIndex == 1)
         let owned = try context.fetch(FetchDescriptor<OwnedCollectible>())
         #expect(owned.count == 1)
@@ -71,11 +71,11 @@ struct CardGrowthLifecycleTests {
         let now = Date(timeIntervalSince1970: 10_000)
         context.insert(CollectionProgress(highestLevel: 1))
         context.insert(OwnedCollectible(
-            awardKey: "ordinary.level.1", collectibleID: "ordinary.sprout",
+            awardKey: "ordinary.level.1", collectibleID: "growth.star-vortex",
             kind: .ordinaryMature, reason: "达到 Lv.1，陪伴成熟", acquiredAt: now
         ))
         context.insert(PendingCardReward(
-            awardKey: "ordinary.level.1", collectibleID: "ordinary.sprout",
+            awardKey: "ordinary.level.1", collectibleID: "growth.star-vortex",
             kind: .ordinaryMature, reason: "达到 Lv.1，陪伴成熟", maturityLevel: 1,
             triggeredAt: now, eligibleAt: now.addingTimeInterval(60)
         ))

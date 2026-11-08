@@ -1,0 +1,616 @@
+{
+  "entries": [
+    {
+      "collectibleID": "hidden.health.first",
+      "crop": [
+        0,
+        0,
+        512,
+        504
+      ],
+      "name": "律动之心",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-health-first.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "sourceSHA256": "71394740e0f9cf67ca01a14e0d74d000d4e79ae730f99a6f2e5717a8d4f87a0c",
+      "sha256": "40c3cfb1ba7a3847ebfce939ed778a123b4ab1fcc366128d73b15c2d14e54b52"
+    },
+    {
+      "collectibleID": "hidden.health.streak.7",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "name": "舒息双翼",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-health-streak-7.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "sourceSHA256": "71394740e0f9cf67ca01a14e0d74d000d4e79ae730f99a6f2e5717a8d4f87a0c",
+      "sha256": "5062f51a21544691af73a0efc03236a59f759e0b9cd5b1d1428575df531ed396"
+    },
+    {
+      "collectibleID": "hidden.health.streak.14",
+      "crop": [
+        0,
+        504,
+        512,
+        498
+      ],
+      "name": "修复之泉",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-health-streak-14.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "sourceSHA256": "71394740e0f9cf67ca01a14e0d74d000d4e79ae730f99a6f2e5717a8d4f87a0c",
+      "sha256": "f48dd09bc2c523853a6502c8cbcb80495c531d15a2a20816033ed4b9dc962e03"
+    },
+    {
+      "collectibleID": "hidden.health.streak.21",
+      "crop": [
+        512,
+        512,
+        512,
+        502
+      ],
+      "name": "眠月之茧",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-health-streak-21.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "sourceSHA256": "71394740e0f9cf67ca01a14e0d74d000d4e79ae730f99a6f2e5717a8d4f87a0c",
+      "sha256": "7db326e800f4181632e9d8d31cf4c8d44cedd42437751e21f31360c643138735"
+    },
+    {
+      "collectibleID": "hidden.health.streak.28",
+      "crop": [
+        0,
+        1002,
+        512,
+        534
+      ],
+      "name": "韧生之脊",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-health-streak-28.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "sourceSHA256": "71394740e0f9cf67ca01a14e0d74d000d4e79ae730f99a6f2e5717a8d4f87a0c",
+      "sha256": "e155e480b1481c8c7dac972af9fd140ffc44ee9d5be71cff78e7df69217872e0"
+    },
+    {
+      "collectibleID": "hidden.health.streak.35",
+      "crop": [
+        512,
+        1014,
+        512,
+        522
+      ],
+      "name": "步行之轮",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-health-streak-35.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-9206735f-0537-4a28-b31e-c5517872ceeb.png",
+      "sourceSHA256": "71394740e0f9cf67ca01a14e0d74d000d4e79ae730f99a6f2e5717a8d4f87a0c",
+      "sha256": "4d5c2335053a989adf20d999766452355259dd9c5c27f242130731a3f22d3936"
+    },
+    {
+      "collectibleID": "hidden.learning.first",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "name": "启智之灯",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-learning-first.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "sourceSHA256": "0fc066f32cb0988d69994768abc84f974ab250cd3cf1c2e612575e2a5778d465",
+      "sha256": "cda4d8fe4bb80e3228d2910aeffccfc80b2abf829fdc068ec58d559473b6f3d5"
+    },
+    {
+      "collectibleID": "hidden.learning.streak.7",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "name": "递进书梯",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-learning-streak-7.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "sourceSHA256": "0fc066f32cb0988d69994768abc84f974ab250cd3cf1c2e612575e2a5778d465",
+      "sha256": "3fcf969a4d2084b6f8b14ad00c2dfb95893e604be750ee6dbc8d107c9be7dab1"
+    },
+    {
+      "collectibleID": "hidden.learning.streak.14",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "name": "解谜之钥",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-learning-streak-14.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "sourceSHA256": "0fc066f32cb0988d69994768abc84f974ab250cd3cf1c2e612575e2a5778d465",
+      "sha256": "f553069e6378f1e67cc6a8a3c358f820962c4ea734945be2460fcbe94acffeb1"
+    },
+    {
+      "collectibleID": "hidden.learning.streak.21",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "name": "思维星图",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-learning-streak-21.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "sourceSHA256": "0fc066f32cb0988d69994768abc84f974ab250cd3cf1c2e612575e2a5778d465",
+      "sha256": "3c9d19022a27bb1294ec9a35042d3aeb8c1f7e8bb1c89637c8298618388a56e1"
+    },
+    {
+      "collectibleID": "hidden.learning.streak.28",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "name": "辨真棱镜",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-learning-streak-28.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "sourceSHA256": "0fc066f32cb0988d69994768abc84f974ab250cd3cf1c2e612575e2a5778d465",
+      "sha256": "be1aa63c55a1bdbcd2efb0548f631510d923ebc1ab8afc64735ffdeb3ad1a3ae"
+    },
+    {
+      "collectibleID": "hidden.learning.streak.35",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "name": "迁知之桥",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-learning-streak-35.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-e4a6ea26-ff91-42bb-b59c-9952df0759b5.png",
+      "sourceSHA256": "0fc066f32cb0988d69994768abc84f974ab250cd3cf1c2e612575e2a5778d465",
+      "sha256": "839bd46f5795870815538bfa67de8b5e04763a75bd1a3c80e33ee3bbf2fe72fb"
+    },
+    {
+      "collectibleID": "hidden.finance.first",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "name": "聚沙之仓",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-finance-first.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "sourceSHA256": "086be94f7471f23e23b7b18f8d1ddedde52443335b9caf76969f59ab72d9b91b",
+      "sha256": "294280de8674b35e6c1f0bc20c301eaee3e98b87318dd433d0b913ca7a804d68"
+    },
+    {
+      "collectibleID": "hidden.finance.streak.7",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "name": "积蓄之树",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-finance-streak-7.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "sourceSHA256": "086be94f7471f23e23b7b18f8d1ddedde52443335b9caf76969f59ab72d9b91b",
+      "sha256": "af57ac23249ddac11c5f45ff6bee8f16b029f58691bd635014ea889d99e11c7b"
+    },
+    {
+      "collectibleID": "hidden.finance.streak.14",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "name": "分流之渠",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-finance-streak-14.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "sourceSHA256": "086be94f7471f23e23b7b18f8d1ddedde52443335b9caf76969f59ab72d9b91b",
+      "sha256": "35b657387940c376993722c105bb9450769137c9c9cfc61592c56c60b71eed45"
+    },
+    {
+      "collectibleID": "hidden.finance.streak.21",
+      "crop": [
+        512,
+        512,
+        512,
+        487
+      ],
+      "name": "守储之盾",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-finance-streak-21.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "sourceSHA256": "086be94f7471f23e23b7b18f8d1ddedde52443335b9caf76969f59ab72d9b91b",
+      "sha256": "b7baa0c9d3dc8300dad4a94b1c033cc1ae82c8d0179894f3bc3121f6be7faee8"
+    },
+    {
+      "collectibleID": "hidden.finance.streak.28",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "name": "取舍天平",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-finance-streak-28.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "sourceSHA256": "086be94f7471f23e23b7b18f8d1ddedde52443335b9caf76969f59ab72d9b91b",
+      "sha256": "278150b615aac07bcdc3f450000aa0d4665629fd62226077a20af3f130c9c988"
+    },
+    {
+      "collectibleID": "hidden.finance.streak.35",
+      "crop": [
+        512,
+        999,
+        512,
+        537
+      ],
+      "name": "远期灯塔",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-finance-streak-35.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-dff800e0-5b5c-4a13-80c5-2be92109beff.png",
+      "sourceSHA256": "086be94f7471f23e23b7b18f8d1ddedde52443335b9caf76969f59ab72d9b91b",
+      "sha256": "c28b8529e91cf4db2e804d9215ab4abfe5e07f2ae7f26c8bbe6466d59c57bc76"
+    },
+    {
+      "collectibleID": "hidden.relationships.first",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "name": "共鸣双铃",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-relationships-first.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "sourceSHA256": "2ce29d2b81fc181f78c3836cdcb3abdedd94b488280e3ca127a11ca5c309c024",
+      "sha256": "2ceaf0f09352f23b8c44c225c33549ddb10ad45fc9af3acd27dcc916639b71c1"
+    },
+    {
+      "collectibleID": "hidden.relationships.streak.7",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "name": "交织之根",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-relationships-streak-7.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "sourceSHA256": "2ce29d2b81fc181f78c3836cdcb3abdedd94b488280e3ca127a11ca5c309c024",
+      "sha256": "afe4b78fdb573f2c430fe3b952639dfd3eceda5b532e0808432c6b4e0ff8e8a7"
+    },
+    {
+      "collectibleID": "hidden.relationships.streak.14",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "name": "相向之桥",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-relationships-streak-14.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "sourceSHA256": "2ce29d2b81fc181f78c3836cdcb3abdedd94b488280e3ca127a11ca5c309c024",
+      "sha256": "bccc56c89727aa5a8784acec133f8b60a46ae134ffa474a3154451e7b0cfda9a"
+    },
+    {
+      "collectibleID": "hidden.relationships.streak.21",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "name": "倾听之螺",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-relationships-streak-21.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "sourceSHA256": "2ce29d2b81fc181f78c3836cdcb3abdedd94b488280e3ca127a11ca5c309c024",
+      "sha256": "aa44941ca036ef1720ac675aa20390c026b54e124e70bf23b4f77432d1e39fee"
+    },
+    {
+      "collectibleID": "hidden.relationships.streak.28",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "name": "边界之庭",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-relationships-streak-28.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "sourceSHA256": "2ce29d2b81fc181f78c3836cdcb3abdedd94b488280e3ca127a11ca5c309c024",
+      "sha256": "05078626823610d983ded44815fa3f1354a6f8448c0d71606e19e340ad99934f"
+    },
+    {
+      "collectibleID": "hidden.relationships.streak.35",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "name": "同行双帆",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-relationships-streak-35.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-0ac4aafa-148e-4090-9ef5-88bbdde2b2f8.png",
+      "sourceSHA256": "2ce29d2b81fc181f78c3836cdcb3abdedd94b488280e3ca127a11ca5c309c024",
+      "sha256": "1e5c44e4f85f761480dc0f39da2fc67fe395fcbf676cf84a0b5011006bb13f01"
+    },
+    {
+      "collectibleID": "hidden.career.first",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "name": "筑梦之锤",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-career-first.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "sourceSHA256": "643497ea3f9954d69db76ed9995fcb5e080c7195088d8ba3875ae2545a9842da",
+      "sha256": "52e8bd2109a0aff0d3fe4639c395b58e219948ca2da5d335a9f4cf74367b47cf"
+    },
+    {
+      "collectibleID": "hidden.career.streak.7",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "name": "承重之柱",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-career-streak-7.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "sourceSHA256": "643497ea3f9954d69db76ed9995fcb5e080c7195088d8ba3875ae2545a9842da",
+      "sha256": "8c1bdccb7aafde38bd500ca8857dbdcb45deedd249fd41df597109e87379c681"
+    },
+    {
+      "collectibleID": "hidden.career.streak.14",
+      "crop": [
+        0,
+        512,
+        512,
+        510
+      ],
+      "name": "开拓之钻",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-career-streak-14.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "sourceSHA256": "643497ea3f9954d69db76ed9995fcb5e080c7195088d8ba3875ae2545a9842da",
+      "sha256": "6b871a92fc46f3c5c5ece4a2343d926f15d5de6a2780d2d33be0953d3793cf4a"
+    },
+    {
+      "collectibleID": "hidden.career.streak.21",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "name": "协作齿轮",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-career-streak-21.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "sourceSHA256": "643497ea3f9954d69db76ed9995fcb5e080c7195088d8ba3875ae2545a9842da",
+      "sha256": "47c8bc04ee3899f5a3d0f419e5a0d7981ca181889b7778f2b223685f2d016bf9"
+    },
+    {
+      "collectibleID": "hidden.career.streak.28",
+      "crop": [
+        0,
+        1022,
+        512,
+        514
+      ],
+      "name": "应变枢纽",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-career-streak-28.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "sourceSHA256": "643497ea3f9954d69db76ed9995fcb5e080c7195088d8ba3875ae2545a9842da",
+      "sha256": "af4fad51ea7b29243fbbb91a0b08e6dcc2303b8f630c06b218fb85cb68cbdbe7"
+    },
+    {
+      "collectibleID": "hidden.career.streak.35",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "name": "交付之印",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-career-streak-35.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-a8a079bf-7953-42fa-8b15-897dbff0b5f2.png",
+      "sourceSHA256": "643497ea3f9954d69db76ed9995fcb5e080c7195088d8ba3875ae2545a9842da",
+      "sha256": "ba19d59447c2dc8d9724c1b1b9c02b5c6eadaacc4c84fe6c59c77a5b98c5f3c4"
+    },
+    {
+      "collectibleID": "hidden.interests.first",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "name": "随想之弦",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-interests-first.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "sourceSHA256": "54c7387bb5fea251df09b06cf3b633ebec22f785c63e3734ec2f190472cf292f",
+      "sha256": "9d6a489281e367d45e3a5675a30d11649e314547a44d2fb9c355b55cc9ff84d2"
+    },
+    {
+      "collectibleID": "hidden.interests.streak.7",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "name": "幻形之笔",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-interests-streak-7.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "sourceSHA256": "54c7387bb5fea251df09b06cf3b633ebec22f785c63e3734ec2f190472cf292f",
+      "sha256": "e35884af9c124f3febe40dd10d786a26484e7f9382c0e13ca2654030ae968792"
+    },
+    {
+      "collectibleID": "hidden.interests.streak.14",
+      "crop": [
+        0,
+        512,
+        512,
+        488
+      ],
+      "name": "拾趣万花筒",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-interests-streak-14.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "sourceSHA256": "54c7387bb5fea251df09b06cf3b633ebec22f785c63e3734ec2f190472cf292f",
+      "sha256": "8c924a0c8ce547bc00dcef4836dac54a69356dd004ea74cfd14c261c6b4d3046"
+    },
+    {
+      "collectibleID": "hidden.interests.streak.21",
+      "crop": [
+        512,
+        512,
+        512,
+        501
+      ],
+      "name": "即兴舞环",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-interests-streak-21.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "sourceSHA256": "54c7387bb5fea251df09b06cf3b633ebec22f785c63e3734ec2f190472cf292f",
+      "sha256": "9bc4c1d099dd9d86d2aabc09735672cead15ad7733843daa901a615a864e803b"
+    },
+    {
+      "collectibleID": "hidden.interests.streak.28",
+      "crop": [
+        0,
+        1000,
+        512,
+        536
+      ],
+      "name": "寻奇之镜",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-interests-streak-28.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "sourceSHA256": "54c7387bb5fea251df09b06cf3b633ebec22f785c63e3734ec2f190472cf292f",
+      "sha256": "a153c190ccc2e34552a0f7f4f4c2f3499fd551c7b72c0ba77b8ecb158fe75b54"
+    },
+    {
+      "collectibleID": "hidden.interests.streak.35",
+      "crop": [
+        512,
+        1013,
+        512,
+        523
+      ],
+      "name": "造梦工坊",
+      "normalization": "Fit within 480 pixels on centered transparent 512x512 canvas",
+      "resource": "hidden-interests-streak-35.png",
+      "source": "/var/folders/7m/7prybzqn7dv74chzsjlfm5d00000gn/T/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "stage": "mature",
+      "archivedSource": "/Users/fy/Desktop/LIVELVL-backups/20261107-hidden-cards-source-sheets/codex-clipboard-ea300c7e-f276-4e7c-a4e5-dfa1db6fedbc.png",
+      "sourceSHA256": "54c7387bb5fea251df09b06cf3b633ebec22f785c63e3734ec2f190472cf292f",
+      "sha256": "9fbae8b6aeb026b81b09cb8e65a8058338ae3f252ca7c4881a04566bfaac4aff"
+    }
+  ]
+}

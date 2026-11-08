@@ -1,0 +1,79 @@
+{
+  "source": "/Users/fy/Downloads/异世界粒子六宫格_透明背景_RGBA_1024x1536.png",
+  "sourceSHA256": "0d33885699bf92632273b6e47c845561ac4ef887289697498a28809fd1b7b99e",
+  "processing": "Original RGBA preserved; CoreGraphics crops only. No regeneration.",
+  "entries": [
+    {
+      "collectibleID": "growth.star-vortex",
+      "stage": "juvenile",
+      "crop": [
+        0,
+        0,
+        512,
+        512
+      ],
+      "path": "LIVELVL/LIVELVL/Resources/CompanionArtwork/growth-01-juvenile.png",
+      "sha256": "32166a6b853590e715a9248c302c5b0dad9121169020e360cb8fa8e99b90c07e"
+    },
+    {
+      "collectibleID": "growth.star-vortex",
+      "stage": "mature",
+      "crop": [
+        512,
+        0,
+        512,
+        512
+      ],
+      "path": "LIVELVL/LIVELVL/Resources/CompanionArtwork/growth-01-mature.png",
+      "sha256": "af6ade5a3dd61b882eba67ce14f1a9a7ceb9130aa28e3c97492d311d98e71daa"
+    },
+    {
+      "collectibleID": "growth.light-tree",
+      "stage": "juvenile",
+      "crop": [
+        0,
+        512,
+        512,
+        512
+      ],
+      "path": "LIVELVL/LIVELVL/Resources/CompanionArtwork/growth-02-juvenile.png",
+      "sha256": "45364fc4f138360d2e7ab6c3d832e7cc94f881bd29b81dcd6ae2eaacb1703dc7"
+    },
+    {
+      "collectibleID": "growth.light-tree",
+      "stage": "mature",
+      "crop": [
+        512,
+        512,
+        512,
+        512
+      ],
+      "path": "LIVELVL/LIVELVL/Resources/CompanionArtwork/growth-02-mature.png",
+      "sha256": "7fb505f94fb1b835db1c4903c069e759ef3d45c060d9a1adf9bc0378199a69d7"
+    },
+    {
+      "collectibleID": "growth.dawn-staff",
+      "stage": "juvenile",
+      "crop": [
+        0,
+        1024,
+        512,
+        512
+      ],
+      "path": "LIVELVL/LIVELVL/Resources/CompanionArtwork/growth-03-juvenile.png",
+      "sha256": "674a75062299a45e9d7ce7ca5ffdb3d062f06e30a6c0211fab5f3d2ff0c93c8a"
+    },
+    {
+      "collectibleID": "growth.dawn-staff",
+      "stage": "mature",
+      "crop": [
+        512,
+        1024,
+        512,
+        512
+      ],
+      "path": "LIVELVL/LIVELVL/Resources/CompanionArtwork/growth-03-mature.png",
+      "sha256": "35934b2b0bf6d55d4853b7a3aeab768c7155f251a6d0a027f7b60145e4d4a6e2"
+    }
+  ]
+}

@@ -485,6 +485,12 @@ struct MainTabView: View {
         .task(id: rewardPresentationTaskIdentity) {
             await presentQueueHead(rewardPresentationTaskIdentity)
         }
+        .onChange(of: Set(ownedCollectibles.map(\.awardKey)), initial: true) { _, keys in
+            archiveArrival.reconcile(validAwardKeys: keys)
+        }
+        .onChange(of: Set(ownedCollectibles.filter(\.isUnseen).map(\.awardKey)), initial: true) { _, keys in
+            if keys.isEmpty { attention.markSeen() }
+        }
         .onChange(of: livePendingAwardKeys, initial: true) { _, liveAwardKeys in
             if presentation.reconcile(liveAwardKeys: liveAwardKeys) {
                 handoff.recordDismissalCompletion(at: .now)

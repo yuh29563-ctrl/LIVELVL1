@@ -1,10 +1,1811 @@
-{"version":1,"entries":[
-  {"collectibleID":"ordinary.sprout","stage":"juvenile","resourceName":"ordinary-sprout-juvenile","fileExtension":"jpg"},
-  {"collectibleID":"ordinary.sprout","stage":"stageTwo","resourceName":"ordinary-sprout-stage-two","fileExtension":"jpg"},
-  {"collectibleID":"ordinary.sprout","stage":"stageThree","resourceName":"ordinary-sprout-stage-three","fileExtension":"jpg"},
-  {"collectibleID":"ordinary.sprout","stage":"mature","resourceName":"ordinary-sprout-mature","fileExtension":"jpg"},
-  {"collectibleID":"ordinary.hare","stage":"juvenile","resourceName":"ordinary-hare-juvenile","fileExtension":"png","renderMode":"transparentRaster"},
-  {"collectibleID":"ordinary.hare","stage":"stageTwo","resourceName":"ordinary-sprout-stage-two","fileExtension":"jpg"},
-  {"collectibleID":"ordinary.hare","stage":"stageThree","resourceName":"ordinary-sprout-stage-three","fileExtension":"jpg"},
-  {"collectibleID":"ordinary.hare","stage":"mature","resourceName":"ordinary-sprout-mature","fileExtension":"jpg"}
-]}
+{
+  "version": 1,
+  "entries": [
+    {
+      "collectibleID": "growth.star-vortex",
+      "stage": "juvenile",
+      "resourceName": "growth-01-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.star-vortex",
+      "stage": "mature",
+      "resourceName": "growth-01-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.light-tree",
+      "stage": "juvenile",
+      "resourceName": "growth-02-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.light-tree",
+      "stage": "mature",
+      "resourceName": "growth-02-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.dawn-staff",
+      "stage": "juvenile",
+      "resourceName": "growth-03-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.dawn-staff",
+      "stage": "mature",
+      "resourceName": "growth-03-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.binary-eclipse",
+      "stage": "juvenile",
+      "resourceName": "growth-04-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.binary-eclipse",
+      "stage": "mature",
+      "resourceName": "growth-04-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.inverted-starfall",
+      "stage": "juvenile",
+      "resourceName": "growth-05-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.inverted-starfall",
+      "stage": "mature",
+      "resourceName": "growth-05-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.shattered-moon",
+      "stage": "juvenile",
+      "resourceName": "growth-06-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.shattered-moon",
+      "stage": "mature",
+      "resourceName": "growth-06-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.silent-bell",
+      "stage": "juvenile",
+      "resourceName": "growth-07-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.silent-bell",
+      "stage": "mature",
+      "resourceName": "growth-07-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.floating-crown",
+      "stage": "juvenile",
+      "resourceName": "growth-08-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.floating-crown",
+      "stage": "mature",
+      "resourceName": "growth-08-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.unwritten-book",
+      "stage": "juvenile",
+      "resourceName": "growth-09-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.unwritten-book",
+      "stage": "mature",
+      "resourceName": "growth-09-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.endless-stairway",
+      "stage": "juvenile",
+      "resourceName": "growth-10-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.endless-stairway",
+      "stage": "mature",
+      "resourceName": "growth-10-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.folded-maze",
+      "stage": "juvenile",
+      "resourceName": "growth-11-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.folded-maze",
+      "stage": "mature",
+      "resourceName": "growth-11-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.drifting-isle",
+      "stage": "juvenile",
+      "resourceName": "growth-12-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.drifting-isle",
+      "stage": "mature",
+      "resourceName": "growth-12-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.dream-cocoon",
+      "stage": "juvenile",
+      "resourceName": "growth-13-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.dream-cocoon",
+      "stage": "mature",
+      "resourceName": "growth-13-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.sky-whale",
+      "stage": "juvenile",
+      "resourceName": "growth-14-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.sky-whale",
+      "stage": "mature",
+      "resourceName": "growth-14-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.crystal-butterflies",
+      "stage": "juvenile",
+      "resourceName": "growth-15-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.crystal-butterflies",
+      "stage": "mature",
+      "resourceName": "growth-15-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.reverse-clock",
+      "stage": "juvenile",
+      "resourceName": "growth-16-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.reverse-clock",
+      "stage": "mature",
+      "resourceName": "growth-16-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.yesterday-mirror",
+      "stage": "juvenile",
+      "resourceName": "growth-17-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.yesterday-mirror",
+      "stage": "mature",
+      "resourceName": "growth-17-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.unfinished-beacon",
+      "stage": "juvenile",
+      "resourceName": "growth-18-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.unfinished-beacon",
+      "stage": "mature",
+      "resourceName": "growth-18-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.floating-crystal",
+      "stage": "juvenile",
+      "resourceName": "growth-19-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.floating-crystal",
+      "stage": "mature",
+      "resourceName": "growth-19-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.hollow-stone",
+      "stage": "juvenile",
+      "resourceName": "growth-20-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.hollow-stone",
+      "stage": "mature",
+      "resourceName": "growth-20-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.living-vein",
+      "stage": "juvenile",
+      "resourceName": "growth-21-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.living-vein",
+      "stage": "mature",
+      "resourceName": "growth-21-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.doorless-tower",
+      "stage": "juvenile",
+      "resourceName": "growth-22-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.doorless-tower",
+      "stage": "mature",
+      "resourceName": "growth-22-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.returning-bridge",
+      "stage": "juvenile",
+      "resourceName": "growth-23-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.returning-bridge",
+      "stage": "mature",
+      "resourceName": "growth-23-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.inverted-sanctum",
+      "stage": "juvenile",
+      "resourceName": "growth-24-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.inverted-sanctum",
+      "stage": "mature",
+      "resourceName": "growth-24-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.thunder-spear",
+      "stage": "juvenile",
+      "resourceName": "growth-25-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.thunder-spear",
+      "stage": "mature",
+      "resourceName": "growth-25-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.tidal-bow",
+      "stage": "juvenile",
+      "resourceName": "growth-26-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.tidal-bow",
+      "stage": "mature",
+      "resourceName": "growth-26-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.ember-shield",
+      "stage": "juvenile",
+      "resourceName": "growth-27-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.ember-shield",
+      "stage": "mature",
+      "resourceName": "growth-27-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.broken-harp",
+      "stage": "juvenile",
+      "resourceName": "growth-28-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.broken-harp",
+      "stage": "mature",
+      "resourceName": "growth-28-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.echo-flute",
+      "stage": "juvenile",
+      "resourceName": "growth-29-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.echo-flute",
+      "stage": "mature",
+      "resourceName": "growth-29-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.silent-chimes",
+      "stage": "juvenile",
+      "resourceName": "growth-30-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.silent-chimes",
+      "stage": "mature",
+      "resourceName": "growth-30-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.path-lantern",
+      "stage": "juvenile",
+      "resourceName": "growth-31-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.path-lantern",
+      "stage": "mature",
+      "resourceName": "growth-31-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.boundary-boat",
+      "stage": "juvenile",
+      "resourceName": "growth-32-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.boundary-boat",
+      "stage": "mature",
+      "resourceName": "growth-32-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.homeward-anchor",
+      "stage": "juvenile",
+      "resourceName": "growth-33-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.homeward-anchor",
+      "stage": "mature",
+      "resourceName": "growth-33-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.suspended-sun",
+      "stage": "juvenile",
+      "resourceName": "growth-34-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.suspended-sun",
+      "stage": "mature",
+      "resourceName": "growth-34-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.stardust-scales",
+      "stage": "juvenile",
+      "resourceName": "growth-35-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.stardust-scales",
+      "stage": "mature",
+      "resourceName": "growth-35-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.wind-chasing-sail",
+      "stage": "juvenile",
+      "resourceName": "growth-36-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.wind-chasing-sail",
+      "stage": "mature",
+      "resourceName": "growth-36-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.sleeping-ember-egg",
+      "stage": "juvenile",
+      "resourceName": "growth-37-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.sleeping-ember-egg",
+      "stage": "mature",
+      "resourceName": "growth-37-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.star-bearing-beast",
+      "stage": "juvenile",
+      "resourceName": "growth-38-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.star-bearing-beast",
+      "stage": "mature",
+      "resourceName": "growth-38-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.floating-root-lotus",
+      "stage": "juvenile",
+      "resourceName": "growth-39-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.floating-root-lotus",
+      "stage": "mature",
+      "resourceName": "growth-39-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.drowned-crown",
+      "stage": "juvenile",
+      "resourceName": "growth-40-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.drowned-crown",
+      "stage": "mature",
+      "resourceName": "growth-40-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.abyss-pearl",
+      "stage": "juvenile",
+      "resourceName": "growth-41-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.abyss-pearl",
+      "stage": "mature",
+      "resourceName": "growth-41-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.returning-reef",
+      "stage": "juvenile",
+      "resourceName": "growth-42-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.returning-reef",
+      "stage": "mature",
+      "resourceName": "growth-42-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.frost-breaking-bud",
+      "stage": "juvenile",
+      "resourceName": "growth-43-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.frost-breaking-bud",
+      "stage": "mature",
+      "resourceName": "growth-43-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.summer-keeping-fruit",
+      "stage": "juvenile",
+      "resourceName": "growth-44-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.summer-keeping-fruit",
+      "stage": "mature",
+      "resourceName": "growth-44-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.winter-crossing-branch",
+      "stage": "juvenile",
+      "resourceName": "growth-45-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.winter-crossing-branch",
+      "stage": "mature",
+      "resourceName": "growth-45-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.star-carrying-fish",
+      "stage": "juvenile",
+      "resourceName": "growth-46-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.star-carrying-fish",
+      "stage": "mature",
+      "resourceName": "growth-46-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.nightwatch-moth",
+      "stage": "juvenile",
+      "resourceName": "growth-47-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.nightwatch-moth",
+      "stage": "mature",
+      "resourceName": "growth-47-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.comet-spirit",
+      "stage": "juvenile",
+      "resourceName": "growth-48-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.comet-spirit",
+      "stage": "mature",
+      "resourceName": "growth-48-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.light-gathering-windmill",
+      "stage": "juvenile",
+      "resourceName": "growth-49-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.light-gathering-windmill",
+      "stage": "mature",
+      "resourceName": "growth-49-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.dream-spinning-wheel",
+      "stage": "juvenile",
+      "resourceName": "growth-50-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.dream-spinning-wheel",
+      "stage": "mature",
+      "resourceName": "growth-50-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.gap-seeking-key",
+      "stage": "juvenile",
+      "resourceName": "growth-51-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.gap-seeking-key",
+      "stage": "mature",
+      "resourceName": "growth-51-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.rift-starship",
+      "stage": "juvenile",
+      "resourceName": "growth-52-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.rift-starship",
+      "stage": "mature",
+      "resourceName": "growth-52-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.gravity-sail",
+      "stage": "juvenile",
+      "resourceName": "growth-53-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.gravity-sail",
+      "stage": "mature",
+      "resourceName": "growth-53-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.transit-ring",
+      "stage": "juvenile",
+      "resourceName": "growth-54-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.transit-ring",
+      "stage": "mature",
+      "resourceName": "growth-54-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.memory-bottle",
+      "stage": "juvenile",
+      "resourceName": "growth-55-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.memory-bottle",
+      "stage": "mature",
+      "resourceName": "growth-55-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.soundkeeping-conch",
+      "stage": "juvenile",
+      "resourceName": "growth-56-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.soundkeeping-conch",
+      "stage": "mature",
+      "resourceName": "growth-56-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.dream-vault",
+      "stage": "juvenile",
+      "resourceName": "growth-57-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.dream-vault",
+      "stage": "mature",
+      "resourceName": "growth-57-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.rising-snowcloud",
+      "stage": "juvenile",
+      "resourceName": "growth-58-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.rising-snowcloud",
+      "stage": "mature",
+      "resourceName": "growth-58-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.gathering-rain-ring",
+      "stage": "juvenile",
+      "resourceName": "growth-59-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.gathering-rain-ring",
+      "stage": "mature",
+      "resourceName": "growth-59-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.spiraling-aurora",
+      "stage": "juvenile",
+      "resourceName": "growth-60-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.spiraling-aurora",
+      "stage": "mature",
+      "resourceName": "growth-60-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.sleeping-statue",
+      "stage": "juvenile",
+      "resourceName": "growth-61-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.sleeping-statue",
+      "stage": "mature",
+      "resourceName": "growth-61-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.embracing-wall",
+      "stage": "juvenile",
+      "resourceName": "growth-62-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.embracing-wall",
+      "stage": "mature",
+      "resourceName": "growth-62-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.watchful-feather",
+      "stage": "juvenile",
+      "resourceName": "growth-63-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.watchful-feather",
+      "stage": "mature",
+      "resourceName": "growth-63-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.pulsar-core",
+      "stage": "juvenile",
+      "resourceName": "growth-64-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.pulsar-core",
+      "stage": "mature",
+      "resourceName": "growth-64-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.collapsed-star-nest",
+      "stage": "juvenile",
+      "resourceName": "growth-65-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.collapsed-star-nest",
+      "stage": "mature",
+      "resourceName": "growth-65-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.gravity-rift",
+      "stage": "juvenile",
+      "resourceName": "growth-66-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.gravity-rift",
+      "stage": "mature",
+      "resourceName": "growth-66-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.wind-listening-lily",
+      "stage": "juvenile",
+      "resourceName": "growth-67-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.wind-listening-lily",
+      "stage": "mature",
+      "resourceName": "growth-67-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.reverse-growing-vine",
+      "stage": "juvenile",
+      "resourceName": "growth-68-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.reverse-growing-vine",
+      "stage": "mature",
+      "resourceName": "growth-68-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.rainkeeping-fern",
+      "stage": "juvenile",
+      "resourceName": "growth-69-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.rainkeeping-fern",
+      "stage": "mature",
+      "resourceName": "growth-69-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.reviving-amber",
+      "stage": "juvenile",
+      "resourceName": "growth-70-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.reviving-amber",
+      "stage": "mature",
+      "resourceName": "growth-70-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.layered-shell",
+      "stage": "juvenile",
+      "resourceName": "growth-71-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.layered-shell",
+      "stage": "mature",
+      "resourceName": "growth-71-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.renewing-bone",
+      "stage": "juvenile",
+      "resourceName": "growth-72-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.renewing-bone",
+      "stage": "mature",
+      "resourceName": "growth-72-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.twin-rings",
+      "stage": "juvenile",
+      "resourceName": "growth-73-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.twin-rings",
+      "stage": "mature",
+      "resourceName": "growth-73-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.promise-seal",
+      "stage": "juvenile",
+      "resourceName": "growth-74-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.promise-seal",
+      "stage": "mature",
+      "resourceName": "growth-74-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.wish-binding-cord",
+      "stage": "juvenile",
+      "resourceName": "growth-75-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.wish-binding-cord",
+      "stage": "mature",
+      "resourceName": "growth-75-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.suspended-dunes",
+      "stage": "juvenile",
+      "resourceName": "growth-76-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.suspended-dunes",
+      "stage": "mature",
+      "resourceName": "growth-76-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.refracting-canyon",
+      "stage": "juvenile",
+      "resourceName": "growth-77-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.refracting-canyon",
+      "stage": "mature",
+      "resourceName": "growth-77-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.echo-cavern",
+      "stage": "juvenile",
+      "resourceName": "growth-78-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.echo-cavern",
+      "stage": "mature",
+      "resourceName": "growth-78-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.mist-treading-hoof",
+      "stage": "juvenile",
+      "resourceName": "growth-79-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.mist-treading-hoof",
+      "stage": "mature",
+      "resourceName": "growth-79-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.tide-coiling-eel",
+      "stage": "juvenile",
+      "resourceName": "growth-80-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.tide-coiling-eel",
+      "stage": "mature",
+      "resourceName": "growth-80-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.mountain-bearing-sleeper",
+      "stage": "juvenile",
+      "resourceName": "growth-81-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.mountain-bearing-sleeper",
+      "stage": "mature",
+      "resourceName": "growth-81-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.lockless-gate",
+      "stage": "juvenile",
+      "resourceName": "growth-82-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.lockless-gate",
+      "stage": "mature",
+      "resourceName": "growth-82-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.realm-turning-axle",
+      "stage": "juvenile",
+      "resourceName": "growth-83-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.realm-turning-axle",
+      "stage": "mature",
+      "resourceName": "growth-83-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.hidden-path-box",
+      "stage": "juvenile",
+      "resourceName": "growth-84-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.hidden-path-box",
+      "stage": "mature",
+      "resourceName": "growth-84-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.star-gathering-pack",
+      "stage": "juvenile",
+      "resourceName": "growth-85-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.star-gathering-pack",
+      "stage": "mature",
+      "resourceName": "growth-85-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.night-crossing-cloak",
+      "stage": "juvenile",
+      "resourceName": "growth-86-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.night-crossing-cloak",
+      "stage": "mature",
+      "resourceName": "growth-86-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.wind-seeking-boots",
+      "stage": "juvenile",
+      "resourceName": "growth-87-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.wind-seeking-boots",
+      "stage": "mature",
+      "resourceName": "growth-87-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.self-writing-scroll",
+      "stage": "juvenile",
+      "resourceName": "growth-88-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.self-writing-scroll",
+      "stage": "mature",
+      "resourceName": "growth-88-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.wandering-ink-pen",
+      "stage": "juvenile",
+      "resourceName": "growth-89-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.wandering-ink-pen",
+      "stage": "mature",
+      "resourceName": "growth-89-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.floating-script-stele",
+      "stage": "juvenile",
+      "resourceName": "growth-90-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.floating-script-stele",
+      "stage": "mature",
+      "resourceName": "growth-90-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.shadow-folding-prism",
+      "stage": "juvenile",
+      "resourceName": "growth-91-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.shadow-folding-prism",
+      "stage": "mature",
+      "resourceName": "growth-91-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.day-night-dial",
+      "stage": "juvenile",
+      "resourceName": "growth-92-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.day-night-dial",
+      "stage": "mature",
+      "resourceName": "growth-92-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.lightkeeping-shade",
+      "stage": "juvenile",
+      "resourceName": "growth-93-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.lightkeeping-shade",
+      "stage": "mature",
+      "resourceName": "growth-93-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.meteor-wheat",
+      "stage": "juvenile",
+      "resourceName": "growth-94-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.meteor-wheat",
+      "stage": "mature",
+      "resourceName": "growth-94-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.orbital-dandelion",
+      "stage": "juvenile",
+      "resourceName": "growth-95-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.orbital-dandelion",
+      "stage": "mature",
+      "resourceName": "growth-95-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.stardust-pinecone",
+      "stage": "juvenile",
+      "resourceName": "growth-96-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.stardust-pinecone",
+      "stage": "mature",
+      "resourceName": "growth-96-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.rift-slipping-serpent",
+      "stage": "juvenile",
+      "resourceName": "growth-97-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.rift-slipping-serpent",
+      "stage": "mature",
+      "resourceName": "growth-97-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.mirror-crossing-wings",
+      "stage": "juvenile",
+      "resourceName": "growth-98-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.mirror-crossing-wings",
+      "stage": "mature",
+      "resourceName": "growth-98-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.boundary-striding-walker",
+      "stage": "juvenile",
+      "resourceName": "growth-99-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.boundary-striding-walker",
+      "stage": "mature",
+      "resourceName": "growth-99-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.folding-tent",
+      "stage": "juvenile",
+      "resourceName": "growth-100-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.folding-tent",
+      "stage": "mature",
+      "resourceName": "growth-100-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.suspended-cradle",
+      "stage": "juvenile",
+      "resourceName": "growth-101-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.suspended-cradle",
+      "stage": "mature",
+      "resourceName": "growth-101-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.homecoming-dream-nest",
+      "stage": "juvenile",
+      "resourceName": "growth-102-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.homecoming-dream-nest",
+      "stage": "mature",
+      "resourceName": "growth-102-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.star-measuring-instrument",
+      "stage": "juvenile",
+      "resourceName": "growth-103-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.star-measuring-instrument",
+      "stage": "mature",
+      "resourceName": "growth-103-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.tide-listening-dish",
+      "stage": "juvenile",
+      "resourceName": "growth-104-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.tide-listening-dish",
+      "stage": "mature",
+      "resourceName": "growth-104-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.vein-seeking-probe",
+      "stage": "juvenile",
+      "resourceName": "growth-105-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.vein-seeking-probe",
+      "stage": "mature",
+      "resourceName": "growth-105-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.cooperating-ant-column",
+      "stage": "juvenile",
+      "resourceName": "growth-106-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.cooperating-ant-column",
+      "stage": "mature",
+      "resourceName": "growth-106-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.floating-fungal-colony",
+      "stage": "juvenile",
+      "resourceName": "growth-107-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.floating-fungal-colony",
+      "stage": "mature",
+      "resourceName": "growth-107-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.migrating-light-rays",
+      "stage": "juvenile",
+      "resourceName": "growth-108-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.migrating-light-rays",
+      "stage": "mature",
+      "resourceName": "growth-108-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.unsent-letter",
+      "stage": "juvenile",
+      "resourceName": "growth-109-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.unsent-letter",
+      "stage": "mature",
+      "resourceName": "growth-109-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.still-tide-jar",
+      "stage": "juvenile",
+      "resourceName": "growth-110-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.still-tide-jar",
+      "stage": "mature",
+      "resourceName": "growth-110-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.awakening-box",
+      "stage": "juvenile",
+      "resourceName": "growth-111-juvenile",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "growth.awakening-box",
+      "stage": "mature",
+      "resourceName": "growth-111-mature",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.health.first",
+      "stage": "mature",
+      "resourceName": "hidden-health-first",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.health.streak.7",
+      "stage": "mature",
+      "resourceName": "hidden-health-streak-7",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.health.streak.14",
+      "stage": "mature",
+      "resourceName": "hidden-health-streak-14",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.health.streak.21",
+      "stage": "mature",
+      "resourceName": "hidden-health-streak-21",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.health.streak.28",
+      "stage": "mature",
+      "resourceName": "hidden-health-streak-28",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.health.streak.35",
+      "stage": "mature",
+      "resourceName": "hidden-health-streak-35",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.learning.first",
+      "stage": "mature",
+      "resourceName": "hidden-learning-first",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.learning.streak.7",
+      "stage": "mature",
+      "resourceName": "hidden-learning-streak-7",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.learning.streak.14",
+      "stage": "mature",
+      "resourceName": "hidden-learning-streak-14",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.learning.streak.21",
+      "stage": "mature",
+      "resourceName": "hidden-learning-streak-21",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.learning.streak.28",
+      "stage": "mature",
+      "resourceName": "hidden-learning-streak-28",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.learning.streak.35",
+      "stage": "mature",
+      "resourceName": "hidden-learning-streak-35",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.finance.first",
+      "stage": "mature",
+      "resourceName": "hidden-finance-first",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.finance.streak.7",
+      "stage": "mature",
+      "resourceName": "hidden-finance-streak-7",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.finance.streak.14",
+      "stage": "mature",
+      "resourceName": "hidden-finance-streak-14",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.finance.streak.21",
+      "stage": "mature",
+      "resourceName": "hidden-finance-streak-21",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.finance.streak.28",
+      "stage": "mature",
+      "resourceName": "hidden-finance-streak-28",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.finance.streak.35",
+      "stage": "mature",
+      "resourceName": "hidden-finance-streak-35",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.relationships.first",
+      "stage": "mature",
+      "resourceName": "hidden-relationships-first",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.relationships.streak.7",
+      "stage": "mature",
+      "resourceName": "hidden-relationships-streak-7",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.relationships.streak.14",
+      "stage": "mature",
+      "resourceName": "hidden-relationships-streak-14",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.relationships.streak.21",
+      "stage": "mature",
+      "resourceName": "hidden-relationships-streak-21",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.relationships.streak.28",
+      "stage": "mature",
+      "resourceName": "hidden-relationships-streak-28",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.relationships.streak.35",
+      "stage": "mature",
+      "resourceName": "hidden-relationships-streak-35",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.career.first",
+      "stage": "mature",
+      "resourceName": "hidden-career-first",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.career.streak.7",
+      "stage": "mature",
+      "resourceName": "hidden-career-streak-7",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.career.streak.14",
+      "stage": "mature",
+      "resourceName": "hidden-career-streak-14",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.career.streak.21",
+      "stage": "mature",
+      "resourceName": "hidden-career-streak-21",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.career.streak.28",
+      "stage": "mature",
+      "resourceName": "hidden-career-streak-28",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.career.streak.35",
+      "stage": "mature",
+      "resourceName": "hidden-career-streak-35",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.interests.first",
+      "stage": "mature",
+      "resourceName": "hidden-interests-first",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.interests.streak.7",
+      "stage": "mature",
+      "resourceName": "hidden-interests-streak-7",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.interests.streak.14",
+      "stage": "mature",
+      "resourceName": "hidden-interests-streak-14",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.interests.streak.21",
+      "stage": "mature",
+      "resourceName": "hidden-interests-streak-21",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.interests.streak.28",
+      "stage": "mature",
+      "resourceName": "hidden-interests-streak-28",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    },
+    {
+      "collectibleID": "hidden.interests.streak.35",
+      "stage": "mature",
+      "resourceName": "hidden-interests-streak-35",
+      "fileExtension": "png",
+      "renderMode": "transparentRaster"
+    }
+  ]
+}

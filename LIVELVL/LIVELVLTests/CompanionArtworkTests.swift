@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 import Testing
 @testable import LIVELVL
 
@@ -66,34 +67,29 @@ struct CompanionArtworkTests {
         }
     }
 
-    @Test func bundledPilotPayloadsAreReadableJPEGs() async throws {
-        let provider = try BundledCompanionArtworkProvider(
-            bundle: .main,
-            subdirectory: "CompanionArtwork"
-        )
+    @MainActor
+    @Test func bundledArtworkCoversBothStagesOfEveryGrowthCard() async throws {
+        let provider = try BundledCompanionArtworkProvider()
+        var fingerprints: Set<String> = []
 
-        for stage in CompanionStage.allCases {
-            let id = CompanionArtworkID(collectibleID: "ordinary.sprout", stage: stage)
-            let payload = try #require(try await provider.payload(for: id))
-            #expect(payload.data.count > 2)
-            #expect(payload.data.prefix(2).elementsEqual([0xFF, 0xD8]))
+        for definition in CollectionCatalog.ordinary {
+            for stage in [CompanionStage.juvenile, .mature] {
+                let id = CompanionArtworkID(collectibleID: definition.id, stage: stage)
+                let payload = try #require(try await provider.payload(for: id))
+                #expect(payload.renderMode == .transparentRaster)
+                let source = try #require(CGImageSourceCreateWithData(payload.data as CFData, nil))
+                let image = try #require(CGImageSourceCreateImageAtIndex(source, 0, nil))
+                #expect(image.width == 512)
+                #expect(image.height == 512)
+                #expect(fingerprints.insert(payload.fingerprint).inserted)
+            }
+            for stage in [CompanionStage.stageTwo, .stageThree] {
+                let payload = try await provider.payload(
+                    for: .init(collectibleID: definition.id, stage: stage)
+                )
+                #expect(payload == nil)
+            }
         }
-    }
-
-    @Test func bundledHareJuvenileUsesTheApprovedTransparentArtwork() async throws {
-        let provider = try BundledCompanionArtworkProvider(
-            bundle: .main,
-            subdirectory: "CompanionArtwork"
-        )
-
-        let payload = try #require(
-            try await provider.payload(
-                for: CompanionArtworkID(collectibleID: "ordinary.hare", stage: .juvenile)
-            )
-        )
-
-        #expect(payload.renderMode == .transparentRaster)
-        #expect(payload.data.prefix(8).elementsEqual([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]))
     }
 
     @Test func bundledProviderReturnsNilForAnUnmappedIdentity() async throws {

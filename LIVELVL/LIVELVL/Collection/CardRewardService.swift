@@ -75,14 +75,19 @@ enum CardRewardService {
         let pending = try context.fetch(FetchDescriptor<PendingCardReward>())
         let owned = try context.fetch(FetchDescriptor<OwnedCollectible>())
         var awardedKeys = Set(pending.map(\.awardKey) + owned.map(\.awardKey))
-        var ownedOrdinaryIDs = Set(owned.filter { $0.kind == .ordinaryMature }.map(\.collectibleID))
+        var reservedOrdinaryIDs = Set(
+            owned.filter { $0.kind == .ordinaryMature }.map(\.collectibleID)
+                + pending.filter { $0.kind == .ordinaryMature }.map(\.collectibleID)
+        )
         let delay = progress.level > previousLevel ? 1.6 : 0.8
         let eligibleAt = now.addingTimeInterval(delay)
 
-        if collectionProgress.highestLevel > previousHighestLevel {
-            for level in (previousHighestLevel + 1)...collectionProgress.highestLevel {
+        // Catalog expansion can fill levels that were reached while no cards remained.
+        if collectionProgress.highestLevel > 0 {
+            for level in 1...collectionProgress.highestLevel {
+                guard !awardedKeys.contains("ordinary.level.\(level)") else { continue }
                 guard let index = CollectionCatalog.ordinary.firstIndex(where: {
-                    !ownedOrdinaryIDs.contains($0.id)
+                    !reservedOrdinaryIDs.contains($0.id)
                 }), let collectible = CollectionCatalog.ordinary(at: index) else { continue }
                 guard case let .matured(_, _, maturityLevel) = CompanionProgressionEngine.event(
                     forReachedLevel: level, nextOrdinaryIndex: index
@@ -106,41 +111,76 @@ enum CardRewardService {
                     triggeredAt: now,
                     eligibleAt: eligibleAt
                 ))
-                ownedOrdinaryIDs.insert(collectible.id)
+                reservedOrdinaryIDs.insert(collectible.id)
                 awardedKeys.insert(awardKey)
             }
         }
 
+        try stageHiddenRewards(completions: completions, in: context, now: now,
+                               calendar: calendar, eligibleAt: eligibleAt)
+    }
+
+    static func activateHiddenCards(in context: ModelContext, now: Date, calendar: Calendar) throws {
+        do {
+            let progress = try progressWithoutSaving(in: context)
+            initializeHiddenWindow(progress: progress, now: now, calendar: calendar)
+            if context.hasChanges { try context.save() }
+        } catch {
+            context.rollback()
+            throw error
+        }
+    }
+
+    private static func initializeHiddenWindow(progress: CollectionProgress, now: Date, calendar: Calendar) {
+        if progress.hiddenCardsEnabledAt == nil { progress.hiddenCardsEnabledAt = now }
+        if progress.hiddenCardsTimeZoneIdentifier == nil {
+            progress.hiddenCardsTimeZoneIdentifier = calendar.timeZone.identifier
+        }
+    }
+
+    @discardableResult
+    static func stageHiddenRewards(
+        completions: [Completion], in context: ModelContext, now: Date,
+        calendar: Calendar, eligibleAt: Date? = nil
+    ) throws -> Set<String> {
+        let progress = try progressWithoutSaving(in: context)
+        initializeHiddenWindow(progress: progress, now: now, calendar: calendar)
+        guard let enabledAt = progress.hiddenCardsEnabledAt else { return [] }
+        var fixedCalendar = Calendar(identifier: .gregorian)
+        fixedCalendar.timeZone = progress.hiddenCardsTimeZoneIdentifier.flatMap(TimeZone.init(identifier:))
+            ?? calendar.timeZone
         let facts = completions.compactMap { completion -> CompletionFact? in
-            guard let dimension = completion.recordedDimension,
-                  let durationMinutes = completion.durationMinutes else {
-                return nil
-            }
-            return CompletionFact(
-                itemID: completion.itemID,
-                date: completion.date,
-                dimension: dimension,
-                durationMinutes: durationMinutes
-            )
+            guard completion.date >= enabledAt,
+                  let dimension = completion.recordedDimension else { return nil }
+            return CompletionFact(itemID: completion.itemID, date: completion.date,
+                                  dimension: dimension, durationMinutes: completion.durationMinutes ?? 0)
         }
-
-        let hiddenAwards = HiddenAchievementEngine.newAwards(
-            facts: facts,
-            alreadyAwardedKeys: Array(awardedKeys),
-            calendar: calendar
-        )
-        for award in hiddenAwards where !awardedKeys.contains(award.awardKey) {
-            context.insert(PendingCardReward(
-                awardKey: award.awardKey,
-                collectibleID: award.collectibleID,
-                kind: .hiddenDiscovery,
-                reason: award.reason,
-                triggeredAt: award.triggeredAt,
-                eligibleAt: eligibleAt
-            ))
-            awardedKeys.insert(award.awardKey)
+        let supportedAwards = HiddenAchievementEngine.eligibleAwards(facts: facts, calendar: fixedCalendar)
+        let supportedKeys = Set(supportedAwards.map(\.awardKey))
+        // Clock rollback must not erase valid evidence; only gate new awards by their trigger time.
+        let awards = supportedAwards.filter { $0.triggeredAt <= now }
+        let eligibleKeys = Set(awards.map(\.awardKey))
+        let managedKeys = Set(HiddenAchievementEngine.rules.map(\.id))
+        var existingKeys: Set<String> = []
+        for pending in try context.fetch(FetchDescriptor<PendingCardReward>()) {
+            if pending.kind == .hiddenDiscovery && managedKeys.contains(pending.awardKey)
+                && !supportedKeys.contains(pending.awardKey) {
+                context.delete(pending)
+            } else { existingKeys.insert(pending.awardKey) }
         }
-
+        for owned in try context.fetch(FetchDescriptor<OwnedCollectible>()) {
+            if owned.kind == .hiddenDiscovery && managedKeys.contains(owned.awardKey)
+                && !supportedKeys.contains(owned.awardKey) {
+                context.delete(owned)
+            } else { existingKeys.insert(owned.awardKey) }
+        }
+        for award in awards where !existingKeys.contains(award.awardKey)
+            && CollectionCatalog.definition(id: award.collectibleID) != nil {
+            context.insert(PendingCardReward(awardKey: award.awardKey, collectibleID: award.collectibleID,
+                kind: .hiddenDiscovery, reason: award.reason, triggeredAt: award.triggeredAt,
+                eligibleAt: eligibleAt ?? now))
+        }
+        return eligibleKeys
     }
 
     static func reconcile(
@@ -198,6 +238,11 @@ enum CardRewardService {
             if lhs.triggeredAt != rhs.triggeredAt {
                 return lhs.triggeredAt < rhs.triggeredAt
             }
+            if lhs.kind == .ordinaryMature {
+                let lhsLevel = lhs.maturityLevel ?? Int.max
+                let rhsLevel = rhs.maturityLevel ?? Int.max
+                if lhsLevel != rhsLevel { return lhsLevel < rhsLevel }
+            }
             return lhs.awardKey < rhs.awardKey
         }
     }
@@ -227,6 +272,11 @@ enum CardRewardService {
         in context: ModelContext,
         now: Date
     ) throws {
+        if reward.kind == .hiddenDiscovery,
+           HiddenAchievementEngine.rules.contains(where: { $0.id == reward.awardKey }) {
+            try claimHiddenReward(awardKey: reward.awardKey, in: context, now: now)
+            return
+        }
         let ownedKeys = Set(
             try context.fetch(FetchDescriptor<OwnedCollectible>()).map(\.awardKey)
         )
@@ -251,7 +301,7 @@ enum CardRewardService {
             if let maturedIndex = CollectionCatalog.ordinary.firstIndex(where: {
                 $0.id == reward.collectibleID
             }) {
-                progress.activeOrdinaryIndex = maturedIndex + 1
+                progress.activeOrdinaryIndex = max(progress.activeOrdinaryIndex, maturedIndex + 1)
                 progress.activeStage = .juvenile
             }
         }
@@ -262,6 +312,35 @@ enum CardRewardService {
             context.rollback()
             throw error
         }
+    }
+
+    private static func claimHiddenReward(awardKey: String, in context: ModelContext, now: Date) throws {
+        let writer = ModelContext(context.container)
+        writer.autosaveEnabled = false
+        do {
+            let completions = try writer.fetch(FetchDescriptor<Completion>())
+            let eligible = try stageHiddenRewards(completions: completions, in: writer,
+                                                  now: now, calendar: .current)
+            if eligible.contains(awardKey),
+               let pending = try writer.fetch(FetchDescriptor<PendingCardReward>()).first(where: {
+                   $0.awardKey == awardKey && $0.eligibleAt <= now
+               }) {
+                if try !writer.fetch(FetchDescriptor<OwnedCollectible>()).contains(where: {
+                    $0.awardKey == awardKey
+                }) {
+                    writer.insert(OwnedCollectible(awardKey: pending.awardKey,
+                        collectibleID: pending.collectibleID, kind: .hiddenDiscovery,
+                        reason: pending.reason, acquiredAt: now))
+                }
+                writer.delete(pending)
+            }
+            if writer.hasChanges { try writer.save() }
+        } catch {
+            writer.rollback()
+            throw error
+        }
+        _ = try context.fetch(FetchDescriptor<OwnedCollectible>())
+        _ = try context.fetch(FetchDescriptor<PendingCardReward>())
     }
 
     static func markAllSeen(in context: ModelContext) throws {

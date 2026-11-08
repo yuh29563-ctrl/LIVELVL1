@@ -2,8 +2,7 @@ import SwiftUI
 
 @MainActor
 struct ArchiveExpandedView: View {
-    let collectible: OwnedCollectible
-    let definition: CollectibleDefinition
+    let item: ArchiveCollectiblePresentation
     @Binding var isShowingBack: Bool
     let onClose: () -> Void
 
@@ -130,7 +129,31 @@ struct ArchiveExpandedView: View {
         }
     }
 
+    @ViewBuilder
     private var front: some View {
+        switch item {
+        case .permanent(let card):
+            PermanentCollectionCardFront(card: card)
+                .accessibilityHint("双击查看卡片背面")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityAction { flip() }
+        case .earned(let collectible, let definition):
+            earnedFront(collectible: collectible, definition: definition)
+        }
+    }
+
+    @ViewBuilder
+    private var back: some View {
+        switch item {
+        case .permanent(let card):
+            PermanentCollectionCardBack(card: card)
+                .accessibilityAction(named: Text("返回卡片正面")) { flip() }
+        case .earned(let collectible, let definition):
+            earnedBack(collectible: collectible, definition: definition)
+        }
+    }
+
+    private func earnedFront(collectible: OwnedCollectible, definition: CollectibleDefinition) -> some View {
         VStack(spacing: 12) {
             ArchiveOrganismArtwork(identifier: definition.id)
                 .frame(height: 300)
@@ -158,13 +181,21 @@ struct ArchiveExpandedView: View {
         .accessibilityAction { flip() }
     }
 
-    private var back: some View {
+    private func earnedBack(collectible: OwnedCollectible, definition: CollectibleDefinition) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 Text(definition.name)
                     .font(.title.bold())
+                if let series = definition.series {
+                    Text("\(collectible.collectionKindTitle) · \(series)")
+                        .font(.caption)
+                        .foregroundStyle(LivingOSTheme.graphite)
+                }
                 Text(definition.summary)
                     .foregroundStyle(LivingOSTheme.graphite)
+                Text(definition.details)
+                    .font(.body)
+                    .fixedSize(horizontal: false, vertical: true)
                 Rectangle()
                     .fill(LivingOSTheme.mist)
                     .frame(height: 0.5)

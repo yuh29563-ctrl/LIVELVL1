@@ -164,11 +164,11 @@ struct TodayCompanionLevelCardTests {
 
         #expect(
             presentation.compactAccessibilityLabel
-                == "成长卡已折叠，正在陪伴，月兔，幼体，等级 2"
+                == "成长卡已折叠，正在陪伴，织光灵树，幼体，等级 2"
         )
         #expect(presentation.compactAccessibilityHint == "轻点展开成长卡")
         #expect(presentation.compactAccessibilityIdentifier == "today-life-core-expand")
-        #expect(presentation.compactTitleText == "月兔 · LV 2")
+        #expect(presentation.compactTitleText == "织光灵树 · LV 2")
     }
 
     @Test func compactDockIsTheOnlyAccessibleExpansionAction() {
@@ -205,9 +205,9 @@ struct TodayCompanionLevelCardTests {
             remainingXP: 1_920
         )
 
-        #expect(presentation.companionName == "月兔")
+        #expect(presentation.companionName == "织光灵树")
         #expect(presentation.stageTitle == "幼体")
-        #expect(presentation.accessibilityLabel == "正在陪伴，月兔，幼体，等级 2")
+        #expect(presentation.accessibilityLabel == "正在陪伴，织光灵树，幼体，等级 2")
         #expect(presentation.accessibilityValue == "当前 80，共需 2000，还差 1920 XP")
     }
 
@@ -217,7 +217,7 @@ struct TodayCompanionLevelCardTests {
 
         #expect(
             juvenile.artworkRequest.current
-                == .init(collectibleID: "ordinary.sprout", stage: .juvenile)
+                == .init(collectibleID: "growth.star-vortex", stage: .juvenile)
         )
         #expect(juvenile.artworkRequest.next == nil)
     }
@@ -235,7 +235,7 @@ struct TodayCompanionLevelCardTests {
         #expect(sprout.artworkRequest.current != hare.artworkRequest.current)
         #expect(
             hare.artworkRequest.current
-                == .init(collectibleID: "ordinary.hare", stage: .juvenile)
+                == .init(collectibleID: "growth.light-tree", stage: .juvenile)
         )
         #expect(sprout.level == hare.level)
         #expect(sprout.currentXP == hare.currentXP)

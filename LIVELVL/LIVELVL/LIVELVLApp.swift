@@ -24,7 +24,11 @@ struct LIVELVLApp: App {
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            let bootstrap = ModelContext(container)
+            try GrowthCardCatalogReset.applyIfNeeded(in: bootstrap)
+            try CardRewardService.activateHiddenCards(in: bootstrap, now: .now, calendar: .current)
+            return container
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }

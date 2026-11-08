@@ -97,7 +97,7 @@ struct CardRewardServiceTests {
         ))
         context.insert(OwnedCollectible(
             awardKey: "ordinary.level.1",
-            collectibleID: "ordinary.sprout",
+            collectibleID: "growth.star-vortex",
             kind: .ordinaryMature,
             reason: "达到 Lv.1，陪伴成熟"
         ))
@@ -122,7 +122,7 @@ struct CardRewardServiceTests {
                 == ["ordinary.level.2"]
         )
         #expect(try context.fetch(FetchDescriptor<OwnedCollectible>())
-            .contains { $0.awardKey == "ordinary.level.2" && $0.collectibleID == "ordinary.hare" })
+            .contains { $0.awardKey == "ordinary.level.2" && $0.collectibleID == "growth.light-tree" })
     }
 
     @Test func ordinaryRewardsSortBeforeHiddenRewardsAtTheSameTime() throws {
@@ -139,7 +139,7 @@ struct CardRewardServiceTests {
         ))
         context.insert(PendingCardReward(
             awardKey: "ordinary.level.1",
-            collectibleID: "ordinary.sprout",
+            collectibleID: "growth.star-vortex",
             kind: .ordinaryMature,
             reason: "达到 Lv.1，陪伴成熟",
             maturityLevel: 1,
@@ -162,7 +162,7 @@ struct CardRewardServiceTests {
         context.insert(CollectionProgress())
         let pending = PendingCardReward(
             awardKey: "ordinary.level.1",
-            collectibleID: "ordinary.sprout",
+            collectibleID: "growth.star-vortex",
             kind: .ordinaryMature,
             reason: "达到 Lv.1，陪伴成熟",
             maturityLevel: 1,
@@ -280,14 +280,15 @@ struct CardRewardServiceTests {
         #expect(collectionProgress.activeStage == .juvenile)
         #expect(
             Set(try context.fetch(FetchDescriptor<PendingCardReward>()).map(\.awardKey))
-                == ["ordinary.level.2", "ordinary.level.3"]
+                == ["ordinary.level.2", "ordinary.level.3", "ordinary.level.4"]
         )
     }
 
     @Test func exhaustedCatalogShowsNoOldJuvenileAndDoesNotCreateBacklog() throws {
         let container = try makeContainer()
         let context = container.mainContext
-        let progress = Progress(totalXP: 6_200)
+        let count = CollectionCatalog.ordinary.count
+        let progress = Progress(totalXP: 200 + count * 2_000)
         context.insert(progress)
         try context.save()
         let now = Date(timeIntervalSince1970: 3_500)
@@ -302,9 +303,7 @@ struct CardRewardServiceTests {
         )
         let collection = try #require(context.fetch(FetchDescriptor<CollectionProgress>()).first)
         let owned = try context.fetch(FetchDescriptor<OwnedCollectible>())
-        #expect(Set(owned.map(\.awardKey)) == [
-            "ordinary.level.1", "ordinary.level.2", "ordinary.level.3"
-        ])
+        #expect(Set(owned.map(\.awardKey)) == Set((1...count).map { "ordinary.level.\($0)" }))
         #expect(Set(owned.map(\.collectibleID)) == Set(CollectionCatalog.ordinary.map(\.id)))
 
         for reward in CardRewardService.ordered(try context.fetch(FetchDescriptor<PendingCardReward>())) {
@@ -313,19 +312,19 @@ struct CardRewardServiceTests {
         #expect(collection.activeOrdinaryIndex == CollectionCatalog.ordinary.count)
         #expect(CollectionCatalog.ordinary(at: collection.activeOrdinaryIndex) == nil)
 
-        progress.totalXP = 8_200
+        progress.totalXP += 2_000
         try context.save()
         try CardRewardService.processCompletion(
             progress: progress,
-            previousLevel: 4,
+            previousLevel: count + 1,
             completions: [],
             in: context,
             now: now.addingTimeInterval(100),
             calendar: Calendar(identifier: .gregorian)
         )
-        #expect(collection.highestLevel == 5)
+        #expect(collection.highestLevel == count + 2)
         #expect(try context.fetch(FetchDescriptor<PendingCardReward>()).isEmpty)
-        #expect(try context.fetch(FetchDescriptor<OwnedCollectible>()).count == 3)
+        #expect(try context.fetch(FetchDescriptor<OwnedCollectible>()).count == count)
     }
 
     @Test func loweringXPCannotRegressHighestLevelOrDuplicateOriginalReward() throws {
@@ -482,7 +481,7 @@ struct CardRewardServiceTests {
         let context = container.mainContext
         context.insert(OwnedCollectible(
             awardKey: "ordinary.level.1",
-            collectibleID: "ordinary.sprout",
+            collectibleID: "growth.star-vortex",
             kind: .ordinaryMature,
             reason: "达到 Lv.1，陪伴成熟"
         ))
@@ -506,7 +505,7 @@ struct CardRewardServiceTests {
         let context = container.mainContext
         context.insert(OwnedCollectible(
             awardKey: "visible",
-            collectibleID: "ordinary.sprout",
+            collectibleID: "growth.star-vortex",
             kind: .ordinaryMature,
             reason: "可见"
         ))
